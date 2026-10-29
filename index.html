@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Reading Folio">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Article Folio">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 </head><body>
-<title>The Reading Folio</title>
+<title>Article Folio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,9 +30,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* ---------- Library ---------- */
 .lib{max-width:620px;margin:0 auto;padding-block:32px 96px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
-.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
-.mark{font:italic 400 46px/0.9 var(--f-serif);letter-spacing:-.02em;margin:0}
-.mark small{display:block;font:600 11.5px/1.2 var(--f-sans);font-style:normal;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 8px 2px}
+.top{display:flex;flex-direction:column-reverse;gap:14px}
+.top > .row{align-self:flex-end;margin-bottom:-6px}
+.mark{font:500 clamp(30px,9.6vw,50px)/0.95 var(--f-serif);letter-spacing:.015em;text-transform:uppercase;white-space:nowrap;margin:0;font-optical-sizing:auto}
 .mark b{font-style:normal;font-weight:600;color:var(--accent)}
 .lede{font:400 15px/1.5 var(--f-sans);color:var(--muted);margin:8px 0 0;max-width:34em}
 .add{display:flex;flex-direction:column;gap:10px}
@@ -244,7 +244,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 <main class="lib" id="lib">
   <header class="top">
     <div>
-      <h1 class="mark"><small>The Reading</small>Folio<b>.</b></h1>
+      <h1 class="mark">Article Folio</h1>
       <p class="lede">Paste article links. Each one plays as a story, one paragraph per slide.</p>
     </div>
     <div class="row" style="gap:2px;flex-wrap:nowrap">
@@ -272,7 +272,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <div class="qhead"><span class="lbl">Queue</span><button class="link" id="clearRead">Clear finished</button></div>
     <div class="filters" id="filters" role="group" aria-label="Highlight a category"></div>
     <ul class="queue" id="queue"></ul>
-    <p class="note" id="modeNote">Links load through a reader service. Where a page can't be reached, Folio asks you to paste its text.</p>
+    <p class="note" id="modeNote">Links load through a reader service. Where a page can't be reached, Article Folio asks you to paste its text.</p>
   </section>
   </div>
 
@@ -410,8 +410,8 @@ $('#szDn').onclick=()=>S.size>0&&setS('size',S.size-1);
 $('#szUp').onclick=()=>S.size<SIZES.length-1&&setS('size',S.size+1);
 
 /* ---------- Sample (original text) ---------- */
-const SAMPLE={id:'sample',title:'Reading as a story',site:'The Reading Folio',url:null,date:null,hero:null,blocks:[
- {t:'p',html:'The Reading Folio plays a long article as a story. Every paragraph gets a slide of its own.'},
+const SAMPLE={id:'sample',title:'Reading as a story',site:'Article Folio',url:null,date:null,hero:null,blocks:[
+ {t:'p',html:'Article Folio plays a long article as a story. Every paragraph gets a slide of its own.'},
  {t:'p',html:'Short paragraphs are set large. Longer ones step down towards your reading size, so a one-line thought lands with weight and a dense passage still reads comfortably. Sizes move on a fixed scale, which keeps the rhythm steady from slide to slide.'},
  {t:'h',html:'Moving through'},
  {t:'p',html:'Tap the right side to go on and the left side to go back, or swipe. Hold anywhere to pause. Swipe down to close.'},
@@ -447,7 +447,7 @@ const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch=
 function renderMode(){
   const n=$('#modeNote');
   if(canFetch===false){n.className='banner';n.innerHTML='<span><b>Paste mode.</b> This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</span>';}
-  else{n.className='note';n.textContent='Links load through a reader service. Where a page can’t be reached, Folio asks you to paste its text.'}
+  else{n.className='note';n.textContent='Links load through a reader service. Where a page can’t be reached, Article Folio asks you to paste its text.'}
 }
 function renderQ(){renderMode();
   const ul=$('#queue');const nx=nextUnread(null);
@@ -961,7 +961,7 @@ function renderCards(){
   const p=$('#prog');
   p.innerHTML=c.length<=60?c.map(()=>'<i><b></b></i>').join(''):'<i><b></b></i>';
   p.classList.toggle('cont',c.length>60);
-  $('#src').textContent=a.site||'The Reading Folio';
+  $('#src').textContent=a.site||'Article Folio';
   const sl=$('#srcLink');sl.hidden=!a.url;if(a.url)sl.href=a.url;
   $('#av').textContent=(a.site||'F').replace(/^www\./,'').charAt(0);
 }
@@ -1107,8 +1107,8 @@ function openPaste(it,err){
   pasteFor=it;pastedHTML=null;
   $('#pTitle').textContent='Paste this article';
   $('#pWhy').textContent=canFetch===true
-    ?`Folio couldn’t load ${it.site||'this page'}. ${err&&err.message?err.message:''} Open it, copy the article text and paste it below.`
-    :`This copy of the Reading Folio can’t reach other websites, so links need their text pasted in. Open the article, select the text, copy, and paste it below. Hosted on your own site, Folio loads links directly.`;
+    ?`Article Folio couldn’t load ${it.site||'this page'}. ${err&&err.message?err.message:''} Open it, copy the article text and paste it below.`
+    :`This copy of Article Folio can’t reach other websites, so links need their text pasted in. Open the article, select the text, copy, and paste it below. Hosted on your own site, Article Folio loads links directly.`;
   $('#pOpen').href=it.url||'#';$('#pOpen').hidden=!it.url;
   $('#pName').value=it.title||'';$('#pText').value='';pasteStat();
   if(it.status!=='read'){it.status='paste';saveQ();renderQ()}
@@ -1119,7 +1119,7 @@ function pasteStat(){
   const w=words($('#pText').value),box=$('#pBox');
   box.classList.toggle('full',w>0);$('#pGo').disabled=w<30;
   $('#pStat').textContent=w===0?'Tap the box, then Paste. Copied text or the page’s source code both work.'
-    :w>=30&&isSource($('#pText').value)?'Page source detected. Folio will pull the article, title and images out of it.'
+    :w>=30&&isSource($('#pText').value)?'Page source detected. Article Folio will pull the article, title and images out of it.'
     :w<30?'That looks too short to be the article. Paste the full text.'
     :`${w.toLocaleString('en-GB')} words pasted. About ${Math.max(1,Math.round(w/230))} min of reading.`;
 }
@@ -1139,7 +1139,7 @@ $('#pGo').onclick=()=>{
   else blocks=(pastedHTML&&pastedText===$('#pText').value)?htmlToBlocks(pastedHTML,{base:it.url}):textToBlocks(raw);
   if(!title||title===slugTitle(it.url||'')){const h=blocks.find(b=>b.t==='h'||b.t==='p');if(h&&words(h.html)<=18){title=strip(h.html)}}
   blocks=clean(blocks,title);const dek=blocks.dek;
-  if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
+  if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Article Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
   const art={title:title||'Untitled',date:meta.date||null,site:meta.site||it.site||'Pasted',url:it.url,hero:meta.hero||null,blocks,dek};
   store.set('folio.c.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
 };
