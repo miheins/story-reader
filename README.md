@@ -13,7 +13,7 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 
 ## How links load
 
-Articles are fetched through [Jina Reader](https://jina.ai/reader) (`r.jina.ai`), which returns a page's main content as text. If a page can't be loaded, Folio asks you to paste either the article text or the page's source code instead.
+Articles are fetched through [Jina Reader](https://jina.ai/reader) (`r.jina.ai`), asking for the rendered HTML. Folio reads only what sits inside the page's `<article>` (or its main body container), then drops captions, credits, galleries, repeated pull quotes and labels. If the HTML request fails it falls back to Jina's markdown. If a page can't be loaded, Folio asks you to paste either the article text or the page's source code instead.
 
 Your queue, reading positions and settings are kept in your browser's local storage on that device only.
 

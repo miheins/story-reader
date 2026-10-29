@@ -353,7 +353,7 @@ function chip(it){
   if(it.status==='paste')return'<span class="chip warn">Needs text</span>';
   return'<span class="chip">Unread</span>';
 }
-const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.b.'+it.id,null)));
+const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.c.'+it.id,null)));
 function renderMode(){
   const n=$('#modeNote');
   if(canFetch===false){n.className='banner';n.innerHTML='<span><b>Paste mode.</b> This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</span>';}
@@ -379,7 +379,7 @@ $('#queue').onclick=e=>{
   const o=e.target.closest('[data-open]'),r=e.target.closest('[data-rm]');
   if(o)openItem(Q.find(q=>q.id===o.dataset.open));
   if(r){const i=Q.findIndex(q=>q.id===r.dataset.rm);const [it]=Q.splice(i,1);saveQ();renderQ();
-    toast('Removed',()=>{Q.splice(i,0,it);saveQ();renderQ()},()=>store.del('folio.b.'+it.id))}
+    toast('Removed',()=>{Q.splice(i,0,it);saveQ();renderQ()},()=>store.del('folio.c.'+it.id))}
 };
 /* reorder: drag the grip, or focus it and press the arrow keys */
 let drag=null;const ul=$('#queue');
@@ -415,7 +415,7 @@ function addLinks(){
 $('#addBtn').onclick=addLinks;
 $('#readNext').onclick=()=>{if($('#links').value.trim())addLinks();const it=nextUnread(null);if(it)openItem(it)};
 $('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read');Q=Q.filter(q=>q.status!=='read');saveQ();renderQ();
-  toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.b.'+g.id)))};
+  toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
 
 let toastTimer;
 function toast(msg,undo,commit){
@@ -471,9 +471,17 @@ function domInline(el){
 const isSource=t=>/^\s*(<!doctype|<html[\s>]|<head[\s>]|<meta\s|<link\s|<script[\s>])/i.test(t)||((t.match(/<\/?[a-z][a-z0-9]*[\s>\/]/gi)||[]).length>40&&/<(p|div|article|section)[\s>]/i.test(t));
 const ROOTS=['[itemprop="articleBody"]','.available-content','.body.markup','.post-content','.entry-content','.article-body','.article__body','.article-content','.story-body','.rich-text','article','main','[role="main"]'];
 function abs(u,base){try{return new URL(u,base||undefined).href}catch(e){return /^https?:/.test(u)?u:''}}
+const pLen=el=>{let n=0;el.querySelectorAll('p').forEach(p=>n+=p.textContent.trim().length);return n};
+/* from the chosen container, step down into the one child that holds at least 80% of the paragraph text */
+function narrow(root){
+  const total=pLen(root);if(total<400)return root;
+  let cur=root;
+  for(let d=0;d<12;d++){let nx=null;for(const c of cur.children){if(pLen(c)>=total*.8){nx=c;break}}if(!nx)break;cur=nx}
+  return cur;
+}
 function pickRoot(doc){
-  for(const sel of ROOTS){const el=[...doc.querySelectorAll(sel)].sort((a,b)=>b.textContent.length-a.textContent.length)[0];
-    if(el&&words(el.textContent)>150)return el}
+  for(const sel of ROOTS){const el=[...doc.querySelectorAll(sel)].sort((a,b)=>pLen(b)-pLen(a))[0];
+    if(el&&words(el.textContent)>150)return narrow(el)}
   let best=doc.body,bs=0;
   doc.querySelectorAll('div,section').forEach(d=>{let sc=0;for(const c of d.children)if(c.tagName==='P')sc+=c.textContent.length;if(sc>bs){bs=sc;best=d}});
   return best;
@@ -540,7 +548,7 @@ function clean(blocks,title){
   const prose=x=>{if(x.t!=='p'&&x.t!=='q')return false;const{t,w}=info(x);
     return w>=18&&(x.lr||0)<.5&&/[.!?…"”’)\]:;]$/.test(t)&&!(w<40&&CAP_RE.test(t))&&!(w<30&&CRUFT_RE.test(t))};
   let b=blocks.filter(x=>x.t!=='img'||!/\.svg|^data:|gravatar|avatar|logo|icon|sprite|pixel|badge|emoji|1x1|spacer|tracking|placeholder/i.test(x.src))
-    .map(x=>x.t==='img'?{...x,cap:x.alt?'':(x.cap||'').replace(/^image\s*\d+\s*:\s*/i,'').trim()}:x);
+    .map(x=>x.t==='img'?{...x,cap:x.alt?'':(x.cap||'').replace(/^image\s*\d+\s*:\s*/i,'').replace(/^(above|top|below|left|right|opposite)\s*[:,–—-]?\s*/i,'').trim()}:x);
   // 1. start after the headline when it's present
   const nt=norm(title||'');
   if(nt){const i=b.findIndex((x,k)=>k<120&&x.html&&(norm(x.html)===nt||(nt.length>24&&norm(x.html).startsWith(nt.slice(0,30)))));if(i>=0)b=b.slice(i+1)}
@@ -561,7 +569,7 @@ function clean(blocks,title){
   let last=-1;b.forEach((x,i)=>{if(prose(x))last=i});
   if(first>=0&&last>=first)b=b.slice(first,last+1);
   // 4. inside the body
-  const longNorms=b.filter(x=>(x.t==='p'||x.t==='li')&&info(x).w>=25).map(x=>norm(x.html));
+  const longNorms=b.filter(x=>(x.t==='p'||x.t==='li')&&info(x).w>=10).map(x=>norm(x.html));
   const out=[];let lastImg=null;
   b.forEach((x,i)=>{
     if(x.t==='img'){out.push(x);lastImg={x,at:out.length-1};return}
@@ -574,7 +582,7 @@ function clean(blocks,title){
     if(w<16&&CRUFT_RE.test(t))return;
     if(DATE_RE.test(t))return;
     if(x.t!=='h'&&w<4&&!/[.!?…"”’]$/.test(t))return;          // labels, names after pull quotes
-    if((x.t==='q'||x.t==='p')&&w>=5&&w<=60){const nn=norm(x.html);if(longNorms.some(L=>L!==nn&&L.includes(nn)))return} // repeated pull quotes
+    if((x.t==='q'||x.t==='p')&&w>=5&&w<=60){const nn=norm(x.html);if(longNorms.some(L=>L!==nn&&L.length>nn.length&&L.includes(nn)))return} // repeated pull quotes
     if(x.t==='h'){if(w>28){out.push({...x,t:'p'});return}
       const nx=b.slice(i+1).find(y=>y.t!=='img');if(!nx||nx.t==='h'||info(nx).w<8)return}
     out.push(x);
@@ -588,18 +596,35 @@ function clean(blocks,title){
 }
 function fmtDate(s){if(!s)return null;const d=new Date(s);return isNaN(d)?null:d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
 
+async function jina(url,html,signal){
+  const r=await fetch('https://r.jina.ai/'+url,{signal,headers:html?{'X-Return-Format':'html'}:{}});
+  if(!r.ok)throw new Error('The reader service answered '+r.status+'.');
+  return r.text();
+}
+const enough=blocks=>words(blocks.map(b=>b.html||'').join(' '))>=120;
 async function fetchArticle(url){
-  const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),25000);
+  const ctl=new AbortController();const tm=setTimeout(()=>ctl.abort(),30000);
   try{
-    const r=await fetch('https://r.jina.ai/'+url,{signal:ctl.signal});
-    if(!r.ok)throw new Error('The reader service answered '+r.status+'.');
-    const txt=await r.text();
+    // 1. rendered HTML: read only what sits inside <article> (or the page's main body container)
+    try{
+      const txt=await jina(url,true,ctl.signal);
+      const k=txt.search(/<!doctype|<html[\s>]|<head[\s>]|<body[\s>]/i);const html=k>=0?txt.slice(k):txt;
+      if(/<[a-z][\s\S]*>/i.test(html)){
+        let r=htmlToBlocks(html,{source:true,base:url,meta:true});
+        if(!enough(r.blocks))r=htmlToBlocks(html,{source:true,loose:true,base:url,meta:true});
+        const title=r.meta.title||slugTitle(url);
+        const blocks=clean(r.blocks,title);
+        if(enough(blocks))return{title,date:r.meta.date||null,site:r.meta.site||host(url),url,hero:r.meta.hero||null,blocks,dek:blocks.dek,via:'html'};
+      }
+    }catch(e){if(e.name==='AbortError')throw e}
+    // 2. fallback: the reader's markdown
+    const txt=await jina(url,false,ctl.signal);
     const title=((txt.match(/^Title:\s*(.+)$/m)||[])[1]||'').trim()||slugTitle(url);
     const date=fmtDate((txt.match(/^Published Time:\s*(.+)$/m)||[])[1]);
     const md=txt.split(/^Markdown Content:\s*$/m)[1]??txt;
-    const blocks=clean(mdToBlocks(md),title);const dek=blocks.dek;
-    if(words(blocks.map(b=>b.html||'').join(' '))<120)throw new Error('The page came back almost empty; it may be behind a sign-in or built with scripts.');
-    return{title,date,site:host(url),url,blocks,dek};
+    const blocks=clean(mdToBlocks(md),title);
+    if(!enough(blocks))throw new Error('The page came back almost empty; it may be behind a sign-in or built with scripts.');
+    return{title,date,site:host(url),url,blocks,dek:blocks.dek,via:'markdown'};
   }finally{clearTimeout(tm)}
 }
 
@@ -773,12 +798,12 @@ function loading(on,title,sub){$('#loading').hidden=!on;if(on){$('#loadT').textC
 async function openItem(it){
   if(!it)return;
   closeSheets();stopTimer();
-  let art=it.id==='sample'?SAMPLE:store.get('folio.b.'+it.id,null);
+  let art=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);
   if(!art&&canFetch===false){showReader(false);openPaste(it);return}
   showReader(true);
   if(!art){
     loading(true,it.title,'Fetching '+(it.site||'page'));
-    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.b.'+it.id,art);it.title=art.title;saveQ()}
+    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.c.'+it.id,art);it.title=art.title;saveQ()}
     catch(e){
       if(canFetch!==true)store.set('folio.canFetch',canFetch=false);
       loading(false);showReader(false);openPaste(it,e);return}
@@ -794,8 +819,8 @@ async function openItem(it){
 }
 async function prefetch(){
   if(canFetch!==true)return;const nx=nextUnread(R.item);
-  if(!nx||nx.id==='sample'||store.get('folio.b.'+nx.id,null))return;
-  try{const a=await fetchArticle(nx.url);store.set('folio.b.'+nx.id,a);nx.title=a.title;saveQ()}catch(e){}
+  if(!nx||nx.id==='sample'||store.get('folio.c.'+nx.id,null))return;
+  try{const a=await fetchArticle(nx.url);store.set('folio.c.'+nx.id,a);nx.title=a.title;saveQ()}catch(e){}
 }
 
 /* gestures: tap sides, swipe across, hold to pause, swipe down to close */
@@ -892,7 +917,7 @@ $('#pGo').onclick=()=>{
   blocks=clean(blocks,title);const dek=blocks.dek;
   if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
   const art={title:title||'Untitled',date:meta.date||null,site:meta.site||it.site||'Pasted',url:it.url,hero:meta.hero||null,blocks,dek};
-  store.set('folio.b.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
+  store.set('folio.c.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
 };
 
 /* boot */
