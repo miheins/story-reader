@@ -11,17 +11,17 @@
 /* Layout: a quiet queue page; reading happens in a full-screen deck of measured cards, one calm page of type per screen. */
 :root{
   --bg:#FAFAF7; --fg:#17181B; --muted:#6A6D73; --rule:#DCDCD5; --accent:#2747C4;
-  --sheet:#FFFFFF; --chip:#EDEDE7; --tint:#EEF1FC; --stagebg:#DCDCD5; --cover-bg:#2747C4; --cover-fg:#F4F5FF; --scrim:rgba(20,21,24,.38); --ink:#26272B;
+  --sheet:#FFFFFF; --chip:#EDEDE7; --c1:#2747C4; --c2:#C2410C; --c3:#15803D; --c4:#9333EA; --c5:#B45309; --c6:#0E7490; --tint:#EEF1FC; --stagebg:#DCDCD5; --cover-bg:#2747C4; --cover-fg:#F4F5FF; --scrim:rgba(20,21,24,.38); --ink:#26272B;
   --f-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
   --f-sans:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --rf:var(--f-serif); --rs:19px; --rl:1.55;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111214; --fg:#E8E6E1; --muted:#93969C; --rule:#2C2E33; --accent:#98AAFF;
-  --sheet:#1A1B1F; --chip:#24262B; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}}
+  --sheet:#1A1B1F; --chip:#24262B; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111214; --fg:#E8E6E1; --muted:#93969C; --rule:#2C2E33; --accent:#98AAFF;
-  --sheet:#1A1B1F; --chip:#24262B; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}
+  --sheet:#1A1B1F; --chip:#24262B; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}
 :root[data-face="sans"]{--rf:var(--f-sans)}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -185,6 +185,56 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .qpaste{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--accent);color:var(--bg);font:600 13px/1 var(--f-sans);white-space:nowrap}
 .banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:2px dashed var(--accent);background:var(--tint);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:1.45;color:var(--fg)}
 .banner b{font-weight:650}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:-10px}
+.filters:empty{display:none}
+.fchip{border:1px solid var(--rule);background:transparent;border-radius:999px;height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:600 13px/1 var(--f-sans);color:var(--fg)}
+.fchip i{width:9px;height:9px;border-radius:50%;background:var(--cc,var(--muted))}
+.fchip span{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.fchip[aria-pressed="true"]{border-color:var(--cc,var(--fg));background:color-mix(in srgb,var(--cc,var(--fg)) 14%,transparent);box-shadow:inset 0 0 0 1px var(--cc,var(--fg))}
+.fchip.manage{border-style:dashed;color:var(--muted)}
+.queue li .qopen{padding-bottom:10px}
+.queue li .qcat{grid-column:2;padding:0 0 14px;display:flex}
+.catsel{position:relative;display:inline-flex;align-items:center}
+.catsel i{position:absolute;left:10px;width:8px;height:8px;border-radius:50%;background:var(--cc,transparent);box-shadow:inset 0 0 0 1px var(--cc,var(--muted));pointer-events:none}
+.catsel::after{content:"";position:absolute;right:11px;width:5px;height:5px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg);pointer-events:none}
+.catsel select{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--chip);color:var(--fg);font:500 12.5px/1 var(--f-sans);height:28px;padding:0 28px 0 24px;max-width:220px;text-overflow:ellipsis}
+.catsel select.none{color:var(--muted)}
+.queue.filtering li[data-id]:not(.hl){opacity:.35}
+.queue li.hl{background:var(--tint);background:color-mix(in srgb,var(--cc) 9%,var(--bg));box-shadow:inset 3px 0 0 var(--cc)}
+.queue li{transition:opacity .2s,background .2s}
+.cats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cats li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
+.cats .dot{width:30px;height:30px;border-radius:50%;border:0;background:var(--cc);box-shadow:inset 0 0 0 3px var(--sheet),0 0 0 1px var(--cc)}
+.cats input{height:40px;padding:0 12px}
+.cats .ct{font:500 12px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums;min-width:20px;text-align:right}
+.catadd{display:flex;gap:8px}
+.catadd input{flex:1;min-width:0;height:44px;padding:0 14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin-bottom:-12px}
+.tabs button{border:0;background:none;padding:10px 2px;margin-right:18px;font:600 15px/1 var(--f-sans);color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;display:flex;gap:7px;align-items:center}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--fg)}
+.tc{font:600 11.5px/1 var(--f-sans);padding:4px 7px;border-radius:999px;background:var(--chip);color:var(--muted);font-variant-numeric:tabular-nums}
+.tc:empty{display:none}
+.view{display:flex;flex-direction:column;gap:28px}
+.ngroup{border-top:1px solid var(--rule);padding-block:18px 6px;display:flex;flex-direction:column;gap:14px}
+.nghead{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.nghead > div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.note-i{display:flex;flex-direction:column;gap:8px;padding-left:14px;border-left:2px solid var(--rule)}
+.nref{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.nref:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.nref small{font:600 11px/1.2 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.nref q{font:italic 400 15px/1.45 var(--f-serif);color:var(--muted);quotes:"“" "”"}
+.ntext{margin:0;font:400 16px/1.5 var(--f-sans);color:var(--fg);white-space:pre-wrap;overflow-wrap:anywhere}
+.nmeta{display:flex;gap:12px;align-items:center;font:500 12.5px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums}
+.nmeta button{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font:inherit}
+.nempty{border-top:1px solid var(--rule);padding:22px 0;color:var(--muted);font-size:14.5px;line-height:1.5;margin:0}
+.ref{margin:0;display:flex;flex-direction:column;gap:6px}
+.ref figcaption{font:600 11.5px/1.2 var(--f-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.ref blockquote{margin:0;padding-left:12px;border-left:2px solid var(--accent);font:italic 400 16px/1.45 var(--f-serif);color:var(--fg)}
+#nText{min-height:120px;font-size:16px}
+#nOthers:empty{display:none}
+#nOthers{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--rule);padding-top:16px}
+.nb{position:relative}
+.badge{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:var(--bg);font:700 10px/16px var(--f-sans);text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:60;background:var(--fg);color:var(--bg);border-radius:999px;padding:10px 8px 10px 18px;font-size:14px;display:flex;gap:10px;align-items:center;max-width:calc(100% - 40px);box-sizing:border-box}
 .toast button{border:0;background:none;color:var(--bg);font-weight:700;padding:4px 10px}
 @media (prefers-reduced-motion: reduce){.track.anim{transition:none}.dots::after{animation:none;content:"…"}}
@@ -196,9 +246,18 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
       <h1 class="mark">Folio<b>.</b></h1>
       <p class="lede">Paste article links. Each one plays as a story, one paragraph per slide.</p>
     </div>
-    <button class="ib aa" id="libAa" aria-label="Reading settings">A<span>a</span></button>
+    <div class="row" style="gap:2px;flex-wrap:nowrap">
+      <button class="ib aa" id="libAa" aria-label="Reading settings">A<span>a</span></button>
+      <button class="ib" id="menuBtn" aria-label="Menu"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12"/></svg></button>
+    </div>
   </header>
 
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabQueue" aria-selected="true">Queue</button>
+    <button role="tab" id="tabNotes" aria-selected="false">Notes <span class="tc" id="noteTotal"></span></button>
+  </div>
+
+  <div id="viewQueue" class="view">
   <section class="add">
     <label class="lbl" for="links">Add links</label>
     <textarea id="links" rows="3" placeholder="One or more links, any separator"></textarea>
@@ -210,9 +269,16 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 
   <section class="add">
     <div class="qhead"><span class="lbl">Queue</span><button class="link" id="clearRead">Clear finished</button></div>
+    <div class="filters" id="filters" role="group" aria-label="Highlight a category"></div>
     <ul class="queue" id="queue"></ul>
     <p class="note" id="modeNote">Links load through a reader service. Where a page can't be reached, Folio asks you to paste its text.</p>
   </section>
+  </div>
+
+  <div id="viewNotes" class="view" hidden>
+    <div class="qhead"><span class="lbl">All notes</span><button class="link" id="copyNotes">Copy all as text</button></div>
+    <div id="notesList"></div>
+  </div>
 </main>
 
 <div class="reader" id="reader" hidden lang="en">
@@ -224,6 +290,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
         <div class="av" id="av" aria-hidden="true"></div>
         <div class="who"><span id="src"></span><span class="tm" id="tm"></span></div>
         <a class="ib" id="srcLink" href="#" target="_blank" rel="noopener" aria-label="Open original" hidden><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>
+        <button class="ib nb" id="noteBtn" aria-label="Add a note to this slide"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 2.5l3 3-8 8H2.5v-3z"/><path d="M9 4l3 3"/></svg><span class="badge" id="noteCount" hidden></span></button>
         <button class="ib aa" id="rdAa" aria-label="Reading settings">A<span>a</span></button>
         <button class="ib" id="close" aria-label="Back to queue">✕</button>
       </div>
@@ -272,6 +339,28 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <div class="row"><button class="btn primary" id="pGo" disabled>Make pages</button><button class="btn" id="pCancel">Cancel</button></div>
     <div class="set"><label class="lbl" for="pName">Title</label><input type="text" id="pName"></div>
     <p id="pWhy" class="why"></p>
+  </div>
+</div>
+
+<div class="sheet" id="menuSheet" hidden role="dialog" aria-label="Menu">
+  <div class="in">
+    <div class="phead"><h2>Menu</h2><button class="x" id="mX" aria-label="Close">×</button></div>
+    <div class="set"><span class="lbl">Categories</span>
+      <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
+      <ul class="cats" id="catList"></ul>
+      <form class="catadd" id="catForm"><input type="text" id="catName" placeholder="New category, e.g. Branding" maxlength="40" autocomplete="off"><button class="btn" type="submit">Add</button></form>
+    </div>
+    <div class="set"><span class="lbl">Reading</span><button class="btn" id="mReading" style="align-self:flex-start">Typeface, size and theme</button></div>
+  </div>
+</div>
+
+<div class="sheet" id="noteSheet" hidden role="dialog" aria-label="Note">
+  <div class="in">
+    <div class="phead"><h2 id="nTitle">Note</h2><button class="x" id="nX" aria-label="Close">×</button></div>
+    <figure class="ref"><figcaption id="nWhere"></figcaption><blockquote id="nRef"></blockquote></figure>
+    <textarea id="nText" rows="5" placeholder="What do you want to remember about this?"></textarea>
+    <div class="row"><button class="btn primary" id="nSave">Save note</button><button class="btn" id="nDel" hidden>Delete note</button></div>
+    <div id="nOthers"></div>
   </div>
 </div>
 
@@ -362,20 +451,22 @@ function renderMode(){
 function renderQ(){renderMode();
   const ul=$('#queue');const nx=nextUnread(null);
   if(!Q.length){ul.innerHTML='<li class="empty" style="display:block">Nothing queued. Paste a link above.</li>';}
-  else ul.innerHTML=Q.map(it=>`<li data-id="${it.id}">
+  else ul.innerHTML=Q.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}${nx&&nx.id===it.id?' <span class="nx">· Next</span>':''}</span><span class="qt">${esc(it.title)}</span></button>
-    <div class="qright">${it.url?`<a class="x lk" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>`:''}${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div></li>`).join('');
+    <div class="qright">${it.url?`<a class="x lk" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>`:''}${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div>${catSelect(it)}</li>`}).join('');
   $('#readNext').disabled=!nx;
+  const fc=F&&C.find(c=>c.id===F);$('#readNext').textContent=fc?'Read next in '+fc.name:'Read next';
+  renderFilters();
   $('#clearRead').hidden=!Q.some(i=>i.status==='read');
 }
 function nextUnread(after){
   let i=after?Q.findIndex(q=>q.id===after.id)+1:0;
-  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id))return it}
+  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id)&&(!F||it.cat===F))return it}
   return null;
 }
 $('#queue').onclick=e=>{
-  if(e.target.closest('[data-grip]'))return;
+  if(e.target.closest('[data-grip],[data-cat],.qcat'))return;
   const o=e.target.closest('[data-open]'),r=e.target.closest('[data-rm]');
   if(o)openItem(Q.find(q=>q.id===o.dataset.open));
   if(r){const i=Q.findIndex(q=>q.id===r.dataset.rm);const [it]=Q.splice(i,1);saveQ();renderQ();
@@ -423,6 +514,137 @@ function toast(msg,undo,commit){
   let done=false;$('#toastB').onclick=()=>{done=true;t.hidden=true;undo&&undo()};
   toastTimer=setTimeout(()=>{t.hidden=true;if(!done&&commit)commit()},4000);
 }
+
+const LINK_ICON='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg>';
+/* ---------- Categories ---------- */
+const CC=6;
+let C=store.get('folio.cats',[]);let F=store.get('folio.filter',null);
+const saveC=()=>{store.set('folio.cats',C);store.set('folio.filter',F)};
+const catOf=it=>C.find(c=>c.id===it.cat)||null;
+const ccv=c=>c?`var(--c${c.c+1})`:'';
+function renderFilters(){
+  const box=$('#filters');if(F&&!C.some(c=>c.id===F))F=null;
+  if(!C.length){box.innerHTML='';$('#queue').classList.remove('filtering');return}
+  box.innerHTML=`<button class="fchip" data-f="" aria-pressed="${!F}">All</button>`+
+    C.map(c=>`<button class="fchip" data-f="${c.id}" aria-pressed="${F===c.id}" style="--cc:${ccv(c)}"><i></i>${esc(c.name)}<span>${Q.filter(q=>q.cat===c.id).length}</span></button>`).join('')+
+    `<button class="fchip manage" data-f="__manage">Edit categories</button>`;
+  $('#queue').classList.toggle('filtering',!!F);
+}
+$('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
+  if(b.dataset.f==='__manage'){openMenu();return}
+  F=b.dataset.f||null;saveC();renderQ()};
+function catSelect(it){
+  const c=catOf(it);
+  return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c):''}"><i></i>
+    <select data-cat="${it.id}" class="${c?'':'none'}" aria-label="Category for ${esc(it.title)}">
+      <option value="">${C.length?'No category':'Add a category…'}</option>
+      ${C.map(k=>`<option value="${k.id}"${it.cat===k.id?' selected':''}>${esc(k.name)}</option>`).join('')}
+      ${C.length?'<option value="__manage">Edit categories…</option>':''}
+    </select></label></div>`;
+}
+$('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]');if(!sel)return;
+  const it=Q.find(q=>q.id===sel.dataset.cat);if(!it)return;
+  if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
+  it.cat=sel.value||null;saveQ();renderQ()});
+$('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
+function openMenu(){renderCats();openSheet('#menuSheet')}
+function renderCats(){
+  $('#catList').innerHTML=C.map(c=>`<li><button class="dot" data-color="${c.id}" style="--cc:${ccv(c)}" aria-label="Change colour of ${esc(c.name)}"></button>
+    <input type="text" data-rename="${c.id}" value="${esc(c.name)}" maxlength="40" aria-label="Category name">
+    <div style="display:flex;align-items:center;gap:2px"><span class="ct">${Q.filter(q=>q.cat===c.id).length}</span><button class="x" data-delcat="${c.id}" aria-label="Delete ${esc(c.name)}">×</button></div></li>`).join('');
+}
+$('#catForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#catName').value.trim();if(!n)return;
+  if(C.some(c=>c.name.toLowerCase()===n.toLowerCase())){toast('That category already exists');return}
+  const used=C.map(c=>c.c);let col=C.length%CC;for(let k=0;k<CC;k++){if(!used.includes(k)){col=k;break}}
+  C.push({id:'c'+Date.now().toString(36),name:n,c:col});$('#catName').value='';saveC();renderCats();renderQ();$('#catName').focus()});
+$('#catList').addEventListener('click',e=>{
+  const d=e.target.closest('[data-color]'),x=e.target.closest('[data-delcat]');
+  if(d){const c=C.find(k=>k.id===d.dataset.color);c.c=(c.c+1)%CC;saveC();renderCats();renderQ()}
+  if(x){const i=C.findIndex(k=>k.id===x.dataset.delcat);const [c]=C.splice(i,1);const had=Q.filter(q=>q.cat===c.id);had.forEach(q=>q.cat=null);
+    if(F===c.id)F=null;saveC();saveQ();renderCats();renderQ();
+    toast(`Deleted ${c.name}`,()=>{C.splice(i,0,c);had.forEach(q=>q.cat=c.id);saveC();saveQ();renderCats();renderQ()})}
+});
+$('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rename]');if(!r)return;const c=C.find(k=>k.id===r.dataset.rename);
+  const n=r.value.trim();if(n){c.name=n;saveC();renderQ()}else r.value=c.name});
+$('#menuBtn').onclick=openMenu;$('#mX').onclick=closeSheets;
+$('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
+
+/* ---------- Notes ---------- */
+let N=store.get('folio.notes',[]);
+const saveN=()=>store.set('folio.notes',N);
+const fmtWhen=t=>new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+const clip=(t,n=34)=>{const w=t.split(/\s+/).filter(Boolean);return w.length>n?w.slice(0,n).join(' ')+'…':w.join(' ')};
+let tab=store.get('folio.tab','queue');
+function showTab(t){tab=t;store.set('folio.tab',t);
+  $('#tabQueue').setAttribute('aria-selected',String(t==='queue'));$('#tabNotes').setAttribute('aria-selected',String(t==='notes'));
+  $('#viewQueue').hidden=t!=='queue';$('#viewNotes').hidden=t!=='notes';if(t==='notes')renderNotes()}
+$('#tabQueue').onclick=()=>showTab('queue');$('#tabNotes').onclick=()=>showTab('notes');
+function renderNotes(){
+  $('#noteTotal').textContent=N.length||'';
+  if($('#viewNotes').hidden)return;
+  const box=$('#notesList');
+  if(!N.length){box.innerHTML='<p class="nempty">No notes yet. While reading, tap the pencil in the top bar to note something on the slide you’re on. Every note appears here with the passage it belongs to.</p>';$('#copyNotes').hidden=true;return}
+  $('#copyNotes').hidden=false;
+  const groups=new Map();
+  [...N].sort((a,b)=>b.at-a.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
+  box.innerHTML=[...groups.values()].map(g=>{const h=g[0];g.sort((a,b)=>a.pos-b.pos);
+    return `<section class="ngroup"><div class="nghead"><div><span class="qdom">${esc(h.site||'')} · ${g.length} note${g.length>1?'s':''}</span><span class="qt">${esc(h.title)}</span></div>
+      ${h.url?`<a class="x lk" href="${esc(h.url)}" target="_blank" rel="noopener" aria-label="Open original">${LINK_ICON}</a>`:''}</div>
+      ${g.map(n=>`<article class="note-i"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>
+        <p class="ntext">${esc(n.text)}</p><div class="nmeta"><span>${fmtWhen(n.at)}</span><button data-edit="${n.id}">Edit</button></div></article>`).join('')}</section>`}).join('');
+}
+$('#notesList').onclick=e=>{
+  const j=e.target.closest('[data-jump]'),ed=e.target.closest('[data-edit]');
+  if(j){const n=N.find(x=>x.id===j.dataset.jump);if(!n)return;let it=Q.find(q=>q.id===n.art);
+    if(!it&&n.art==='sample')it={id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0};
+    if(!it&&n.url){it=mkItem(n.url);it.id=n.art;it.title=n.title;Q.push(it);saveQ()}
+    if(it)openItem(it,{pos:n.pos})}
+  if(ed){const n=N.find(x=>x.id===ed.dataset.edit);if(n)openNote(n)}
+};
+function notesText(){
+  const groups=new Map();[...N].sort((a,b)=>a.at-b.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
+  return [...groups.values()].map(g=>{const h=g[0];g.sort((a,b)=>a.pos-b.pos);
+    return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text}\n`).join('\n')}).join('\n\n');
+}
+$('#copyNotes').onclick=()=>{const t=notesText();
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(ta);ta.select();
+    let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();toast(ok?'Notes copied':'Copying is blocked here. Select the notes and copy them by hand.')};
+  try{navigator.clipboard.writeText(t).then(()=>toast(`Copied ${N.length} note${N.length>1?'s':''}`),fallback)}catch(e){fallback()}};
+
+/* note sheet */
+let NC=null; // {note} when editing, or {ctx} when adding
+function slideRef(){
+  const cd=R.cards[R.idx],a=R.art;
+  const isText=b=>b.t==='p'||b.t==='q'||b.t==='li'||b.t==='h';
+  if(cd.k==='cover')return{pos:-1,where:'Cover',excerpt:clip(a.title+(a.dek?'. '+a.dek:''))};
+  if(cd.k==='end')return{pos:1e9,where:'End of article',excerpt:clip(a.title)};
+  if(cd.k==='img')return{pos:cd.first,where:'Image',excerpt:clip(cd.b.cap||'Image without a caption')};
+  const n=a.blocks.slice(0,cd.first+1).filter(isText).length;
+  return{pos:cd.first,where:(cd.k==='chap'?'Section':'Paragraph')+' '+n,excerpt:clip(strip(cd.items.map(i=>i.html).join(' ')))};
+}
+function openNote(note){
+  if(note){NC={note};$('#nTitle').textContent='Edit note';$('#nWhere').textContent=note.where+' · '+note.title;$('#nRef').textContent=note.excerpt;
+    $('#nText').value=note.text;$('#nDel').hidden=false;$('#nOthers').innerHTML=''}
+  else{const ref=slideRef();NC={ctx:ref};$('#nTitle').textContent='Note';$('#nWhere').textContent=ref.where;$('#nRef').textContent=ref.excerpt;
+    $('#nText').value='';$('#nDel').hidden=true;
+    const mine=N.filter(n=>n.art===R.item.id).sort((a,b)=>a.pos-b.pos);
+    $('#nOthers').innerHTML=mine.length?`<span class="lbl">Your notes on this article</span>`+mine.map(n=>`<article class="note-i"><button class="nref" data-njump="${n.id}"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button><p class="ntext">${esc(n.text)}</p></article>`).join(''):''}
+  openSheet('#noteSheet');
+  setTimeout(()=>{try{$('#nText').focus({preventScroll:true})}catch(e){}},60);
+}
+$('#nOthers').onclick=e=>{const j=e.target.closest('[data-njump]');if(!j)return;const n=N.find(x=>x.id===j.dataset.njump);if(!n)return;closeSheets();go(idxFor(n.pos))};
+$('#noteBtn').onclick=()=>{if(R.art)openNote(null)};
+$('#nX').onclick=closeSheets;
+$('#nSave').onclick=()=>{
+  const t=$('#nText').value.trim();
+  if(NC&&NC.note){if(!t){N=N.filter(n=>n!==NC.note)}else{NC.note.text=t;NC.note.at=Date.now()}}
+  else if(NC&&NC.ctx){if(!t){$('#nText').focus();return}
+    const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,at:Date.now()})}
+  saveN();closeSheets();updateNoteBadge();renderNotes();toast('Note saved');
+};
+$('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N.splice(i,1);saveN();closeSheets();renderNotes();updateNoteBadge();
+  toast('Note deleted',()=>{N.splice(i,0,n);saveN();renderNotes();updateNoteBadge()})};
+function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id).length:0;b.hidden=!n;b.textContent=n}
 
 /* ---------- Parsing ---------- */
 const IMG_RE=/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
@@ -756,7 +978,7 @@ function restartTimer(){
   T.dur=durFor(R.cards[R.idx]);T.last=performance.now();setBar(0);T.raf=requestAnimationFrame(tick);
 }
 function tick(now){
-  const live=!T.paused&&document.visibilityState==='visible'&&$('#setSheet').hidden&&$('#pasteSheet').hidden;
+  const live=!T.paused&&document.visibilityState==='visible'&&$('#setSheet').hidden&&$('#pasteSheet').hidden&&$('#noteSheet').hidden;
   if(live)T.elapsed+=now-T.last;T.last=now;
   const f=Math.min(1,T.elapsed/T.dur);setBar(f);
   if(f>=1){T.raf=0;next();return}
@@ -791,11 +1013,11 @@ let wake=null;
 function showReader(on){
   reader.hidden=!on;document.body.style.overflow=on?'hidden':'';
   if(on){try{navigator.wakeLock?.request('screen').then(w=>wake=w).catch(()=>{})}catch(e){}}
-  else{stopTimer();try{wake&&wake.release()}catch(e){}wake=null;R.art=null;R.item=null;frame.style.transform='';renderQ()}
+  else{stopTimer();try{wake&&wake.release()}catch(e){}wake=null;R.art=null;R.item=null;frame.style.transform='';renderQ();renderNotes()}
 }
 function loading(on,title,sub){$('#loading').hidden=!on;if(on){$('#loadT').textContent=title;$('#loadS').textContent=sub}}
 
-async function openItem(it){
+async function openItem(it,opt={}){
   if(!it)return;
   closeSheets();stopTimer();
   let art=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);
@@ -814,7 +1036,8 @@ async function openItem(it){
   R.cards=build(R.art);renderCards();
   loading(false);
   frame.classList.remove('enter');void frame.offsetWidth;frame.classList.add('enter');
-  go(it.status==='reading'?idxFor(it.pos):0);
+  go(opt.pos!=null?(opt.pos>=1e9?R.cards.length-1:idxFor(opt.pos)):it.status==='reading'?idxFor(it.pos):0);
+  updateNoteBadge();
   prefetch();
 }
 async function prefetch(){
@@ -863,7 +1086,7 @@ stage.addEventListener('contextmenu',e=>e.preventDefault());
 track.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;
   if(a.dataset.act==='next')openItem(nextUnread(R.item));else showReader(false)});
 document.addEventListener('keydown',e=>{
-  if(!$('#setSheet').hidden||!$('#pasteSheet').hidden){if(e.key==='Escape')closeSheets();return}
+  if(!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
   if(reader.hidden)return;
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();next()}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}
@@ -874,7 +1097,7 @@ let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(rela
 
 /* sheets */
 function openSheet(id){$('#scrim').hidden=false;$(id).hidden=false}
-function closeSheets(){$('#scrim').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true}
+function closeSheets(){$('#scrim').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true;$('#noteSheet').hidden=true;$('#menuSheet').hidden=true}
 $('#scrim').onclick=closeSheets;$('#setDone').onclick=closeSheets;
 $('#libAa').onclick=$('#rdAa').onclick=()=>openSheet('#setSheet');
 
@@ -924,7 +1147,7 @@ $('#pGo').onclick=()=>{
 const fontsReady=(document.fonts?Promise.race([
   Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px "Hanken Grotesk"','600 20px "Hanken Grotesk"'].map(f=>document.fonts.load(f))),
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
-applySettings();renderQ();
+applySettings();renderQ();showTab(tab);renderNotes();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
   .finally(()=>{if(canFetch!==null)store.set('folio.canFetch',canFetch);renderQ()})}
 })();
