@@ -61,7 +61,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .chip{font:600 11.5px/1 var(--f-sans);padding:6px 9px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .chip.read{background:transparent;border:1px solid var(--rule)}
 .chip.warn{color:var(--accent)}
-.x{width:32px;height:32px;border:0;background:none;color:var(--muted);border-radius:50%;font-size:20px;line-height:1}
+.x{width:32px;height:32px;border:0;background:none;color:var(--muted);border-radius:50%;font-size:20px;line-height:1;display:grid;place-items:center;text-decoration:none}
+.x:hover{color:var(--fg);background:var(--chip)}
+#srcLink{text-decoration:none}
 .note{font:400 13px/1.5 var(--f-sans);color:var(--muted);margin:0}
 .empty{padding:22px 0;color:var(--muted);font-size:14.5px;border-top:1px solid var(--rule)}
 
@@ -221,6 +223,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
       <div class="bar">
         <div class="av" id="av" aria-hidden="true"></div>
         <div class="who"><span id="src"></span><span class="tm" id="tm"></span></div>
+        <a class="ib" id="srcLink" href="#" target="_blank" rel="noopener" aria-label="Open original" hidden><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>
         <button class="ib aa" id="rdAa" aria-label="Reading settings">A<span>a</span></button>
         <button class="ib" id="close" aria-label="Back to queue">✕</button>
       </div>
@@ -362,7 +365,7 @@ function renderQ(){renderMode();
   else ul.innerHTML=Q.map(it=>`<li data-id="${it.id}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}${nx&&nx.id===it.id?' <span class="nx">· Next</span>':''}</span><span class="qt">${esc(it.title)}</span></button>
-    <div class="qright">${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div></li>`).join('');
+    <div class="qright">${it.url?`<a class="x lk" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>`:''}${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div></li>`).join('');
   $('#readNext').disabled=!nx;
   $('#clearRead').hidden=!Q.some(i=>i.status==='read');
 }
@@ -711,6 +714,7 @@ function renderCards(){
   p.innerHTML=c.length<=60?c.map(()=>'<i><b></b></i>').join(''):'<i><b></b></i>';
   p.classList.toggle('cont',c.length>60);
   $('#src').textContent=a.site||'Folio';
+  const sl=$('#srcLink');sl.hidden=!a.url;if(a.url)sl.href=a.url;
   $('#av').textContent=(a.site||'F').replace(/^www\./,'').charAt(0);
 }
 const T={raf:0,elapsed:0,dur:0,last:0,paused:false};
