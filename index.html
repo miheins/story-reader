@@ -45,7 +45,13 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .qhead{display:flex;justify-content:space-between;align-items:baseline}
 .link{background:none;border:0;padding:4px 0;color:var(--muted);font-size:13.5px;text-decoration:underline;text-underline-offset:3px}
 .queue{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
-.queue li{display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 12px;border-top:1px solid var(--rule)}
+.queue li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;border-top:1px solid var(--rule);background:var(--bg)}
+.grip{width:34px;height:48px;margin-left:-8px;border:0;background:none;color:var(--muted);cursor:grab;touch-action:none;display:grid;place-items:center;border-radius:8px}
+.grip::before{content:"";width:10px;height:16px;background:radial-gradient(circle,currentColor 1.5px,transparent 1.8px) 0 0/5px 5.4px}
+.grip:hover{color:var(--fg)}
+.queue li.dragging{position:relative;z-index:2;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);border-top-color:transparent;background:var(--sheet)}
+.queue li.dragging .grip{cursor:grabbing;color:var(--accent)}
+.queue.sorting li:not(.dragging){transition:none}
 .qopen{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:16px 0;min-width:0}
 .qopen:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
 .qdom{font:600 11px/1.2 var(--f-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:8px;align-items:center}
@@ -93,6 +99,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .cover .kick{color:inherit;opacity:.82}
 .ctitle{font-family:var(--rf);font-weight:480;line-height:1.04;letter-spacing:-.022em;text-wrap:balance;color:inherit;margin:0}
 :root[data-face="sans"] .ctitle{font-weight:650;letter-spacing:-.03em}
+.dek{font-family:var(--rf);font-size:calc(var(--rs) * 1.02);line-height:1.38;margin:0;opacity:.92;text-wrap:pretty}
 .cmeta{font:400 13.5px/1.55 var(--f-sans);font-variant-numeric:tabular-nums;margin:0;opacity:.78}
 .hint{font:500 12.5px/1.4 var(--f-sans);display:flex;align-items:center;gap:8px;margin:6px 0 0;opacity:.7}
 .hint i{display:inline-block;width:22px;height:1px;background:currentColor}
@@ -343,7 +350,7 @@ function chip(it){
   if(it.status==='paste')return'<span class="chip warn">Needs text</span>';
   return'<span class="chip">Unread</span>';
 }
-const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.a.'+it.id,null)));
+const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.b.'+it.id,null)));
 function renderMode(){
   const n=$('#modeNote');
   if(canFetch===false){n.className='banner';n.innerHTML='<span><b>Paste mode.</b> This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</span>';}
@@ -353,6 +360,7 @@ function renderQ(){renderMode();
   const ul=$('#queue');const nx=nextUnread(null);
   if(!Q.length){ul.innerHTML='<li class="empty" style="display:block">Nothing queued. Paste a link above.</li>';}
   else ul.innerHTML=Q.map(it=>`<li data-id="${it.id}">
+    <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}${nx&&nx.id===it.id?' <span class="nx">· Next</span>':''}</span><span class="qt">${esc(it.title)}</span></button>
     <div class="qright">${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div></li>`).join('');
   $('#readNext').disabled=!nx;
@@ -364,11 +372,35 @@ function nextUnread(after){
   return null;
 }
 $('#queue').onclick=e=>{
+  if(e.target.closest('[data-grip]'))return;
   const o=e.target.closest('[data-open]'),r=e.target.closest('[data-rm]');
   if(o)openItem(Q.find(q=>q.id===o.dataset.open));
   if(r){const i=Q.findIndex(q=>q.id===r.dataset.rm);const [it]=Q.splice(i,1);saveQ();renderQ();
-    toast('Removed',()=>{Q.splice(i,0,it);saveQ();renderQ()},()=>store.del('folio.a.'+it.id))}
+    toast('Removed',()=>{Q.splice(i,0,it);saveQ();renderQ()},()=>store.del('folio.b.'+it.id))}
 };
+/* reorder: drag the grip, or focus it and press the arrow keys */
+let drag=null;const ul=$('#queue');
+function commitOrder(focusId){
+  const order=[...ul.children].map(li=>li.dataset.id).filter(Boolean);
+  Q.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));saveQ();renderQ();
+  if(focusId)ul.querySelector(`[data-grip="${focusId}"]`)?.focus();
+}
+ul.addEventListener('pointerdown',e=>{const gp=e.target.closest('[data-grip]');if(!gp)return;e.preventDefault();
+  const li=gp.closest('li');drag={li,id:e.pointerId,y:e.clientY,from:[...ul.children].indexOf(li)};li.classList.add('dragging');ul.classList.add('sorting');
+  try{gp.setPointerCapture(e.pointerId)}catch(_){}});
+ul.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
+  let dy=e.clientY-drag.y;const li=drag.li,pv=li.previousElementSibling,nx=li.nextElementSibling;
+  if(nx&&dy>nx.offsetHeight/2){ul.insertBefore(nx,li);drag.y+=nx.offsetHeight;dy=e.clientY-drag.y}
+  else if(pv&&dy<-pv.offsetHeight/2){ul.insertBefore(li,pv);drag.y-=pv.offsetHeight;dy=e.clientY-drag.y}
+  li.style.transform=`translateY(${dy}px)`});
+const dropG=e=>{if(!drag||e.pointerId!==drag.id)return;drag.li.style.transform='';drag.li.classList.remove('dragging');ul.classList.remove('sorting');
+  const changed=[...ul.children].indexOf(drag.li)!==drag.from;drag=null;if(changed){commitOrder(null);toast('Queue reordered')}};
+ul.addEventListener('pointerup',dropG);ul.addEventListener('pointercancel',dropG);
+ul.addEventListener('keydown',e=>{const gp=e.target.closest('[data-grip]');if(!gp||!/^Arrow(Up|Down)$/.test(e.key))return;e.preventDefault();
+  const li=gp.closest('li');
+  if(e.key==='ArrowUp'&&li.previousElementSibling)ul.insertBefore(li,li.previousElementSibling);
+  else if(e.key==='ArrowDown'&&li.nextElementSibling)ul.insertBefore(li.nextElementSibling,li);
+  commitOrder(gp.dataset.grip)});
 function addLinks(){
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
   let n=0;for(const u of urls){if(!Q.some(q=>q.url===u)){Q.push(mkItem(u));n++}}
@@ -380,7 +412,7 @@ function addLinks(){
 $('#addBtn').onclick=addLinks;
 $('#readNext').onclick=()=>{if($('#links').value.trim())addLinks();const it=nextUnread(null);if(it)openItem(it)};
 $('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read');Q=Q.filter(q=>q.status!=='read');saveQ();renderQ();
-  toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.a.'+g.id)))};
+  toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.b.'+g.id)))};
 
 let toastTimer;
 function toast(msg,undo,commit){
@@ -404,7 +436,7 @@ function inlineMd(s){
 }
 function mdToBlocks(md){
   const out=[];let buf=[],kind='p';
-  const push=(t,raw)=>{const imgs=[];let m;IMG_RE.lastIndex=0;while((m=IMG_RE.exec(raw)))imgs.push({t:'img',src:m[2],cap:m[1]});
+  const push=(t,raw)=>{const imgs=[];let m;IMG_RE.lastIndex=0;while((m=IMG_RE.exec(raw)))imgs.push({t:'img',src:m[2],cap:'',alt:true});
     const{html,lc}=inlineMd(raw);const tl=strip(html).length;if(tl)out.push({t,html,lr:lc/Math.max(1,tl)});out.push(...imgs)};
   const flush=()=>{if(buf.length){push(kind,buf.join(' '));buf=[]}kind='p'};
   for(const L of md.replace(/\r/g,'').split('\n')){
@@ -470,7 +502,7 @@ function htmlToBlocks(html,opt={}){
         const pick=c.find(x=>(parseInt(x[1])||0)<=1600)||c[0];s=pick?pick[0]:''}}
     if(!s||/^data:/.test(s))s=im.getAttribute('src')||'';
     if(/^data:/.test(s))return'';return abs(s,opt.base)};
-  const pushImg=(im,cap)=>{const src=imgSrc(im);if(/^https?:/.test(src))out.push({t:'img',src,cap:(cap||im.alt||'').replace(/\s+/g,' ').trim()})};
+  const pushImg=(im,cap)=>{const src=imgSrc(im);if(/^https?:/.test(src))out.push({t:'img',src,cap:(cap||'').replace(/\s+/g,' ').trim(),alt:!cap})};
   const walk=el=>{for(const c of el.children){const tg=c.tagName;
     if(/^H[1-4]$/.test(tg))pushT('h',c);
     else if(tg==='P'){c.querySelectorAll('img').forEach(i=>pushImg(i));pushT('p',c)}
@@ -493,28 +525,63 @@ function textToBlocks(txt){
     const w=s.split(' ').length;return{t:(w<=12&&!/[.!?,;:”"’)]$/.test(s))?'h':'p',html:esc(s),lr:0}});
 }
 const norm=s=>strip(s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+/* Keep only the main reading text: find the run of real prose, drop everything around it,
+   then remove captions, credits, gallery controls, repeated pull quotes and labels inside it. */
+const END_RE=/^(related( articles| stories| posts| reading)?|more from|view more from|more stories|comments?|discussion about this post|share( this)?( post| article| story)?|ready for more\??|you (may|might) also like|read next|recommended( for you)?|most popular|about the author|about the writer|further info(rmation)?|further reading|hero header|tags?|sign up for|subscribe to|keep reading|to submit your work|newsletters?|explore more|latest( stories| articles)?|trending)\b/i;
+const CRUFT_RE=/(subscribe|sign ?up|sign in|log ?in|newsletter|share (this|on)|share article|cookie|advertisement|sponsored content|follow us|all rights reserved|privacy policy|terms of (use|service)|skip to|back to top|click here|upgrade to paid|leave a comment|restack|assistive technology|read more|listen to this|min read)/i;
+const CAP_RE=/^(above|top|below|bottom|left|right|opposite|main image|header image|hero image|all images?|images?|pictured|photo(graph)?s?|photography|illustrations?|courtesy|credit|via)\b|©|copyright|\(c\)\s?\d{4}|image credits?|photo credits?|photography by|illustrations? by|images? courtesy/i;
+const GALLERY_RE=/^(\d+\s*(of|\/)\s*\d+|prev(ious)?|next|left|right|prev\s*\/\s*next|close|expand|play|pause|zoom)$/i;
+const DATE_RE=/^([A-Z][a-z]{2,8}\.? \d{1,2},? \d{4}|\d{1,2} [A-Z][a-z]{2,8}\.? \d{4}|\d+ ?min(ute)?s? (read|listen)|\d{1,2}[./-]\d{1,2}[./-]\d{2,4})$/;
 function clean(blocks,title){
-  let b=blocks.filter(x=>x.t!=='img'||!/\.svg|^data:|gravatar|avatar|logo|icon|sprite|pixel|badge|emoji|1x1|spacer|tracking/i.test(x.src));
+  const info=x=>{const t=strip(x.html||'').trim();return{t,w:t?t.split(/\s+/).length:0}};
+  const prose=x=>{if(x.t!=='p'&&x.t!=='q')return false;const{t,w}=info(x);
+    return w>=18&&(x.lr||0)<.5&&/[.!?…"”’)\]:;]$/.test(t)&&!(w<40&&CAP_RE.test(t))&&!(w<30&&CRUFT_RE.test(t))};
+  let b=blocks.filter(x=>x.t!=='img'||!/\.svg|^data:|gravatar|avatar|logo|icon|sprite|pixel|badge|emoji|1x1|spacer|tracking|placeholder/i.test(x.src))
+    .map(x=>x.t==='img'?{...x,cap:x.alt?'':(x.cap||'').replace(/^image\s*\d+\s*:\s*/i,'').trim()}:x);
+  // 1. start after the headline when it's present
   const nt=norm(title||'');
-  if(nt){const i=b.findIndex((x,k)=>k<40&&x.html&&(norm(x.html)===nt||(nt.length>24&&norm(x.html).startsWith(nt.slice(0,30)))));if(i>=0)b=b.slice(i+1)}
-  const endRe=/^(related( articles| stories| posts| reading)?|more from|more stories|comments?|discussion about this post|share this( post| article| story)?|ready for more\??|you (may|might) also like|read next|recommended|most popular|about the author|tags?|sign up for|subscribe to|keep reading|further reading)\b/i;
-  const n=b.length;const cut=b.findIndex((x,i)=>i>n*.35&&x.html&&words(x.html)<8&&endRe.test(strip(x.html).trim()));
+  if(nt){const i=b.findIndex((x,k)=>k<120&&x.html&&(norm(x.html)===nt||(nt.length>24&&norm(x.html).startsWith(nt.slice(0,30)))));if(i>=0)b=b.slice(i+1)}
+  // 2. cut at the first end-of-article marker in the back two thirds
+  const n0=b.length;const cut=b.findIndex((x,i)=>i>n0*.3&&x.html&&info(x).w<9&&END_RE.test(info(x).t));
   if(cut>0)b=b.slice(0,cut);
-  const cruft=/(subscribe|sign ?up|sign in|log ?in|newsletter|share (this|on)|cookie|advertis|follow us|all rights reserved|©|copyright|privacy policy|terms of (use|service)|skip to|back to top|click here|upgrade to paid|leave a comment|restack)/i;
-  const dateRe=/^([A-Z][a-z]{2,8}\.? \d{1,2},? \d{4}|\d{1,2} [A-Z][a-z]{2,8}\.? \d{4}|\d+ ?min(ute)?s? read)$/;
-  b=b.filter(x=>{
-    if(x.t==='img'||x.t==='hr')return true;
-    const t=strip(x.html).trim(),w=words(x.html);
-    if((x.lr||0)>.6&&w<40)return false;
-    if(x.t!=='h'&&w<16&&cruft.test(t))return false;
-    if(dateRe.test(t))return false;
-    if(x.t!=='h'&&w<3&&!/[.!?”"]$/.test(t))return false;
-    if(x.t==='h'&&w>28)x.t='p';
-    return true});
-  const seen=new Set();b=b.filter(x=>x.t!=='img'||(!seen.has(x.src)&&seen.add(x.src)));
-  b=b.filter((x,i)=>!(x.t==='hr'&&(i===0||b[i-1].t==='hr')));
-  while(b.length&&(b.at(-1).t==='hr'||b.at(-1).t==='h'))b.pop();
-  return b;
+  // 3. the body runs from the first pair of prose paragraphs to the last prose paragraph
+  let first=b.findIndex((x,i)=>prose(x)&&b.slice(i+1,i+5).some(prose));
+  if(first<0)first=b.findIndex(prose);
+  let dek='';
+  if(first>0){
+    const pre=b.slice(0,first);
+    const d=pre.find(x=>x.t==='p'&&info(x).w>=8&&info(x).w<=55&&!CAP_RE.test(info(x).t)&&!CRUFT_RE.test(info(x).t)&&(x.lr||0)<.5);
+    if(d)dek=strip(d.html).trim();
+    // keep an image or heading that sits right before the body
+    while(first>0&&(b[first-1].t==='img'||(b[first-1].t==='h'&&info(b[first-1]).w>1)))first--;
+  }
+  let last=-1;b.forEach((x,i)=>{if(prose(x))last=i});
+  if(first>=0&&last>=first)b=b.slice(first,last+1);
+  // 4. inside the body
+  const longNorms=b.filter(x=>(x.t==='p'||x.t==='li')&&info(x).w>=25).map(x=>norm(x.html));
+  const out=[];let lastImg=null;
+  b.forEach((x,i)=>{
+    if(x.t==='img'){out.push(x);lastImg={x,at:out.length-1};return}
+    if(x.t==='hr'){out.push(x);return}
+    const{t,w}=info(x);
+    if(!w)return;
+    if(GALLERY_RE.test(t))return;
+    if(CAP_RE.test(t)&&w<70){if(lastImg&&out.length-lastImg.at<=3&&!lastImg.x.cap)lastImg.x.cap=t.replace(/^(above|top|below|left|right)\s*[:,–—-]?\s*/i,'');return}
+    if((x.lr||0)>.6&&w<40)return;
+    if(w<16&&CRUFT_RE.test(t))return;
+    if(DATE_RE.test(t))return;
+    if(x.t!=='h'&&w<4&&!/[.!?…"”’]$/.test(t))return;          // labels, names after pull quotes
+    if((x.t==='q'||x.t==='p')&&w>=5&&w<=60){const nn=norm(x.html);if(longNorms.some(L=>L!==nn&&L.includes(nn)))return} // repeated pull quotes
+    if(x.t==='h'){if(w>28){out.push({...x,t:'p'});return}
+      const nx=b.slice(i+1).find(y=>y.t!=='img');if(!nx||nx.t==='h'||info(nx).w<8)return}
+    out.push(x);
+  });
+  const seen=new Set();
+  let r=out.filter(x=>x.t!=='img'||(!seen.has(x.src)&&seen.add(x.src)));
+  r=r.filter((x,i)=>!(x.t==='hr'&&(i===0||r[i-1].t==='hr')));
+  while(r.length&&(r.at(-1).t==='hr'||r.at(-1).t==='h'))r.pop();
+  r.dek=dek.split(/\s+/).length<=55?dek:'';
+  return r;
 }
 function fmtDate(s){if(!s)return null;const d=new Date(s);return isNaN(d)?null:d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
 
@@ -527,9 +594,9 @@ async function fetchArticle(url){
     const title=((txt.match(/^Title:\s*(.+)$/m)||[])[1]||'').trim()||slugTitle(url);
     const date=fmtDate((txt.match(/^Published Time:\s*(.+)$/m)||[])[1]);
     const md=txt.split(/^Markdown Content:\s*$/m)[1]??txt;
-    const blocks=clean(mdToBlocks(md),title);
+    const blocks=clean(mdToBlocks(md),title);const dek=blocks.dek;
     if(words(blocks.map(b=>b.html||'').join(' '))<120)throw new Error('The page came back almost empty; it may be behind a sign-in or built with scripts.');
-    return{title,date,site:host(url),url,blocks};
+    return{title,date,site:host(url),url,blocks,dek};
   }finally{clearTimeout(tm)}
 }
 
@@ -624,7 +691,7 @@ function renderCards(){
     if(cd.k==='cover'){
       const mins=Math.max(1,Math.round(a.words/230));
       if(a.hero){el.classList.add('hasimg');el.insertAdjacentHTML('afterbegin',`<img class="bgimg" src="${esc(a.hero)}" alt="" referrerpolicy="no-referrer">`)}
-      body.innerHTML=`<p class="kick">${esc(a.site||'')}</p><h1 class="ctitle" style="font-size:calc(var(--rs) * ${titleSize(a.title)})">${esc(a.title)}</h1>
+      body.innerHTML=`<p class="kick">${esc(a.site||'')}</p><h1 class="ctitle" style="font-size:calc(var(--rs) * ${titleSize(a.title)})">${esc(a.title)}</h1>${a.dek?`<p class="dek">${esc(a.dek)}</p>`:''}
         <p class="cmeta">${[a.date,mins+' min read',(c.length-2)+' slides'].filter(Boolean).join(' · ')}</p>
         <p class="hint"><i></i>Tap to continue · hold to pause</p>`;
     }else if(cd.k==='img'){
@@ -702,12 +769,12 @@ function loading(on,title,sub){$('#loading').hidden=!on;if(on){$('#loadT').textC
 async function openItem(it){
   if(!it)return;
   closeSheets();stopTimer();
-  let art=it.id==='sample'?SAMPLE:store.get('folio.a.'+it.id,null);
+  let art=it.id==='sample'?SAMPLE:store.get('folio.b.'+it.id,null);
   if(!art&&canFetch===false){showReader(false);openPaste(it);return}
   showReader(true);
   if(!art){
     loading(true,it.title,'Fetching '+(it.site||'page'));
-    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.a.'+it.id,art);it.title=art.title;saveQ()}
+    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.b.'+it.id,art);it.title=art.title;saveQ()}
     catch(e){
       if(canFetch!==true)store.set('folio.canFetch',canFetch=false);
       loading(false);showReader(false);openPaste(it,e);return}
@@ -723,8 +790,8 @@ async function openItem(it){
 }
 async function prefetch(){
   if(canFetch!==true)return;const nx=nextUnread(R.item);
-  if(!nx||nx.id==='sample'||store.get('folio.a.'+nx.id,null))return;
-  try{const a=await fetchArticle(nx.url);store.set('folio.a.'+nx.id,a);nx.title=a.title;saveQ()}catch(e){}
+  if(!nx||nx.id==='sample'||store.get('folio.b.'+nx.id,null))return;
+  try{const a=await fetchArticle(nx.url);store.set('folio.b.'+nx.id,a);nx.title=a.title;saveQ()}catch(e){}
 }
 
 /* gestures: tap sides, swipe across, hold to pause, swipe down to close */
@@ -818,10 +885,10 @@ $('#pGo').onclick=()=>{
     blocks=r.blocks;meta=r.meta;if(untitled&&meta.title)title=meta.title}
   else blocks=(pastedHTML&&pastedText===$('#pText').value)?htmlToBlocks(pastedHTML,{base:it.url}):textToBlocks(raw);
   if(!title||title===slugTitle(it.url||'')){const h=blocks.find(b=>b.t==='h'||b.t==='p');if(h&&words(h.html)<=18){title=strip(h.html)}}
-  blocks=clean(blocks,title);
+  blocks=clean(blocks,title);const dek=blocks.dek;
   if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
-  const art={title:title||'Untitled',date:meta.date||null,site:meta.site||it.site||'Pasted',url:it.url,hero:meta.hero||null,blocks};
-  store.set('folio.a.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
+  const art={title:title||'Untitled',date:meta.date||null,site:meta.site||it.site||'Pasted',url:it.url,hero:meta.hero||null,blocks,dek};
+  store.set('folio.b.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
 };
 
 /* boot */
