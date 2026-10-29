@@ -197,6 +197,15 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .qpaste{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--accent);color:var(--bg);font:600 13px/1 var(--f-sans);white-space:nowrap}
 .banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:2px dashed var(--accent);background:var(--tint);border-radius:16px;padding:14px 16px;font-size:14.5px;line-height:1.45;color:var(--fg)}
 .banner b{font-weight:650}
+.listsw{display:flex;align-items:center;gap:10px;position:relative;min-width:0}
+.listsw select{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:var(--fg);font:500 21px/1.2 var(--f-serif);padding:2px 22px 2px 0;max-width:62vw;text-overflow:ellipsis;cursor:pointer}
+.listsw::after{content:"";position:absolute;right:4px;top:50%;width:6px;height:6px;border-right:1.6px solid var(--fg);border-bottom:1.6px solid var(--fg);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.qhead{align-items:center}
+.qcat{gap:6px;flex-wrap:wrap}
+.catsel.mv i{display:none}
+.catsel.mv select{padding-left:12px;color:var(--muted)}
+.cats.lists li{grid-template-columns:1fr auto}
+.cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-right:6px}
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:-10px}
 .filters:empty{display:none}
 .fchip{border:1px solid var(--rule);background:transparent;border-radius:999px;height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:600 13px/1 var(--f-sans);color:var(--fg)}
@@ -249,6 +258,16 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .badge{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:var(--bg);font:700 10px/16px var(--f-sans);text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 22px);z-index:60;background:var(--fg);color:var(--bg);border-radius:999px;padding:10px 8px 10px 18px;font-size:14px;display:flex;gap:10px;align-items:center;max-width:calc(100% - 40px);box-sizing:border-box}
 .toast button{border:0;background:none;color:var(--bg);font-weight:700;padding:4px 10px}
+/* Desktop: the overview sits in the same centred phone frame as the reader (matches the Paper design) */
+@media (min-width:720px){
+  body{background:var(--stagebg)}
+  .lib{position:fixed;top:3vh;bottom:3vh;left:50%;transform:translateX(-50%);width:min(100%,52vh);max-width:none;margin:0;box-sizing:border-box;
+    background:var(--bg);border-radius:16px;box-shadow:0 24px 60px rgba(23,24,27,.14);overflow-y:auto;overscroll-behavior:contain;
+    padding-block:24px 60px;padding-left:18px;padding-right:18px}
+  .mark{font-size:calc(min(100vw,52vh) * .092)}
+  .sheet{left:50%;right:auto;bottom:3vh;width:min(100%,52vh);transform:translateX(-50%);border-radius:20px;max-height:80vh}
+  .scrim{background:var(--scrim)}
+}
 @media (prefers-reduced-motion: reduce){.track.anim{transition:none}.dots::after{animation:none;content:"…"}}
 </style>
 
@@ -280,7 +299,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   </section>
 
   <section class="add">
-    <div class="qhead"><span class="lbl">Queue</span><button class="link" id="clearRead">Clear finished</button></div>
+    <div class="qhead"><label class="listsw" for="listSel"><span class="lbl">List</span><select id="listSel" aria-label="Reading list"></select></label><button class="link" id="clearRead">Clear finished</button></div>
     <div class="filters" id="filters" role="group" aria-label="Highlight a category"></div>
     <ul class="queue" id="queue"></ul>
     <p class="note" id="modeNote">Links load through a reader service. Where a page can't be reached, Article Folio asks you to paste its text.</p>
@@ -357,6 +376,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 <div class="sheet" id="menuSheet" hidden role="dialog" aria-label="Menu">
   <div class="in">
     <div class="phead"><h2>Menu</h2><button class="x" id="mX" aria-label="Close">×</button></div>
+    <div class="set"><span class="lbl">Reading lists</span>
+      <p>Each article lives in one list. Switch lists above the queue; move an article from the list menu on its row.</p>
+      <ul class="cats lists" id="listList"></ul>
+      <form class="catadd" id="listForm"><input type="text" id="listName" placeholder="New list, e.g. Weekend" maxlength="40" autocomplete="off"><button class="btn" type="submit">Add</button></form>
+    </div>
     <div class="set"><span class="lbl">Categories</span>
       <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
       <ul class="cats" id="catList"></ul>
@@ -447,7 +471,14 @@ const EXAMPLES=['https://www.itsnicethat.com/features/ffern-film-spotlight-23032
 let Q=store.get('folio.queue',null);
 if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(mkItem)];}
 {const sm=Q.find(q=>q.id==='sample');if(sm)sm.title=SAMPLE.title}
-function mkItem(u){return{id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0}}
+function mkItem(u){return{id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0,list:typeof AL!=='undefined'?AL:'main'}}
+/* reading lists: every article lives in one list; the overview shows the active one */
+var LS=store.get('folio.lists',null);if(!Array.isArray(LS)||!LS.length)LS=[{id:'main',name:'Reading list'}];
+var AL=store.get('folio.alist',LS[0].id);if(!LS.some(l=>l.id===AL))AL=LS[0].id;
+Q.forEach(q=>{if(!q.list||!LS.some(l=>l.id===q.list))q.list=LS[0].id});
+const saveL=()=>{store.set('folio.lists',LS);store.set('folio.alist',AL)};
+const inList=it=>it.list===AL;
+const listName=id=>(LS.find(l=>l.id===id)||{}).name||'';
 const saveQ=()=>store.set('folio.queue',Q);
 let canFetch=store.get('folio.canFetch',null);
 
@@ -466,19 +497,20 @@ function renderMode(){
 }
 function renderQ(){renderMode();
   const ul=$('#queue');const nx=nextUnread(null);
-  if(!Q.length){ul.innerHTML='<li class="empty" style="display:block">Nothing queued. Paste a link above.</li>';}
-  else ul.innerHTML=Q.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
+  const VQ=Q.filter(inList);renderListSel();
+  if(!VQ.length){ul.innerHTML=`<li class="empty" style="display:block">Nothing in ${esc(listName(AL))} yet. Paste a link above and it lands here.</li>`;}
+  else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}${nx&&nx.id===it.id?' <span class="nx">· Next</span>':''}</span><span class="qt">${esc(it.title)}</span></button>
-    <div class="qright">${it.url?`<a class="x lk" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>`:''}${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div>${catSelect(it)}</li>`}).join('');
+    <div class="qright">${it.url?`<a class="x lk" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5H3.5v9h9v-3"/><path d="M9.5 2.5h4v4"/><path d="M13.5 2.5 7.5 8.5"/></svg></a>`:''}${needsText(it)?`<button class="qpaste" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="x" data-rm="${it.id}" aria-label="Remove">×</button></div>${catSelect(it,moveSelect(it))}</li>`}).join('');
   $('#readNext').disabled=!nx;
   const fc=F&&C.find(c=>c.id===F);$('#readNext').textContent=fc?'Read next in '+fc.name:'Read next';
   renderFilters();
-  $('#clearRead').hidden=!Q.some(i=>i.status==='read');
+  $('#clearRead').hidden=!VQ.some(i=>i.status==='read');
 }
 function nextUnread(after){
   let i=after?Q.findIndex(q=>q.id===after.id)+1:0;
-  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id)&&(!F||it.cat===F))return it}
+  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id)&&(!F||it.cat===F)&&it.list===AL)return it}
   return null;
 }
 $('#queue').onclick=e=>{
@@ -491,8 +523,8 @@ $('#queue').onclick=e=>{
 /* reorder: drag the grip, or focus it and press the arrow keys */
 let drag=null;const ul=$('#queue');
 function commitOrder(focusId){
-  const order=[...ul.children].map(li=>li.dataset.id).filter(Boolean);
-  Q.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));saveQ();renderQ();
+  const order=[...ul.children].map(li=>li.dataset.id).filter(Boolean).map(id=>Q.find(q=>q.id===id));
+  let k=0;Q=Q.map(q=>inList(q)?order[k++]:q);saveQ();renderQ();
   if(focusId)ul.querySelector(`[data-grip="${focusId}"]`)?.focus();
 }
 ul.addEventListener('pointerdown',e=>{const gp=e.target.closest('[data-grip]');if(!gp)return;e.preventDefault();
@@ -513,15 +545,15 @@ ul.addEventListener('keydown',e=>{const gp=e.target.closest('[data-grip]');if(!g
   commitOrder(gp.dataset.grip)});
 function addLinks(){
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
-  let n=0;for(const u of urls){if(!Q.some(q=>q.url===u)){Q.push(mkItem(u));n++}}
+  let n=0,elsewhere=null;for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){Q.push(mkItem(u));n++}else if(ex.list!==AL)elsewhere=ex.list}
   $('#links').value='';saveQ();renderQ();
-  if(urls.length)toast(n?`Added ${n} link${n>1?'s':''}`:'Already in the queue');
+  if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:elsewhere?`Already in ${listName(elsewhere)}`:'Already in this list');
   else toast('No links found in that text');
   return n;
 }
 $('#addBtn').onclick=addLinks;
 $('#readNext').onclick=()=>{if($('#links').value.trim())addLinks();const it=nextUnread(null);if(it)openItem(it)};
-$('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read');Q=Q.filter(q=>q.status!=='read');saveQ();renderQ();
+$('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q));Q=Q.filter(q=>!gone.includes(q));saveQ();renderQ();
   toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
 
 let toastTimer;
@@ -542,28 +574,28 @@ function renderFilters(){
   const box=$('#filters');if(F&&!C.some(c=>c.id===F))F=null;
   if(!C.length){box.innerHTML='';$('#queue').classList.remove('filtering');return}
   box.innerHTML=`<button class="fchip" data-f="" aria-pressed="${!F}">All</button>`+
-    C.map(c=>`<button class="fchip" data-f="${c.id}" aria-pressed="${F===c.id}" style="--cc:${ccv(c)}"><i></i>${esc(c.name)}<span>${Q.filter(q=>q.cat===c.id).length}</span></button>`).join('')+
+    C.map(c=>`<button class="fchip" data-f="${c.id}" aria-pressed="${F===c.id}" style="--cc:${ccv(c)}"><i></i>${esc(c.name)}<span>${Q.filter(q=>q.cat===c.id&&inList(q)).length}</span></button>`).join('')+
     `<button class="fchip manage" data-f="__manage">Edit categories</button>`;
   $('#queue').classList.toggle('filtering',!!F);
 }
 $('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
   if(b.dataset.f==='__manage'){openMenu();return}
   F=b.dataset.f||null;saveC();renderQ()};
-function catSelect(it){
+function catSelect(it,extra=''){
   const c=catOf(it);
   return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c):''}"><i></i>
     <select data-cat="${it.id}" class="${c?'':'none'}" aria-label="Category for ${esc(it.title)}">
       <option value="">${C.length?'No category':'Add a category…'}</option>
       ${C.map(k=>`<option value="${k.id}"${it.cat===k.id?' selected':''}>${esc(k.name)}</option>`).join('')}
       ${C.length?'<option value="__manage">Edit categories…</option>':''}
-    </select></label></div>`;
+    </select></label>${extra}</div>`;
 }
 $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]');if(!sel)return;
   const it=Q.find(q=>q.id===sel.dataset.cat);if(!it)return;
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
   it.cat=sel.value||null;saveQ();renderQ()});
 $('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
-function openMenu(){renderCats();renderInstall();openSheet('#menuSheet')}
+function openMenu(){renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
 /* home-screen install */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
@@ -599,6 +631,43 @@ $('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rena
   const n=r.value.trim();if(n){c.name=n;saveC();renderQ()}else r.value=c.name});
 $('#menuBtn').onclick=openMenu;$('#mX').onclick=closeSheets;
 $('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
+
+/* ---------- Reading lists UI ---------- */
+function renderListSel(){
+  const sel=$('#listSel');if(!sel)return;
+  sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id&&q.status!=='read').length}</option>`).join('')+
+    '<option value="__new">New list…</option><option value="__edit">Edit lists…</option>';
+}
+function switchList(id){if(!LS.some(l=>l.id===id))return;AL=id;F=null;saveL();saveC();renderQ();toast('Switched to '+listName(id))}
+$('#listSel').addEventListener('change',e=>{const v=e.target.value;
+  if(v==='__new'||v==='__edit'){renderListSel();openMenu();if(v==='__new')setTimeout(()=>{try{$('#listName').focus()}catch(_){}},80);return}
+  switchList(v)});
+function moveSelect(it){
+  if(LS.length<2)return'';
+  return `<label class="catsel mv"><select data-move="${it.id}" aria-label="Move ${esc(it.title)} to another list">
+    <option value="" selected>Move to…</option>${LS.filter(l=>l.id!==it.list).map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label>`;
+}
+$('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-move]');if(!sel||!sel.value)return;
+  const it=Q.find(q=>q.id===sel.dataset.move);if(!it)return;const from=it.list;it.list=sel.value;saveQ();renderQ();
+  toast(`Moved to ${listName(it.list)}`,()=>{it.list=from;saveQ();renderQ()})});
+function renderLists(){
+  $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name">
+    <div style="display:flex;align-items:center;gap:2px">${l.id===AL?'<span class="cur">Open</span>':`<button class="link" data-lopen="${l.id}" style="margin-right:6px">Open</button>`}
+    <span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1?`<button class="x" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">×</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
+}
+$('#listForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#listName').value.trim();if(!n)return;
+  if(LS.some(l=>l.name.toLowerCase()===n.toLowerCase())){toast('That list already exists');return}
+  const l={id:'l'+Date.now().toString(36),name:n};LS.push(l);$('#listName').value='';saveL();renderLists();renderQ();
+  toast(`Created ${n}`,null)});
+$('#listList').addEventListener('click',e=>{
+  const o=e.target.closest('[data-lopen]'),d=e.target.closest('[data-ldel]');
+  if(o){switchList(o.dataset.lopen);renderLists();closeSheets()}
+  if(d){const i=LS.findIndex(l=>l.id===d.dataset.ldel);const [l]=LS.splice(i,1);const to=LS[Math.max(0,i-1)].id;const had=Q.filter(q=>q.list===l.id);
+    had.forEach(q=>q.list=to);if(AL===l.id)AL=to;saveL();saveQ();renderLists();renderQ();
+    toast(`Deleted ${l.name}; ${had.length} article${had.length===1?'':'s'} moved to ${listName(to)}`,()=>{LS.splice(i,0,l);had.forEach(q=>q.list=l.id);saveL();saveQ();renderLists();renderQ()})}
+});
+$('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lrename]');if(!r)return;const l=LS.find(x=>x.id===r.dataset.lrename);
+  const n=r.value.trim();if(n){l.name=n;saveL();renderQ()}else r.value=l.name});
 
 /* ---------- Notes ---------- */
 let N=store.get('folio.notes',[]);
