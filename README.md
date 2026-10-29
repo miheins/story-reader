@@ -1,4 +1,4 @@
-# Folio
+# The Reading Folio
 
 Turns a blog post or article into a swipeable story for your phone: one paragraph per slide, with typography you can adjust.
 
