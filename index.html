@@ -635,7 +635,7 @@ $('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
 /* ---------- Reading lists UI ---------- */
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
-  sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id&&q.status!=='read').length}</option>`).join('')+
+  sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
     '<option value="__new">New list…</option><option value="__edit">Edit lists…</option>';
 }
 function switchList(id){if(!LS.some(l=>l.id===id))return;AL=id;F=null;saveL();saveC();renderQ();toast('Switched to '+listName(id))}
