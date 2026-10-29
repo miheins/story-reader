@@ -12,6 +12,8 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 - When an article ends, the next one in the queue is offered on the last slide.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.
 - **Categories:** create them in the menu (☰), set one per article from the dropdown on its row, and tap a category above the queue to highlight its articles. **Read next** then stays within that category.
+- **Links:** every article has its own address (`#read-<id>`), so Back returns to the overview and reloading keeps you in the article.
+- **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
 
 ## How links load
 
@@ -22,3 +24,4 @@ Your queue, reading positions, notes, categories and settings are kept in your b
 ## Files
 
 - `index.html`: the whole app in one file, with no build step.
+- `manifest.webmanifest`, `icons/`: home-screen name and icons, generated from `icons/monogram-source.jpg`.
