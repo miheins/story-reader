@@ -812,8 +812,8 @@ $('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lre
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
   return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
 const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
-/* Lists online is switched off for now. Set to true to bring back GitHub storage and passphrase-protected editing. */
-const ONLINE=false;
+/* ONLINE: GitHub storage and passphrase-protected editing. SHOW_LOCK: the Lock button in the menu (hidden for now; set to true to bring it back). */
+const ONLINE=true,SHOW_LOCK=false;
 const DATA_F='data/folio.json',OWNER_F='data/owner.json',OWNER_K='folio.owner';
 var REMOTE=false,SHA=null,GH_OK=null,SYNCED=false,BOOTING=true,PENDING_ROUTE=false,LAST_SYNC=0,SYNC_STATE='',SYNC_AT=null;
 var OWNER_FILE=null,OWNER_DOC=null,OWN=false,WQ=[],wTimer=null,writing=null;
@@ -939,7 +939,7 @@ function renderOwner(){const box=$('#ownerBox');if(!box||(box.contains(document.
   const where=`<b>${esc(GH.owner)}/${esc(GH.repo)}</b>`;
   if(GH_OK===false){box.innerHTML=`<p>Your lists can live in your GitHub repository, so every device sees them and each list has a lasting address. That works on the hosted site, <a href="https://${esc(GH.owner)}.github.io/${esc(GH.repo)}/" target="_blank" rel="noopener">${esc(GH.owner)}.github.io/${esc(GH.repo)}</a>.</p>`;return}
   if(OWN){const o=ownerInfo()||{};box.innerHTML=`<p><b>Unlocked</b> on this device ${o.exp?'until '+fmtDay(o.exp):'for this session'}. Changes you make are saved to ${where}.</p>
-    <p class="osync">${syncText()}</p><div class="row"><button class="btn" id="oLock">Lock</button><button class="btn" id="oSync">Refresh</button><button class="link" id="oChange">Change passphrase or token</button></div><div id="oForm"></div>`;return}
+    <p class="osync">${syncText()}</p><div class="row">${SHOW_LOCK?'<button class="btn" id="oLock">Lock</button>':''}<button class="btn" id="oSync">Refresh</button><button class="link" id="oChange">Change passphrase or token</button></div><div id="oForm"></div>`;return}
   if(OWNER_FILE===null){box.innerHTML='<p>Checking GitHub…</p>';checkOwnerFile();return}
   if(OWNER_FILE){box.innerHTML=`<p>${REMOTE?'These lists come from '+where+' and update on every device. ':''}Unlock to add and edit.</p><p class="osync">${syncText()}</p>${unlockForm()}<div id="oForm"></div>`;return}
   box.innerHTML=`<p>Keep your lists in ${where} so every device sees them, with one lasting address per list. Anyone with a link can read; only you can add or edit, with a passphrase.</p>
@@ -976,7 +976,7 @@ async function doSetup(change){
     if(p&&p.ok){const j=await p.json();store.set('folio.stashDone',true);applyRemote(JSON.parse(serialize(doc)),j.content.sha);setSync('saved');toast(`Your ${LS.length===1?'list is':LS.length+' lists are'} online`)}
     else toast('Owner access is set up, but publishing failed. Tap Refresh to try again.')}
   else{await afterUnlock();toast(change?'Passphrase updated':'Owner access set up')}
-  renderOwner();renderLists();renderCats();renderQ()}
+  try{document.activeElement.blur()}catch(e){}renderOwner();renderLists();renderCats();renderQ()}
 async function doUnlock(){
   const go=$('#oGoU'),pass=$('#oPassU').value,rem=$('#oRemU').checked;
   const fail=m=>{const el=$('#oErrU');el.textContent=m;el.hidden=false;go.disabled=false;go.textContent='Unlock';return false};
@@ -987,7 +987,7 @@ async function doUnlock(){
   let tok;try{tok=await openToken(OWNER_DOC,pass)}catch(e){return fail('That passphrase doesn’t match.')}
   let t=null;try{t=await fetch(GH_API,{headers:ghHeaders(tok),cache:'no-store'})}catch(e){}
   if(t&&t.status===401)return fail('The saved token has expired or been revoked. Tap “Lost the passphrase?” to set up a new one.');
-  setOwner(tok,rem);await afterUnlock();renderOwner();renderLists();renderCats();renderQ();toast('Unlocked. You can add and edit.')}
+  setOwner(tok,rem);await afterUnlock();try{document.activeElement.blur()}catch(e){}renderOwner();renderLists();renderCats();renderQ();toast('Unlocked. You can add and edit.')}
 async function afterUnlock(){roClass();const st=store.get('folio.stash',null);store.del('folio.stash');
   if(st&&st.articles&&st.articles.length){queueWrite(`Add ${st.articles.length} article${st.articles.length>1?'s':''} from another device`,d=>mergeInto(d,st));toast(`Adding ${st.articles.length} article${st.articles.length>1?'s':''} saved on this device`)}
   else await syncDown()}

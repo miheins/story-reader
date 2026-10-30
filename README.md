@@ -17,9 +17,15 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 - **Links:** every article has its own address (`#read-<id>`), so Back returns to the list you came from and reloading keeps you in the article.
 - **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
 
-## Lists online (switched off for now)
+## Lists online
 
-Built but switched off: storing lists in this repository (`data/folio.json`) so every device sees them, with editing unlocked by a passphrase that decrypts a GitHub token (`data/owner.json`, PBKDF2-SHA256 + AES-256-GCM). To turn it back on, set `const ONLINE=false;` to `true` in `index.html`; the menu then shows *Your lists online* → **Set up**.
+Your lists can live in this repository (`data/folio.json`), so every device sees the same lists and each list's address keeps working anywhere. Anyone with a link can read; only the owner can add or edit.
+
+- **Set up once:** menu (☰) → *Your lists online* → **Set up**. Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) limited to this repository with **Contents: Read and write**, paste it, and choose a passphrase (**Suggest** gives five random words). Your current lists are published.
+- **Other devices:** menu → type the passphrase → **Unlock**. Anything that device had saved locally is added to the online lists. A device stays unlocked for 30 days (or the session, if you untick *Remember*).
+- **How it's protected:** the token is stored in `data/owner.json` encrypted with your passphrase (PBKDF2-SHA256, 600,000 rounds, AES-256-GCM) and is decrypted only in your browser. Deleting the token on GitHub disables it everywhere.
+- Reading progress, notes and settings stay on each device.
+- Switches at the top of the online code in `index.html`: `ONLINE` turns the whole feature on or off; `SHOW_LOCK` shows a **Lock** button in the menu (hidden for now).
 
 ## How links load
 
