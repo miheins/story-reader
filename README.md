@@ -7,14 +7,14 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 ## Using it
 
 - Paste one or more links on the queue screen and tap **Read next**. Drag the dotted handle to reorder the queue; the top unread article plays next.
-- **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). Switch to the list with the toggle next to the list name; reordering, moving, categorising and removing are done in the list.
+- **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). Switch to the list with the toggle above the queue; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
 - **Aa** sets the typeface (Newsreader or Hanken Grotesk), size, line spacing, theme, and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.
-- **Reading lists:** keep separate queues (e.g. Work, Weekend). Switch with the list name above the queue; move an article with **Move to…** on its row; add, rename or delete lists in the menu (☰). New links go into the list you have open, and **Read next** stays inside it.
+- **Reading lists:** keep separate queues (e.g. Work, Weekend). Each list has its own address (`#list-weekend`), so you can bookmark it or add it to your home screen. Switch from the menu (☰ → Reading lists → Open, or Copy link), or on desktop press **L** for the list switcher. Move an article with **Move to…** on its row. New links go into the list you have open, and **Read next** stays inside it.
 - **Categories:** create them in the menu (☰), set one per article from the dropdown on its row, and tap a category above the queue to highlight its articles. **Read next** then stays within that category.
-- **Links:** every article has its own address (`#read-<id>`), so Back returns to the overview and reloading keeps you in the article.
+- **Links:** every article has its own address (`#read-<id>`), so Back returns to the list you came from and reloading keeps you in the article.
 - **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
 
 ## How links load
