@@ -432,7 +432,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 <div class="sheet" id="menuSheet" hidden role="dialog" aria-label="Menu">
   <div class="in">
     <div class="phead"><h2>Menu</h2><button class="x" id="mX" aria-label="Close">×</button></div>
-    <div class="set" id="ownerSet"><span class="lbl">Your lists online</span><div id="ownerBox" class="obox"></div></div>
+    <div class="set" id="ownerSet" hidden><span class="lbl">Your lists online</span><div id="ownerBox" class="obox"></div></div>
     <div class="set"><span class="lbl">Reading lists</span>
       <p>Each article lives in one list. Switch lists above the queue; move an article from the list menu on its row.</p>
       <ul class="cats lists" id="listList"></ul>
@@ -665,7 +665,7 @@ $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
   const v=sel.value||null,id=it.id;edit('Set category',d=>{const a=d.articles.find(x=>x.id===id);if(a)a.cat=v});renderQ()});
 $('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
-function openMenu(){renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
+function openMenu(){$('#ownerSet').hidden=!ONLINE;if(ONLINE)renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
 /* home-screen install */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
@@ -812,6 +812,8 @@ $('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lre
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
   return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
 const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
+/* Lists online is switched off for now. Set to true to bring back GitHub storage and passphrase-protected editing. */
+const ONLINE=false;
 const DATA_F='data/folio.json',OWNER_F='data/owner.json',OWNER_K='folio.owner';
 var REMOTE=false,SHA=null,GH_OK=null,SYNCED=false,BOOTING=true,PENDING_ROUTE=false,LAST_SYNC=0,SYNC_STATE='',SYNC_AT=null;
 var OWNER_FILE=null,OWNER_DOC=null,OWN=false,WQ=[],wTimer=null,writing=null;
@@ -825,7 +827,7 @@ const toB64=str=>{const b=new TextEncoder().encode(str);let s='';for(let i=0;i<b
 const fromB64=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g,'')),c=>c.charCodeAt(0)));
 function ownerInfo(){for(const k of ['sessionStorage','localStorage']){try{const o=JSON.parse(window[k].getItem(OWNER_K)||'null');if(o&&o.tok&&(!o.exp||o.exp>Date.now()))return o}catch(e){}}return null}
 const ownerToken=()=>(ownerInfo()||{}).tok||null;
-OWN=!!ownerToken();
+OWN=ONLINE&&!!ownerToken();
 function setOwner(tok,remember){lockStore();try{(remember?localStorage:sessionStorage).setItem(OWNER_K,JSON.stringify({tok,exp:remember?Date.now()+30*864e5:0}))}catch(e){}OWN=true;roClass()}
 function lockStore(){try{localStorage.removeItem(OWNER_K)}catch(e){}try{sessionStorage.removeItem(OWNER_K)}catch(e){}}
 function lockOwner(){lockStore();OWN=false;roClass();renderQ();renderOwner()}
@@ -867,6 +869,7 @@ function mergeInto(d,src){(src.lists||[]).forEach(l=>{if(!d.lists.some(x=>x.id==
   (src.categories||[]).forEach(c=>{if(!d.categories.some(x=>x.id===c.id))d.categories.push({...c})});
   (src.articles||[]).forEach(a=>{if(a.url&&!d.articles.some(x=>x.id===a.id))d.articles.push({...a})})}
 async function syncDown(){
+  if(!ONLINE){SYNCED=true;if(PENDING_ROUTE){PENDING_ROUTE=false;route()}return}
   if(WQ.length||writing)return;
   const r=await ghGet(DATA_F);LAST_SYNC=Date.now();
   if(r.ok&&r.found){try{const doc=JSON.parse(r.text);if(!WQ.length&&!writing)applyRemote(doc,r.sha||SHA);setSync(r.stale?'stale':'synced')}catch(e){setSync('error')}}
@@ -892,8 +895,8 @@ async function flushWrites(){
     WQ.unshift(...batch);setSync('error');toast('Couldn’t save to GitHub. Kept on this device; it retries when you’re back online.');return false})();
   await writing;writing=null;if(WQ.length&&SYNC_STATE!=='error')flushWrites();
 }
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;if(WQ.length)flushWrites();else if(Date.now()-LAST_SYNC>(OWN?10e3:30e3))syncDown()});
-window.addEventListener('online',()=>{if(WQ.length){setSync('saving');flushWrites()}else syncDown()});
+document.addEventListener('visibilitychange',()=>{if(!ONLINE||document.visibilityState!=='visible')return;if(WQ.length)flushWrites();else if(Date.now()-LAST_SYNC>(OWN?10e3:30e3))syncDown()});
+window.addEventListener('online',()=>{if(!ONLINE)return;if(WQ.length){setSync('saving');flushWrites()}else syncDown()});
 const hm=d=>d?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
 function setSync(st){SYNC_STATE=st;if(st==='synced'||st==='saved')SYNC_AT=new Date();
   const el=$('#ownerBox .osync');if(el)el.textContent=syncText()}
@@ -1627,7 +1630,7 @@ const fontsReady=(document.fonts?Promise.race([
   Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px "Hanken Grotesk"','600 20px "Hanken Grotesk"'].map(f=>document.fonts.load(f))),
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
 applySettings();
-{const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
+if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
 if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length)));if(l){AL=l.id;saveL()}}
 renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
