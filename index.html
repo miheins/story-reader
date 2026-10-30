@@ -1434,7 +1434,7 @@ function relayout(){
   go(atEnd?R.cards.length-1:idxFor(pos));
 }
 let wake=null;
-/* ---------- Routes: #read-<id> for an article, #notes for the notes tab, nothing for the queue ---------- */
+/* ---------- Routes: #list-<slug> for a list, #read-<id> for an article, #notes for the notes tab ---------- */
 const READ='#read-';
 const isReadHash=()=>location.hash.startsWith(READ);
 const baseHash=()=>tab==='notes'?'#notes':listHash();

@@ -4,6 +4,8 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 
 **Live:** https://miheins.github.io/story-reader/
 
+Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where things are, and what's open.
+
 ## Using it
 
 - Paste one or more links on the queue screen and tap **Read next**. Drag the dotted handle to reorder the queue; the top unread article plays next.
@@ -37,3 +39,5 @@ Your queue, reading positions, notes, categories and settings are kept in your b
 
 - `index.html`: the whole app in one file, with no build step.
 - `manifest.webmanifest`, `icons/`: home-screen name and icons, generated from `icons/monogram-source.jpg`.
+- `tests/`: simulated-browser checks (`cd tests && npm install && npm test`).
+- `HANDOVER.md`: how it's built, data, decisions and open items.
