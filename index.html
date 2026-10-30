@@ -22,17 +22,17 @@
 /* Layout: a quiet queue page; reading happens in a full-screen deck of measured cards, one calm page of type per screen. */
 :root{
   --bg:#FAFAF7; --fg:#17181B; --muted:#6A6D73; --rule:#DCDCD5; --accent:#2747C4;
-  --sheet:#FFFFFF; --chip:#EDEDE7; --c1:#2747C4; --c2:#C2410C; --c3:#15803D; --c4:#9333EA; --c5:#B45309; --c6:#0E7490; --tint:#EEF1FC; --stagebg:#DCDCD5; --cover-bg:#2747C4; --cover-fg:#F4F5FF; --scrim:rgba(20,21,24,.38); --ink:#26272B;
+  --sheet:#FFFFFF; --chip:#EDEDE7; --oncat:#FFFFFF; --c1:#2747C4; --c2:#C2410C; --c3:#15803D; --c4:#9333EA; --c5:#B45309; --c6:#0E7490; --tint:#EEF1FC; --stagebg:#DCDCD5; --cover-bg:#2747C4; --cover-fg:#F4F5FF; --scrim:rgba(20,21,24,.38); --ink:#26272B;
   --f-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
   --f-sans:"Hanken Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --rf:var(--f-serif); --rs:19px; --rl:1.55;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111214; --fg:#E8E6E1; --muted:#93969C; --rule:#2C2E33; --accent:#98AAFF;
-  --sheet:#1A1B1F; --chip:#24262B; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}}
+  --sheet:#1A1B1F; --chip:#24262B; --oncat:#111214; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111214; --fg:#E8E6E1; --muted:#93969C; --rule:#2C2E33; --accent:#98AAFF;
-  --sheet:#1A1B1F; --chip:#24262B; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}
+  --sheet:#1A1B1F; --chip:#24262B; --oncat:#111214; --c1:#98AAFF; --c2:#FB923C; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE; --tint:#1C2135; --stagebg:#000000; --cover-bg:#24348A; --cover-fg:#EEF0FF; --scrim:rgba(0,0,0,.55); --ink:#DCDAD4; color-scheme:dark}
 :root[data-face="sans"]{--rf:var(--f-sans)}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
@@ -206,6 +206,44 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-right:6px}
+.vtog{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--chip);flex-shrink:0}
+.vtog button{width:34px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--muted);display:grid;place-items:center}
+.vtog button[aria-pressed="true"]{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.stackv{display:flex;flex-direction:column;gap:14px}
+.deck{position:relative;height:clamp(300px,46vh,430px);margin-top:28px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.card2{position:absolute;inset:0;border-radius:22px;overflow:hidden;box-sizing:border-box;padding:20px 22px 22px;display:flex;flex-direction:column;gap:14px;
+  background:var(--cover-bg);color:var(--cover-fg);cursor:pointer;outline:none;
+  transform:translateY(calc(var(--k) * -14px)) scale(calc(1 - var(--k) * .05));transform-origin:50% 0;
+  transition:transform .34s cubic-bezier(.2,.7,.2,1),opacity .34s;box-shadow:0 14px 34px rgba(23,24,27,.14),0 1px 2px rgba(23,24,27,.08)}
+.card2.cat{background:var(--cc);color:var(--oncat)}
+.card2.k1,.card2.k2{pointer-events:none}
+.card2.k1 > *,.card2.k2 > *{opacity:0}
+.card2.k2{opacity:.85}
+.card2.drag{transition:none}
+.card2:focus-visible{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
+.card2 > *{position:relative;z-index:1;transition:opacity .25s}
+.card2 .cbg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0}
+.card2.img{background:#0c0c0e;color:#fff}
+.card2.img::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(to top,rgba(0,0,0,.84),rgba(0,0,0,.42) 45%,rgba(0,0,0,.12) 70%,rgba(0,0,0,.35))}
+.ctop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px}
+.ckick{font:600 11.5px/1.2 var(--f-sans);letter-spacing:.14em;text-transform:uppercase;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.cnext{flex:none;font:700 11px/1 var(--f-sans);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.2);background:color-mix(in srgb,currentColor 18%,transparent)}
+.cmain{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;overflow:hidden}
+.ctl{margin:0;font-family:var(--f-serif);font-weight:480;font-size:clamp(26px,7.4vw,34px);line-height:1.06;letter-spacing:-.02em;text-wrap:balance;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:6;overflow:hidden}
+:root[data-face="sans"] .ctl{font-family:var(--f-sans);font-weight:650;letter-spacing:-.028em}
+.cdek{margin:0;font:400 16px/1.45 var(--f-serif);opacity:.88;text-wrap:pretty;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+:root[data-face="sans"] .cdek{font-family:var(--f-sans);font-size:15px}
+.cfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 13px/1.3 var(--f-sans);font-variant-numeric:tabular-nums}
+.cfoot > span:first-child{opacity:.85}
+.ccat{flex:none;padding:6px 10px;border-radius:999px;border:1px solid currentColor;font-weight:600;font-size:12px;opacity:.9}
+.cprog{position:absolute;left:0;bottom:0;height:4px;background:currentColor;opacity:.9;z-index:1}
+.card2.done .ctl,.card2.done .cdek{opacity:.6}
+.deckbar{display:flex;align-items:center;justify-content:center;gap:18px}
+.deckbar .ib{border:1px solid var(--rule);font:500 18px/1 var(--f-sans);color:var(--fg)}
+.dkn{font:600 13px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums;min-width:64px;text-align:center}
+.dkhint{font:500 12.5px/1.4 var(--f-sans);color:var(--muted);text-align:center;margin:-4px 0 0}
+@media (prefers-reduced-motion: reduce){.card2{transition:none}}
 .filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:-10px}
 .filters:empty{display:none}
 .fchip{border:1px solid var(--rule);background:transparent;border-radius:999px;height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:600 13px/1 var(--f-sans);color:var(--fg)}
@@ -299,9 +337,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   </section>
 
   <section class="add">
-    <div class="qhead"><label class="listsw" for="listSel"><span class="lbl">List</span><select id="listSel" aria-label="Reading list"></select></label><button class="link" id="clearRead">Clear finished</button></div>
+    <div class="qhead"><label class="listsw" for="listSel"><span class="lbl">List</span><select id="listSel" aria-label="Reading list"></select></label><div class="vtog" role="group" aria-label="View"><button id="vStack" aria-label="Card stack"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="12" height="10" rx="2"/><path d="M5 3.5h8"/></svg></button><button id="vList" aria-label="List"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5h12M3 9h12M3 13h12"/></svg></button></div></div>
     <div class="filters" id="filters" role="group" aria-label="Highlight a category"></div>
+    <div class="stackv" id="stack" hidden></div>
     <ul class="queue" id="queue"></ul>
+    <button class="link" id="clearRead" style="align-self:flex-start">Clear finished</button>
     <p class="note" id="modeNote">Links load through a reader service. Where a page can't be reached, Article Folio asks you to paste its text.</p>
   </section>
   </div>
@@ -506,7 +546,10 @@ function renderQ(){renderMode();
   $('#readNext').disabled=!nx;
   const fc=F&&C.find(c=>c.id===F);$('#readNext').textContent=fc?'Read next in '+fc.name:'Read next';
   renderFilters();
-  $('#clearRead').hidden=!VQ.some(i=>i.status==='read');
+  $('#vStack').setAttribute('aria-pressed',String(VIEW==='stack'));$('#vList').setAttribute('aria-pressed',String(VIEW==='list'));
+  ul.hidden=VIEW!=='list';$('#stack').hidden=VIEW!=='stack';
+  $('#clearRead').hidden=VIEW!=='list'||!VQ.some(i=>i.status==='read');
+  if(VIEW==='stack')renderStack();
 }
 function nextUnread(after){
   let i=after?Q.findIndex(q=>q.id===after.id)+1:0;
@@ -631,6 +674,64 @@ $('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rena
   const n=r.value.trim();if(n){c.name=n;saveC();renderQ()}else r.value=c.name});
 $('#menuBtn').onclick=openMenu;$('#mX').onclick=closeSheets;
 $('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
+
+/* ---------- Card stack view ---------- */
+var VIEW=store.get('folio.view','stack');var SI=null;
+function setView(v){VIEW=v;store.set('folio.view',v);renderQ()}
+$('#vStack').onclick=()=>setView('stack');$('#vList').onclick=()=>setView('list');
+const stackItems=()=>Q.filter(q=>inList(q)&&(!F||q.cat===F));
+function cardFor(it,k,nx){
+  const c=catOf(it);const a=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);
+  const w=a&&a.blocks?words(a.blocks.map(b=>b.html||'').join(' ')):0;
+  const mins=w?Math.max(1,Math.round(w/230))+' min':'';
+  const hero=a&&a.hero;
+  let blurb=a&&a.dek?a.dek:'';
+  if(!blurb&&a&&a.blocks){const p=a.blocks.find(b=>b.t==='p'&&words(b.html)>12);if(p)blurb=clip(strip(p.html),40)}
+  const st=needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
+  return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. Tap to read.">
+    ${hero?`<img class="cbg" src="${esc(hero)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('img');this.remove()">`:''}
+    <div class="ctop"><span class="ckick">${esc(it.site||'')}</span>${nx&&nx.id===it.id?'<span class="cnext">Up next</span>':''}</div>
+    <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek">${esc(blurb)}</p>`:''}</div>
+    <div class="cfoot"><span>${[mins,st].filter(Boolean).join(' · ')}</span>${c?`<span class="ccat">${esc(c.name)}</span>`:''}</div>
+    ${it.status==='reading'?`<i class="cprog" style="width:${it.pct}%"></i>`:''}
+  </article>`;
+}
+function renderStack(){
+  const box=$('#stack'),items=stackItems(),nx=nextUnread(null);
+  if(!items.length){box.innerHTML=`<p class="nempty">${F?'Nothing in this category here.':`Nothing in ${esc(listName(AL))} yet. Paste a link above and it lands on top.`}</p>`;return}
+  let i=items.findIndex(q=>q.id===SI);
+  if(i<0)i=Math.max(0,nx?items.findIndex(q=>q.id===nx.id):0);
+  SI=items[i].id;
+  const show=[];for(let k=0;k<Math.min(3,items.length);k++)show.push(items[(i+k)%items.length]);
+  box.innerHTML=`<div class="deck" id="deck">${show.map((it,k)=>cardFor(it,k,nx)).reverse().join('')}</div>
+    <div class="deckbar"><button class="ib" data-dk="-1" aria-label="Previous article">←</button><span class="dkn">${i+1} of ${items.length}</span><button class="ib" data-dk="1" aria-label="Next article">→</button></div>
+    <p class="dkhint">Swipe to flip through · tap a card to read</p>`;
+}
+function stepStack(d,fly){
+  const items=stackItems();if(items.length<2)return;
+  const i=items.findIndex(q=>q.id===SI);SI=items[(i+d+items.length)%items.length].id;
+  const top=$('#deck .card2.k0');
+  if(top&&fly!==false){top.classList.remove('drag');top.style.transform=`translateX(${d>0?-120:120}%) rotate(${d>0?-14:14}deg)`;top.style.opacity='0';
+    setTimeout(()=>{renderStack();try{$('#deck .card2.k0').focus({preventScroll:true})}catch(e){}},230)}
+  else renderStack();
+}
+$('#stack').addEventListener('click',e=>{const b=e.target.closest('[data-dk]');if(b)stepStack(+b.dataset.dk)});
+$('#stack').addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){e.preventDefault();stepStack(1)}
+  else if(e.key==='ArrowLeft'){e.preventDefault();stepStack(-1)}
+  else if((e.key==='Enter'||e.key===' ')&&e.target.closest('.card2.k0')){e.preventDefault();openItem(Q.find(q=>q.id===SI))}});
+let sg=null;
+$('#stack').addEventListener('pointerdown',e=>{const c=e.target.closest('.card2.k0');if(!c)return;
+  sg={c,x:e.clientX,y:e.clientY,t:Date.now(),id:e.pointerId,drag:false}});
+$('#stack').addEventListener('pointermove',e=>{if(!sg||e.pointerId!==sg.id)return;const dx=e.clientX-sg.x,dy=e.clientY-sg.y;
+  if(!sg.drag&&Math.abs(dx)>8&&Math.abs(dx)>Math.abs(dy)){sg.drag=true;sg.c.classList.add('drag');try{sg.c.setPointerCapture(sg.id)}catch(_){}}
+  if(sg.drag)sg.c.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`});
+const endS=e=>{if(!sg||e.pointerId!==sg.id)return;const g=sg;sg=null;const dx=e.clientX-g.x,dt=Date.now()-g.t,w=g.c.offsetWidth;
+  if(g.drag){const fast=Math.abs(dx)/dt>.45;
+    if(dx<-w*.25||(fast&&dx<-40))stepStack(1);else if(dx>w*.25||(fast&&dx>40))stepStack(-1);
+    else{g.c.classList.remove('drag');g.c.style.transform=''}return}
+  if(e.type==='pointerup'&&Math.abs(e.clientY-g.y)<10&&dt<500)openItem(Q.find(q=>q.id===SI))};
+$('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('pointercancel',endS);
 
 /* ---------- Reading lists UI ---------- */
 function renderListSel(){
@@ -1151,12 +1252,13 @@ window.addEventListener('hashchange',route);
 function showReader(on){
   reader.hidden=!on;document.body.style.overflow=on?'hidden':'';
   if(on){try{navigator.wakeLock?.request('screen').then(w=>wake=w).catch(()=>{})}catch(e){}}
-  else{stopTimer();try{wake&&wake.release()}catch(e){}wake=null;R.art=null;R.item=null;frame.style.transform='';renderQ();renderNotes()}
+  else{stopTimer();try{wake&&wake.release()}catch(e){}wake=null;if(R.item&&R.item.status==='read')SI=null;R.art=null;R.item=null;frame.style.transform='';renderQ();renderNotes()}
 }
 function loading(on,title,sub){$('#loading').hidden=!on;if(on){$('#loadT').textContent=title;$('#loadS').textContent=sub}}
 
 async function openItem(it,opt={}){
   if(!it)return;
+  SI=it.id;
   closeSheets();stopTimer();
   let art=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);
   if(!art&&canFetch===false){showReader(false);openPaste(it);return}

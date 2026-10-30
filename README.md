@@ -7,6 +7,7 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 ## Using it
 
 - Paste one or more links on the queue screen and tap **Read next**. Drag the dotted handle to reorder the queue; the top unread article plays next.
+- **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). Switch to the list with the toggle next to the list name; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
 - **Aa** sets the typeface (Newsreader or Hanken Grotesk), size, line spacing, theme, and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
