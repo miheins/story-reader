@@ -17,6 +17,15 @@ Turns a blog post or article into a swipeable story for your phone: one paragrap
 - **Links:** every article has its own address (`#read-<id>`), so Back returns to the list you came from and reloading keeps you in the article.
 - **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
 
+## Lists online
+
+Your lists can live in this repository (`data/folio.json`), so every device sees the same lists and each list's address keeps working anywhere. Anyone with a link can read; only the owner can add or edit.
+
+- **Set up once:** menu (☰) → *Your lists online* → **Set up**. Create a [fine-grained GitHub token](https://github.com/settings/personal-access-tokens/new) limited to this repository with **Contents: Read and write**, paste it, and choose a passphrase (**Suggest** gives five random words). Your current lists are published.
+- **Other devices:** menu → type the passphrase → **Unlock**. Anything that device had saved locally is added to the online lists.
+- **How it's protected:** the token is stored in `data/owner.json` encrypted with your passphrase (PBKDF2-SHA256, 600,000 rounds, AES-256-GCM). It's decrypted only in your browser. **Lock** forgets it on that device; deleting the token on GitHub disables it everywhere.
+- Reading progress, notes and settings stay on each device.
+
 ## How links load
 
 Articles are fetched through [Jina Reader](https://jina.ai/reader) (`r.jina.ai`), asking for the rendered HTML. Article Folio reads only what sits inside the page's `<article>` (or its main body container), then drops captions, credits, galleries, repeated pull quotes and labels. If the HTML request fails it falls back to Jina's markdown. If a page can't be loaded, Article Folio asks you to paste either the article text or the page's source code instead.

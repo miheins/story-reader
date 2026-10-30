@@ -151,7 +151,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .who .tm{font-weight:500;opacity:.68;flex:none}
 .ib{width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:inherit;display:grid;place-items:center;font:600 16px/1 var(--f-serif)}
 .ib:hover{background:var(--chip)}
-.ib.aa{font:500 17px/1 var(--f-serif)}
+.ib.aa{font:500 17px/40px var(--f-serif);display:flex;justify-content:center;align-items:baseline}
 .ib.aa span{font-size:12px}
 .loading{position:absolute;inset:0;display:grid;place-items:center;z-index:5;background:var(--cover-bg);color:var(--cover-fg);text-align:center;padding:0 24px}
 .loading p{font:italic 400 24px/1.25 var(--f-serif);margin:0 0 8px;text-wrap:balance}
@@ -208,6 +208,20 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-right:6px}
+.ro .owneronly,.ro #links,.ro #addBtn,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
+.obox{display:flex;flex-direction:column;gap:12px}
+.obox p{margin:0}
+.obox .osync{font-size:13px;color:var(--muted)}
+.obox .osync:empty{display:none}
+.oform{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.osteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font:400 14px/1.45 var(--f-sans);color:var(--fg)}
+.osteps a,.obox a{color:var(--accent)}
+.prow{display:flex;gap:8px}.prow input{flex:1;min-width:0}
+.oform input[type=text],.oform input[type=password]{height:44px;padding:0 14px;font-size:16px}
+.obox .ohint{font-size:13px}
+.obox .oerr{font-size:14px;font-weight:500;color:var(--c2)}
+.chk{display:flex;align-items:center;gap:8px;font:400 14px/1.3 var(--f-sans);color:var(--fg)}
+.chk input{width:18px;height:18px;margin:0;accent-color:var(--accent)}
 .vtog{display:flex;gap:2px;padding:3px;border-radius:999px;background:var(--chip);flex-shrink:0}
 .vtog button{width:34px;height:30px;border:0;border-radius:999px;background:transparent;color:var(--muted);display:grid;place-items:center}
 .vtog button[aria-pressed="true"]{background:var(--bg);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
@@ -330,7 +344,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 
   <div id="viewQueue" class="view">
   <section class="add">
-    <label class="lbl" for="links">Add links</label>
+    <label class="lbl owneronly" for="links">Add links</label>
     <textarea id="links" rows="3" placeholder="One or more links, any separator"></textarea>
     <div class="row">
       <button class="btn primary" id="readNext">Read next</button>
@@ -418,12 +432,13 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 <div class="sheet" id="menuSheet" hidden role="dialog" aria-label="Menu">
   <div class="in">
     <div class="phead"><h2>Menu</h2><button class="x" id="mX" aria-label="Close">×</button></div>
+    <div class="set" id="ownerSet"><span class="lbl">Your lists online</span><div id="ownerBox" class="obox"></div></div>
     <div class="set"><span class="lbl">Reading lists</span>
       <p>Each article lives in one list. Switch lists above the queue; move an article from the list menu on its row.</p>
       <ul class="cats lists" id="listList"></ul>
       <form class="catadd" id="listForm"><input type="text" id="listName" placeholder="New list, e.g. Weekend" maxlength="40" autocomplete="off"><button class="btn" type="submit">Add</button></form>
     </div>
-    <div class="set"><span class="lbl">Categories</span>
+    <div class="set owneronly" id="catSet"><span class="lbl">Categories</span>
       <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
       <ul class="cats" id="catList"></ul>
       <form class="catadd" id="catForm"><input type="text" id="catName" placeholder="New category, e.g. Branding" maxlength="40" autocomplete="off"><button class="btn" type="submit">Add</button></form>
@@ -568,14 +583,15 @@ $('#queue').onclick=e=>{
   if(e.target.closest('[data-grip],[data-cat],.qcat'))return;
   const o=e.target.closest('[data-open]'),r=e.target.closest('[data-rm]');
   if(o)openItem(Q.find(q=>q.id===o.dataset.open));
-  if(r){const i=Q.findIndex(q=>q.id===r.dataset.rm);const [it]=Q.splice(i,1);saveQ();renderQ();
-    toast('Removed',()=>{Q.splice(i,0,it);saveQ();renderQ()},()=>store.del('folio.c.'+it.id))}
+  if(r){const id=r.dataset.rm,i=Q.findIndex(q=>q.id===id),it=Q[i];
+    edit('Remove: '+it.title,d=>rmWhere(d.articles,a=>a.id===id));renderQ();
+    toast('Removed',()=>{edit('Restore: '+it.title,d=>{if(!d.articles.some(a=>a.id===id))d.articles.splice(Math.min(i,d.articles.length),0,{...it})});renderQ()},()=>store.del('folio.c.'+id))}
 };
 /* reorder: drag the grip, or focus it and press the arrow keys */
 let drag=null;const ul=$('#queue');
 function commitOrder(focusId){
-  const order=[...ul.children].map(li=>li.dataset.id).filter(Boolean).map(id=>Q.find(q=>q.id===id));
-  let k=0;Q=Q.map(q=>inList(q)?order[k++]:q);saveQ();renderQ();
+  const order=[...ul.children].map(li=>li.dataset.id).filter(Boolean),lid=AL;
+  edit('Reorder '+listName(lid),d=>reorderList(d.articles,lid,order));renderQ();
   if(focusId)ul.querySelector(`[data-grip="${focusId}"]`)?.focus();
 }
 ul.addEventListener('pointerdown',e=>{const gp=e.target.closest('[data-grip]');if(!gp)return;e.preventDefault();
@@ -596,7 +612,9 @@ ul.addEventListener('keydown',e=>{const gp=e.target.closest('[data-grip]');if(!g
   commitOrder(gp.dataset.grip)});
 function addLinks(){
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
-  let n=0,elsewhere=null;for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){Q.push(mkItem(u));n++}else if(ex.list!==AL)elsewhere=ex.list}
+  let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u))}else if(ex.list!==AL)elsewhere=ex.list}
+  const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10);add.forEach(a=>{a.list=lid;a.added=day});
+  if(n)edit(`Add ${n} link${n>1?'s':''} to ${listName(lid)}`,d=>add.forEach(a=>{if(!d.articles.some(x=>x.id===a.id))d.articles.push({...a})}));
   $('#links').value='';saveQ();renderQ();
   if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:elsewhere?`Already in ${listName(elsewhere)}`:'Already in this list');
   else toast('No links found in that text');
@@ -604,8 +622,9 @@ function addLinks(){
 }
 $('#addBtn').onclick=addLinks;
 $('#readNext').onclick=()=>{if($('#links').value.trim())addLinks();const it=nextUnread(null);if(it)openItem(it)};
-$('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q));Q=Q.filter(q=>!gone.includes(q));saveQ();renderQ();
-  toast(`Cleared ${gone.length}`,()=>{Q=Q.concat(gone);saveQ();renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
+$('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
+  edit(`Clear ${gone.length} finished`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));renderQ();
+  toast(`Cleared ${gone.length}`,()=>{edit('Restore finished',d=>gone.forEach(g=>{if(!d.articles.some(a=>a.id===g.id))d.articles.push({...g})}));renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
 
 let toastTimer;
 function toast(msg,undo,commit){
@@ -644,9 +663,9 @@ function catSelect(it,extra=''){
 $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]');if(!sel)return;
   const it=Q.find(q=>q.id===sel.dataset.cat);if(!it)return;
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
-  it.cat=sel.value||null;saveQ();renderQ()});
+  const v=sel.value||null,id=it.id;edit('Set category',d=>{const a=d.articles.find(x=>x.id===id);if(a)a.cat=v});renderQ()});
 $('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
-function openMenu(){renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
+function openMenu(){renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
 /* home-screen install */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
@@ -670,16 +689,17 @@ function renderCats(){
 $('#catForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#catName').value.trim();if(!n)return;
   if(C.some(c=>c.name.toLowerCase()===n.toLowerCase())){toast('That category already exists');return}
   const used=C.map(c=>c.c);let col=C.length%CC;for(let k=0;k<CC;k++){if(!used.includes(k)){col=k;break}}
-  C.push({id:'c'+Date.now().toString(36),name:n,c:col});$('#catName').value='';saveC();renderCats();renderQ();$('#catName').focus()});
+  const nc={id:'c'+Date.now().toString(36),name:n,c:col};edit('Add category '+n,d=>{if(!d.categories.some(c=>c.id===nc.id))d.categories.push({...nc})});$('#catName').value='';renderCats();renderQ();$('#catName').focus()});
 $('#catList').addEventListener('click',e=>{
   const d=e.target.closest('[data-color]'),x=e.target.closest('[data-delcat]');
-  if(d){const c=C.find(k=>k.id===d.dataset.color);c.c=(c.c+1)%CC;saveC();renderCats();renderQ()}
-  if(x){const i=C.findIndex(k=>k.id===x.dataset.delcat);const [c]=C.splice(i,1);const had=Q.filter(q=>q.cat===c.id);had.forEach(q=>q.cat=null);
-    if(F===c.id)F=null;saveC();saveQ();renderCats();renderQ();
-    toast(`Deleted ${c.name}`,()=>{C.splice(i,0,c);had.forEach(q=>q.cat=c.id);saveC();saveQ();renderCats();renderQ()})}
+  if(d){const id=d.dataset.color,nv=(C.find(k=>k.id===id).c+1)%CC;edit('Recolour category',dd=>{const c=dd.categories.find(k=>k.id===id);if(c)c.c=nv});renderCats();renderQ()}
+  if(x){const id=x.dataset.delcat,i=C.findIndex(k=>k.id===id),c={...C[i]},had=Q.filter(q=>q.cat===id).map(q=>q.id);
+    edit('Delete category '+c.name,dd=>{rmWhere(dd.categories,k=>k.id===id);dd.articles.forEach(a=>{if(a.cat===id)a.cat=null})});
+    if(F===id)F=null;saveC();renderCats();renderQ();
+    toast(`Deleted ${c.name}`,()=>{edit('Restore category '+c.name,dd=>{if(!dd.categories.some(k=>k.id===id))dd.categories.splice(Math.min(i,dd.categories.length),0,{...c});dd.articles.forEach(a=>{if(had.includes(a.id))a.cat=id})});renderCats();renderQ()})}
 });
 $('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rename]');if(!r)return;const c=C.find(k=>k.id===r.dataset.rename);
-  const n=r.value.trim();if(n){c.name=n;saveC();renderQ()}else r.value=c.name});
+  const n=r.value.trim();if(!n){r.value=c.name;return}const id=c.id;edit('Rename category',dd=>{const k=dd.categories.find(z=>z.id===id);if(k)k.name=n});renderQ()});
 $('#menuBtn').onclick=openMenu;$('#mX').onclick=closeSheets;
 $('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
 
@@ -745,7 +765,7 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    '<option value="__new">New list…</option><option value="__edit">Edit lists…</option>';
+    (isRO()?'':'<option value="__new">New list…</option><option value="__edit">Edit lists…</option>');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
@@ -759,30 +779,215 @@ function moveSelect(it){
     <option value="" selected>Move to…</option>${LS.filter(l=>l.id!==it.list).map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label>`;
 }
 $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-move]');if(!sel||!sel.value)return;
-  const it=Q.find(q=>q.id===sel.dataset.move);if(!it)return;const from=it.list;it.list=sel.value;saveQ();renderQ();
-  toast(`Moved to ${listName(it.list)}`,()=>{it.list=from;saveQ();renderQ()})});
-function renderLists(){
-  $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name">
+  const it=Q.find(q=>q.id===sel.dataset.move);if(!it)return;const from=it.list,to=sel.value,id=it.id;
+  const mv=l=>d=>{const a=d.articles.find(x=>x.id===id);if(a)a.list=l};
+  edit(`Move to ${listName(to)}`,mv(to));renderQ();
+  toast(`Moved to ${listName(to)}`,()=>{edit(`Move back to ${listName(from)}`,mv(from));renderQ()})});
+function renderLists(){const ro=isRO();
+  $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name"${ro?' readonly':''}>
     <div style="display:flex;align-items:center;gap:2px">${l.id===AL?'<span class="cur">Open</span>':`<button class="link" data-lopen="${l.id}" style="margin-right:6px">Open</button>`}
-    <button class="link" data-lcopy="${l.id}" style="margin-right:6px">Copy link</button><span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1?`<button class="x" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">×</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
+    <button class="link" data-lcopy="${l.id}" style="margin-right:6px">Copy link</button><span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1&&!ro?`<button class="x" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">×</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
 }
 $('#listForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#listName').value.trim();if(!n)return;
   if(LS.some(l=>l.name.toLowerCase()===n.toLowerCase())){toast('That list already exists');return}
-  const l={id:'l'+Date.now().toString(36),name:n};l.slug=uniqueSlug(n,l);LS.push(l);$('#listName').value='';saveL();renderLists();renderQ();
+  const l={id:'l'+Date.now().toString(36),name:n};l.slug=uniqueSlug(n,l);edit('Add list '+n,d=>{if(!d.lists.some(x=>x.id===l.id))d.lists.push({...l})});$('#listName').value='';renderLists();renderQ();
   toast(`Created ${n}`,null)});
 $('#listList').addEventListener('click',e=>{
   const o=e.target.closest('[data-lopen]'),d=e.target.closest('[data-ldel]');
   if(o){switchList(o.dataset.lopen);renderLists();closeSheets()}
   const cp=e.target.closest('[data-lcopy]');if(cp){const url=location.origin+location.pathname+listHash(cp.dataset.lcopy);
     try{navigator.clipboard.writeText(url).then(()=>toast('Link copied: '+listHash(cp.dataset.lcopy)),()=>toast(url))}catch(_){toast(url)}}
-  if(d){const i=LS.findIndex(l=>l.id===d.dataset.ldel);const [l]=LS.splice(i,1);const to=LS[Math.max(0,i-1)].id;const had=Q.filter(q=>q.list===l.id);
-    had.forEach(q=>q.list=to);if(AL===l.id){AL=to;setHash(listHash(),false)}saveL();saveQ();renderLists();renderQ();
-    toast(`Deleted ${l.name}; ${had.length} article${had.length===1?'':'s'} moved to ${listName(to)}`,()=>{LS.splice(i,0,l);had.forEach(q=>q.list=l.id);saveL();saveQ();renderLists();renderQ()})}
+  if(d){const id=d.dataset.ldel,i=LS.findIndex(l=>l.id===id),l={...LS[i]},to=LS[i>0?i-1:1].id,had=Q.filter(q=>q.list===id).map(q=>q.id);
+    edit('Delete list '+l.name,dd=>{rmWhere(dd.lists,x=>x.id===id);dd.articles.forEach(a=>{if(a.list===id)a.list=to})});
+    if(AL===id){AL=to;saveL();setHash(listHash(),false)}renderLists();renderQ();
+    toast(`Deleted ${l.name}; ${had.length} article${had.length===1?'':'s'} moved to ${listName(to)}`,()=>{edit('Restore list '+l.name,dd=>{if(!dd.lists.some(x=>x.id===id))dd.lists.splice(Math.min(i,dd.lists.length),0,{...l});dd.articles.forEach(a=>{if(had.includes(a.id))a.list=id})});renderLists();renderQ()})}
 });
 $('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lrename]');if(!r)return;const l=LS.find(x=>x.id===r.dataset.lrename);
   const n=r.value.trim();if(!n){r.value=l.name;return}
-  l.name=n;const ns=uniqueSlug(n,l);if(ns!==l.slug){l.alt=[...new Set([...(l.alt||[]),l.slug])];l.slug=ns;if(l.id===AL&&!isReadHash())setHash(listHash(),false)}
-  saveL();renderLists();renderQ()});
+  const ns=uniqueSlug(n,l),alt=ns!==l.slug?[...new Set([...(l.alt||[]),l.slug])]:(l.alt||[]),id=l.id;
+  edit('Rename list '+n,dd=>{const x=dd.lists.find(z=>z.id===id);if(x){x.name=n;x.slug=ns;if(alt.length)x.alt=alt}});
+  if(id===AL&&!isReadHash())setHash(listHash(),false);renderLists();renderQ()});
+
+/* ---------- Lists online: GitHub as the store, passphrase-protected owner access ---------- */
+const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
+  return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
+const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
+const DATA_F='data/folio.json',OWNER_F='data/owner.json',OWNER_K='folio.owner';
+var REMOTE=false,SHA=null,GH_OK=null,SYNCED=false,BOOTING=true,PENDING_ROUTE=false,LAST_SYNC=0,SYNC_STATE='',SYNC_AT=null;
+var OWNER_FILE=null,OWNER_DOC=null,OWN=false,WQ=[],wTimer=null,writing=null;
+const isRO=()=>REMOTE&&!OWN;
+const rmWhere=(arr,pred)=>{for(let i=arr.length-1;i>=0;i--)if(pred(arr[i]))arr.splice(i,1)};
+function reorderList(arr,lid,ids){const pos=[];arr.forEach((a,i)=>{if(a.list===lid)pos.push(i)});const inL=pos.map(i=>arr[i]);
+  const sorted=[...ids.map(id=>inL.find(a=>a.id===id)).filter(Boolean),...inL.filter(a=>!ids.includes(a.id))];pos.forEach((p,k)=>arr[p]=sorted[k])}
+/* one change, applied here at once and, when unlocked, to the file on GitHub */
+function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();saveC();if(REMOTE&&OWN)queueWrite(msg,fn)}
+const toB64=str=>{const b=new TextEncoder().encode(str);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)};
+const fromB64=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g,'')),c=>c.charCodeAt(0)));
+function ownerInfo(){for(const k of ['sessionStorage','localStorage']){try{const o=JSON.parse(window[k].getItem(OWNER_K)||'null');if(o&&o.tok&&(!o.exp||o.exp>Date.now()))return o}catch(e){}}return null}
+const ownerToken=()=>(ownerInfo()||{}).tok||null;
+OWN=!!ownerToken();
+function setOwner(tok,remember){lockStore();try{(remember?localStorage:sessionStorage).setItem(OWNER_K,JSON.stringify({tok,exp:remember?Date.now()+30*864e5:0}))}catch(e){}OWN=true;roClass()}
+function lockStore(){try{localStorage.removeItem(OWNER_K)}catch(e){}try{sessionStorage.removeItem(OWNER_K)}catch(e){}}
+function lockOwner(){lockStore();OWN=false;roClass();renderQ();renderOwner()}
+const roClass=()=>document.documentElement.classList.toggle('ro',isRO());
+function ghHeaders(tok){const h={Accept:'application/vnd.github+json'};if(tok)h.Authorization='Bearer '+tok;return h}
+async function ghGet(path,tok=ownerToken()){
+  let r=null;try{r=await fetch(`${GH_API}/contents/${path}`,{headers:ghHeaders(tok),cache:'no-store'})}catch(e){}
+  if(r){GH_OK=true;if(r.ok){const j=await r.json();return{ok:true,found:true,text:fromB64(j.content||''),sha:j.sha}}if(r.status===404)return{ok:true,found:false}}
+  /* rate-limited or offline: fall back to the published copy on this site */
+  try{const p=await fetch(`${path}?ts=${Date.now()}`,{cache:'no-store'});if(p.ok){const t=await p.text();if(t.trim().startsWith('{'))return{ok:true,found:true,text:t,sha:null,stale:true}}}catch(e){}
+  if(!r&&GH_OK===null)GH_OK=false;
+  return{ok:false,status:r?r.status:0}}
+function ghPut(path,text,sha,msg,tok=ownerToken()){return fetch(`${GH_API}/contents/${path}`,{method:'PUT',headers:{...ghHeaders(tok),'Content-Type':'application/json'},
+  body:JSON.stringify({message:msg,content:toB64(text),...(sha?{sha}:{})})})}
+function normDoc(d){d.lists=Array.isArray(d.lists)&&d.lists.length?d.lists:[{id:'main',name:'Reading list',slug:'reading-list'}];
+  d.categories=Array.isArray(d.categories)?d.categories:[];d.articles=Array.isArray(d.articles)?d.articles:[];
+  const seen=new Set();rmWhere(d.articles,a=>!a||!a.url||seen.has(a.id)||!seen.add(a.id));
+  d.articles.forEach(a=>{if(!d.lists.some(l=>l.id===a.list))a.list=d.lists[0].id;if(a.cat&&!d.categories.some(c=>c.id===a.cat))a.cat=null});return d}
+function serialize(d){return JSON.stringify({v:1,updated:new Date().toISOString(),
+  lists:d.lists.map(({id,name,slug,alt})=>({id,name,slug,...(alt&&alt.length?{alt}:{})})),
+  categories:d.categories.map(({id,name,c})=>({id,name,c})),
+  articles:d.articles.filter(a=>a.url).map(a=>({id:a.id,url:a.url,title:a.title,site:a.site,list:a.list,...(a.cat?{cat:a.cat}:{}),added:a.added||new Date().toISOString().slice(0,10)}))},null,2)+'\n'}
+function applyRemote(doc,sha,cache=true){
+  normDoc(doc);
+  if(!REMOTE&&!store.get('folio.stashDone',false)){const own=Q.filter(q=>q.url&&!doc.articles.some(a=>a.id===q.id));
+    if(own.length)store.set('folio.stash',{lists:LS.map(l=>({...l})),categories:C.map(c=>({...c})),articles:own.map(q=>({...q}))});store.set('folio.stashDone',true)}
+  const prev=new Map(Q.map(q=>[q.id,q])),arts=[];
+  doc.articles.forEach(a=>{const o=prev.get(a.id),good=a.title&&a.title!==slugTitle(a.url);
+    if(o){Object.assign(o,a,{title:good?a.title:(o.title||a.title)});if(!a.cat)o.cat=null;arts.push(o)}else arts.push({status:'new',pos:-1,pct:0,...a})});
+  Q.length=0;Q.push(...arts);
+  LS.length=0;doc.lists.forEach(l=>LS.push({...l}));LS.forEach(l=>{if(!l.slug)l.slug=uniqueSlug(l.name,l)});
+  C.length=0;doc.categories.forEach(c=>C.push({...c}));
+  if(!LS.some(l=>l.id===AL))AL=LS[0].id;
+  REMOTE=true;if(sha)SHA=sha;saveQ();saveL();saveC();if(cache)store.set('folio.remote',{doc,sha:SHA,at:Date.now()});
+  roClass();renderQ();
+  if(!$('#menuSheet').hidden&&!$('#menuSheet').contains(document.activeElement)){renderLists();renderCats()}
+}
+function mergeInto(d,src){(src.lists||[]).forEach(l=>{if(!d.lists.some(x=>x.id===l.id))d.lists.push({...l})});
+  (src.categories||[]).forEach(c=>{if(!d.categories.some(x=>x.id===c.id))d.categories.push({...c})});
+  (src.articles||[]).forEach(a=>{if(a.url&&!d.articles.some(x=>x.id===a.id))d.articles.push({...a})})}
+async function syncDown(){
+  if(WQ.length||writing)return;
+  const r=await ghGet(DATA_F);LAST_SYNC=Date.now();
+  if(r.ok&&r.found){try{const doc=JSON.parse(r.text);if(!WQ.length&&!writing)applyRemote(doc,r.sha||SHA);setSync(r.stale?'stale':'synced')}catch(e){setSync('error')}}
+  else if(r.ok){if(REMOTE){REMOTE=false;store.del('folio.remote');roClass();renderQ()}setSync('')}
+  else setSync('offline');
+  SYNCED=true;roClass();if(!$('#menuSheet').hidden)renderOwner();
+  if(PENDING_ROUTE){PENDING_ROUTE=false;route()}
+}
+function queueWrite(msg,fn){WQ.push({msg,fn});clearTimeout(wTimer);setSync('saving');wTimer=setTimeout(flushWrites,700)}
+async function flushWrites(){
+  if(writing)return;const batch=WQ.splice(0);if(!batch.length)return;
+  writing=(async()=>{
+    for(let t=0;t<4;t++){
+      const r=await ghGet(DATA_F);
+      if(!r.ok||r.stale){if(t<3)continue;break}
+      const d=normDoc(r.found?JSON.parse(r.text):{});batch.forEach(b=>{try{b.fn(d)}catch(e){}});normDoc(d);
+      const msg=batch.map(b=>b.msg).filter(Boolean).join('; ').slice(0,140)||'Update reading lists';
+      let w=null;try{w=await ghPut(DATA_F,serialize(d),r.found?r.sha:null,msg)}catch(e){}
+      if(w&&w.ok){const j=await w.json();writing=null;applyRemote(JSON.parse(serialize(d)),j.content.sha);setSync('saved');return true}
+      if(w&&(w.status===401||(w.status===403&&!/rate/i.test(await w.clone().text())))){lockOwner();toast('GitHub refused the save. Unlock again from the menu.');return false}
+      if(w&&(w.status===409||w.status===422))continue;
+    }
+    WQ.unshift(...batch);setSync('error');toast('Couldn’t save to GitHub. Kept on this device; it retries when you’re back online.');return false})();
+  await writing;writing=null;if(WQ.length&&SYNC_STATE!=='error')flushWrites();
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible')return;if(WQ.length)flushWrites();else if(Date.now()-LAST_SYNC>(OWN?10e3:30e3))syncDown()});
+window.addEventListener('online',()=>{if(WQ.length){setSync('saving');flushWrites()}else syncDown()});
+const hm=d=>d?d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+function setSync(st){SYNC_STATE=st;if(st==='synced'||st==='saved')SYNC_AT=new Date();
+  const el=$('#ownerBox .osync');if(el)el.textContent=syncText()}
+const syncText=()=>({synced:'Up to date as of '+hm(SYNC_AT)+'.',saved:'Saved to GitHub at '+hm(SYNC_AT)+'.',saving:'Saving to GitHub…',
+  stale:'Showing the published copy; GitHub is busy.',offline:'Couldn’t reach GitHub; showing the last copy.',error:'Last save failed; will retry.'}[SYNC_STATE]||'');
+/* passphrase → key → the GitHub token, all in the browser */
+const WORDS='acid acorn acre acts afar affix aged agent agile aging agony ahead aide aids aim ajar alarm alias alibi alien alike alive aloe aloft aloha alone amend amino ample amuse angel anger angle ankle apple april apron aqua area arena argue arise armed armor army aroma array arson art ashen ashes atlas atom attic audio avert avoid awake award awoke axis bacon badge bagel baggy baked baker balmy banjo barge barn bash basil bask batch bath baton bats blade blank blast blaze bleak blend bless blimp blink bloat blob blog blot blunt blurt blush boast boat body boil bok bolt boned boney bonus bony book booth boots boss botch both boxer breed bribe brick bride brim bring brink brisk broad broil broke brook broom brush buck bud buggy bulge bulk bully bunch bunny bunt bush bust busy buzz cable cache cadet cage cake calm cameo canal candy cane canon cape card cargo carol carry carve case cash cause cedar chain chair chant chaos charm chase cheek cheer chef chess chest chew chief chili chill chip chomp chop chow chuck chump chunk churn chute cider cinch city civic civil clad claim clamp clap clash clasp class claw clay clean clear cleat cleft clerk click cling clink clip cloak clock clone cloth cloud clump coach coast coat cod coil coke cola cold colt coma come comic comma cone cope copy coral cork cost cot couch cough cover cozy craft cramp crane crank crate crave crawl crazy creme crepe crept crib cried crisp crook crop cross crowd crown crumb crush crust cub cult cupid cure curl curry curse curve curvy cushy cut cycle dab dad daily dairy daisy dance dandy darn dart dash data date dawn deaf deal dean debit debt debug decaf decal decay deck decor decoy deed delay denim dense dent depth derby desk dial diary dice dig dill dime dimly diner dingy disco dish disk ditch ditzy dizzy dock dodge doing doll dome donor donut dose dot dove down dowry doze drab drama drank draw dress dried drift drill drive drone droop drove drown drum dry duck duct dude dug duke duo dusk dust duty dwarf dwell eagle early earth easel east eaten eats ebay ebony ebook echo edge eel eject elbow elder elf elk elm elope elude elves email emit empty emu enter entry envoy equal erase error erupt essay etch evade even evict evil evoke exact exit fable faced fact fade fall false fancy fang fax feast feed femur fence fend ferry fetal fetch fever fiber fifth fifty film filth final finch fit five flag flaky flame flap flask fled flick fling flint flip flirt float flock flop floss flyer foam foe fog foil folic folk food fool found fox foyer frail frame fray fresh fried frill frisk from front frost froth frown froze fruit gag gains gala game gap gas gave gear gecko geek gem genre gift gig gills given giver glad glass glide gloss glove glow glue goal going golf gong good gooey goofy gore gown grab grain grant grape graph grasp grass grave gravy gray green greet grew grid grief grill grip grit groom grope growl grub grunt guide gulf gulp gummy guru gush gut guy habit half halo halt happy harm hash hasty hatch hate haven hazel hazy heap heat heave hedge hefty help herbs hers hub hug hula hull human humid hump hung hunk hunt hurry hurt hush hut ice icing icon icy igloo image ion iron islam issue item ivory ivy jab jam jaws jazz jeep jelly jet jiffy job jog jolly jolt jot joy judge juice juicy july jumbo jump junky juror jury keep keg kept kick kilt king kite kitty kiwi knee knelt koala kung ladle lady lair lake lance land lapel large lash lasso last latch late lazy left legal lemon lend lens lent level lever lid life lift lilac lily limb limes line lint lion lip list lived liver lunar lunch lung lurch lure lurk lying lyric mace maker malt mama mango manor many map march mardi marry mash match mate math moan mocha moist mold mom moody mop morse most motor motto mount mouse mousy mouth move movie mower mud mug mulch mule mull mumbo mummy mural muse music musky mute nacho nag nail name nanny nap navy near neat neon nerd nest net next niece ninth nutty oak oasis oat ocean oil old olive omen onion only ooze opal open opera opt otter ouch ounce outer oval oven owl ozone pace pagan pager palm panda panic pants panty paper park party pasta patch path patio payer pecan penny pep perch perky perm pest petal petri petty photo plank plant plaza plead plot plow pluck plug plus poach pod poem poet pogo point poise poker polar polio polka polo pond pony poppy pork poser pouch pound pout power prank press print prior prism prize probe prong proof props prude prune pry pug pull pulp pulse puma punch punk pupil puppy purr purse push putt quack quake query quiet quill quilt quit quota quote rabid race rack radar radio raft rage raid rail rake rally ramp ranch range rank rant rash raven reach react ream rebel recap relax relay relic remix repay repel reply rerun reset rhyme rice rich ride rigid rigor rinse riot ripen rise risk ritzy rival river roast robe robin rock rogue roman romp rope rover royal ruby rug ruin rule runny rush rust rut sadly sage said saint salad salon salsa salt same sandy santa satin sauna saved savor sax say scale scam scan scare scarf scary scoff scold scoop scoot scope score scorn scout scowl scrap scrub scuba scuff sect sedan self send sepia serve set seven shack shade shady shaft shaky sham shape share sharp shed sheep sheet shelf shell shine shiny ship shirt shock shop shore shout shove shown showy shred shrug shun shush shut shy sift silk silly silo sip siren sixth size skate skew skid skier skies skip skirt skit sky slab slack slain slam slang slash slate slaw sled sleek sleep sleet slept slice slick slimy sling slip slit slob slot slug slum slurp slush small smash smell smile smirk smog snack snap snare snarl sneak sneer sniff snore snort snout snowy snub snuff speak speed spend spent spew spied spill spiny spoil spoke spoof spool spoon sport spot spout spray spree spur squad squat squid stack staff stage stain stall stamp stand stank stark start stash state stays steam steep stem step stew stick sting stir stock stole stomp stony stood stool stoop stop storm stout stove straw stray strut stuck stud stuff stump stung stunt suds sugar sulk surf sushi swab swan swarm sway swear sweat sweep swell swept swim swing swipe swirl swoop swore syrup tacky taco tag take tall talon tamer tank taper taps tarot tart task taste tasty taunt thank thaw theft theme thigh thing think thong thorn those throb thud thumb thump thus tiara tidal tidy tiger tile tilt tint tiny trace track trade train trait trap trash tray treat tree trek trend trial tribe trick trio trout truce truck trump trunk try tug tulip tummy turf tusk tutor tutu tux tweak tweet twice twine twins twirl twist uncle uncut undo unify union unit untie upon upper urban used user usher utter value vapor vegan venue verse vest veto vice video view viral virus visa visor vixen vocal voice void volt voter vowel wad wafer wager wages wagon wake walk wand wasp watch water wavy wheat whiff whole whoop wick widen widow width wife wifi wilt wimp wind wing wink wipe wired wiry wise wish wispy wok wolf womb wool woozy word work worry wound woven wrath wreck wrist xerox yahoo yam yard year yeast yelp yield yodel yoga yoyo yummy zebra zero zesty zippy zone zoom';
+const normPass=s=>String(s).normalize('NFKC').trim().toLowerCase().replace(/\s+/g,' ');
+function suggestPass(){const W=WORDS.split(' '),out=[],b=new Uint32Array(1),lim=Math.floor(4294967296/W.length)*W.length;
+  while(out.length<5){crypto.getRandomValues(b);if(b[0]<lim)out.push(W[b[0]%W.length])}return out.join(' ')}
+const b64u8=u=>btoa(String.fromCharCode(...u)),u8b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function passKey(pass,salt,iter){const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(normPass(pass)),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt,iterations:iter},base,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])}
+async function sealToken(tok,pass){const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),iter=600000;
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},await passKey(pass,salt,iter),new TextEncoder().encode(tok)));
+  return{v:1,what:'GitHub token for Article Folio, encrypted with the owner passphrase (PBKDF2-SHA256 + AES-256-GCM)',kdf:'PBKDF2-SHA256',iter,salt:b64u8(salt),iv:b64u8(iv),ct:b64u8(ct),at:new Date().toISOString()}}
+async function openToken(o,pass){const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:u8b64(o.iv)},await passKey(pass,u8b64(o.salt),o.iter),u8b64(o.ct));return new TextDecoder().decode(pt)}
+async function checkOwnerFile(){const r=await ghGet(OWNER_F);if(r.ok){OWNER_FILE=r.found;OWNER_DOC=r.found?JSON.parse(r.text):null}else OWNER_FILE=GH_OK===false?null:OWNER_FILE;renderOwner()}
+/* the Owner section of the menu */
+const fmtDay=t=>new Date(t).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+function setupForm(change){return `<form class="oform" id="oSetup" data-change="${change?1:''}">
+  <ol class="osteps"><li>On GitHub, <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">create a fine-grained token</a>.</li>
+  <li>Repository access: <b>Only select repositories</b> → <b>${esc(GH.repo)}</b>.</li><li>Permissions → Repository permissions → <b>Contents: Read and write</b>. Expiration: one year.</li><li>Generate it, copy it, paste it below.</li></ol>
+  <label class="lbl" for="oTok">GitHub token${change?' · leave empty to keep the current one':''}</label>
+  <input type="password" id="oTok" autocomplete="off" spellcheck="false" placeholder="github_pat_…">
+  <label class="lbl" for="oPass">${change?'New passphrase':'Passphrase'}</label>
+  <div class="prow"><input type="text" id="oPass" autocomplete="new-password" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="four or more words"><button type="button" class="btn" id="oSuggest">Suggest</button></div>
+  <p class="ohint">Write it down. It can’t be recovered; if you lose it, set up again with a new token. Capitals and extra spaces don’t matter.</p>
+  <label class="chk"><input type="checkbox" id="oRem" checked> Remember on this device for 30 days</label>
+  <p class="oerr" id="oErr" hidden></p>
+  <div class="row"><button class="btn primary" type="submit" id="oGo">${change?'Save':'Save and publish'}</button>${change?'<button class="btn" type="button" id="oCancel">Cancel</button>':''}</div></form>`}
+function unlockForm(){return `<form class="oform" id="oUnlock">
+  <input type="text" name="username" value="Article Folio owner" autocomplete="username" hidden>
+  <label class="lbl" for="oPassU">Passphrase</label>
+  <input type="password" id="oPassU" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
+  <label class="chk"><input type="checkbox" id="oRemU" checked> Remember on this device for 30 days</label>
+  <p class="oerr" id="oErrU" hidden></p>
+  <div class="row"><button class="btn primary" type="submit" id="oGoU">Unlock</button><button class="link" type="button" id="oReset">Lost the passphrase?</button></div></form>`}
+function renderOwner(){const box=$('#ownerBox');if(!box||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
+  const where=`<b>${esc(GH.owner)}/${esc(GH.repo)}</b>`;
+  if(GH_OK===false){box.innerHTML=`<p>Your lists can live in your GitHub repository, so every device sees them and each list has a lasting address. That works on the hosted site, <a href="https://${esc(GH.owner)}.github.io/${esc(GH.repo)}/" target="_blank" rel="noopener">${esc(GH.owner)}.github.io/${esc(GH.repo)}</a>.</p>`;return}
+  if(OWN){const o=ownerInfo()||{};box.innerHTML=`<p><b>Unlocked</b> on this device ${o.exp?'until '+fmtDay(o.exp):'for this session'}. Changes you make are saved to ${where}.</p>
+    <p class="osync">${syncText()}</p><div class="row"><button class="btn" id="oLock">Lock</button><button class="btn" id="oSync">Refresh</button><button class="link" id="oChange">Change passphrase or token</button></div><div id="oForm"></div>`;return}
+  if(OWNER_FILE===null){box.innerHTML='<p>Checking GitHub…</p>';checkOwnerFile();return}
+  if(OWNER_FILE){box.innerHTML=`<p>${REMOTE?'These lists come from '+where+' and update on every device. ':''}Unlock to add and edit.</p><p class="osync">${syncText()}</p>${unlockForm()}<div id="oForm"></div>`;return}
+  box.innerHTML=`<p>Keep your lists in ${where} so every device sees them, with one lasting address per list. Anyone with a link can read; only you can add or edit, with a passphrase.</p>
+    <button class="btn primary" id="oStart">Set up</button><div id="oForm"></div>`}
+$('#ownerBox').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='oLock'){lockOwner();toast('Locked. Editing is off on this device.')}
+  if(b.id==='oSync'){setSync('');syncDown()}
+  if(b.id==='oStart'||b.id==='oReset'){$('#oForm').innerHTML=setupForm(false);b.hidden=true;setTimeout(()=>$('#oTok').focus(),40)}
+  if(b.id==='oChange'){$('#oForm').innerHTML=setupForm(true);setTimeout(()=>$('#oPass').focus(),40)}
+  if(b.id==='oCancel'){$('#oForm').innerHTML=''}
+  if(b.id==='oSuggest'){$('#oPass').value=suggestPass();$('#oPass').select()}});
+$('#ownerBox').addEventListener('submit',e=>{e.preventDefault();if(e.target.id==='oSetup')doSetup(!!e.target.dataset.change);if(e.target.id==='oUnlock')doUnlock()});
+async function doSetup(change){
+  const go=$('#oGo'),label=go.textContent,tokIn=$('#oTok').value.trim(),pass=normPass($('#oPass').value),rem=$('#oRem').checked;
+  const fail=m=>{const el=$('#oErr');el.textContent=m;el.hidden=false;go.disabled=false;go.textContent=label;return false};
+  const tok=tokIn||(change?ownerToken():'');
+  if(!tok)return fail('Paste the GitHub token first.');
+  if(!/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(tok))return fail('That doesn’t look like a GitHub token. A fine-grained token starts with github_pat_.');
+  if(pass.split(' ').length<4&&pass.length<20)return fail('Use at least four words, or 20 characters. Tap Suggest for a strong one.');
+  go.disabled=true;go.textContent='Checking the token…';
+  let t=null;try{t=await fetch(GH_API,{headers:ghHeaders(tok),cache:'no-store'})}catch(e){}
+  if(!t)return fail('Couldn’t reach GitHub. Check your connection.');
+  if(t.status===401)return fail('GitHub says this token isn’t valid. Copy it again, or generate a new one.');
+  if(!t.ok)return fail(`This token can’t see ${GH.owner}/${GH.repo}. Under “Repository access”, choose that repository.`);
+  go.textContent='Encrypting…';const sealed=await sealToken(tok,pass);
+  const ex=await ghGet(OWNER_F,tok);
+  let w=null;try{w=await ghPut(OWNER_F,JSON.stringify(sealed,null,2)+'\n',ex.found?ex.sha:null,change?'Update owner access':'Set up owner access',tok)}catch(e){}
+  if(!w||!w.ok)return fail(w&&(w.status===403||w.status===404)?'This token can read but not write. Give it Contents: Read and write.':'GitHub refused the save'+(w?' ('+w.status+')':'')+'. Try again.');
+  OWNER_FILE=true;OWNER_DOC=sealed;setOwner(tok,rem);
+  go.textContent='Publishing…';
+  const d=await ghGet(DATA_F,tok);
+  if(d.ok&&!d.found){const doc={lists:LS.map(l=>({...l})),categories:C.map(c=>({...c})),articles:Q.filter(q=>q.url).map(q=>({...q}))};normDoc(doc);
+    const p=await ghPut(DATA_F,serialize(doc),null,'Publish reading lists',tok).catch(()=>null);
+    if(p&&p.ok){const j=await p.json();store.set('folio.stashDone',true);applyRemote(JSON.parse(serialize(doc)),j.content.sha);setSync('saved');toast(`Your ${LS.length===1?'list is':LS.length+' lists are'} online`)}
+    else toast('Owner access is set up, but publishing failed. Tap Refresh to try again.')}
+  else{await afterUnlock();toast(change?'Passphrase updated':'Owner access set up')}
+  renderOwner();renderLists();renderCats();renderQ()}
+async function doUnlock(){
+  const go=$('#oGoU'),pass=$('#oPassU').value,rem=$('#oRemU').checked;
+  const fail=m=>{const el=$('#oErrU');el.textContent=m;el.hidden=false;go.disabled=false;go.textContent='Unlock';return false};
+  if(!pass.trim())return fail('Type your passphrase.');
+  go.disabled=true;go.textContent='Unlocking…';
+  if(!OWNER_DOC){const r=await ghGet(OWNER_F);if(r.ok&&r.found)OWNER_DOC=JSON.parse(r.text)}
+  if(!OWNER_DOC)return fail('Couldn’t reach GitHub. Check your connection.');
+  let tok;try{tok=await openToken(OWNER_DOC,pass)}catch(e){return fail('That passphrase doesn’t match.')}
+  let t=null;try{t=await fetch(GH_API,{headers:ghHeaders(tok),cache:'no-store'})}catch(e){}
+  if(t&&t.status===401)return fail('The saved token has expired or been revoked. Tap “Lost the passphrase?” to set up a new one.');
+  setOwner(tok,rem);await afterUnlock();renderOwner();renderLists();renderCats();renderQ();toast('Unlocked. You can add and edit.')}
+async function afterUnlock(){roClass();const st=store.get('folio.stash',null);store.del('folio.stash');
+  if(st&&st.articles&&st.articles.length){queueWrite(`Add ${st.articles.length} article${st.articles.length>1?'s':''} from another device`,d=>mergeInto(d,st));toast(`Adding ${st.articles.length} article${st.articles.length>1?'s':''} saved on this device`)}
+  else await syncDown()}
 
 /* ---------- Notes ---------- */
 let N=store.get('folio.notes',[]);
@@ -791,7 +996,7 @@ const fmtWhen=t=>new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short'
 const clip=(t,n=34)=>{const w=t.split(/\s+/).filter(Boolean);return w.length>n?w.slice(0,n).join(' ')+'…':w.join(' ')};
 let tab=store.get('folio.tab','queue');
 function showTab(t){tab=t;store.set('folio.tab',t);
-  if(typeof isReadHash==='function'&&!isReadHash()){const want=t==='notes'?'#notes':listHash();if(location.hash!==want)setHash(want,false)}
+  if(typeof isReadHash==='function'&&!isReadHash()&&!BOOTING){const want=t==='notes'?'#notes':listHash();if(location.hash!==want)setHash(want,false)}
   $('#tabQueue').setAttribute('aria-selected',String(t==='queue'));$('#tabNotes').setAttribute('aria-selected',String(t==='notes'));
   $('#viewQueue').hidden=t!=='queue';$('#viewNotes').hidden=t!=='notes';if(t==='notes')renderNotes()}
 $('#tabQueue').onclick=()=>showTab('queue');$('#tabNotes').onclick=()=>showTab('notes');
@@ -1254,12 +1459,13 @@ function route(){
     let it=Q.find(q=>q.id===id);
     if(!it&&id==='sample')it={id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0};
     if(it){if(it.list&&it.list!==AL&&LS.some(l=>l.id===it.list)){AL=it.list;saveL()}openItem(it,{fromRoute:true});return}
-    setHash(baseHash(),false);toast('That article isn’t in the queue on this device');
+    if(!SYNCED){PENDING_ROUTE=true;return}
+    setHash(baseHash(),false);toast(REMOTE?'That article isn’t in any list any more':'That article isn’t in the queue on this device');
   }
   if(!reader.hidden){R.pushed=false;showReader(false)}
   if(h.startsWith(LIST)){
     const l=listBySlug(decodeURIComponent(h.slice(LIST.length)));
-    if(!l){setHash(baseHash(),false);toast('That reading list isn’t on this device');return}
+    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
     if(l.slug!==h.slice(LIST.length))setHash(listHash(l.id),false);   // an old address after a rename
     switchList(l.id,true);return;
   }
@@ -1285,7 +1491,8 @@ async function openItem(it,opt={}){
   showReader(true);
   if(!art){
     loading(true,it.title,'Fetching '+(it.site||'page'));
-    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.c.'+it.id,art);it.title=art.title;saveQ()}
+    try{art=await fetchArticle(it.url);canFetch=true;store.set('folio.canFetch',true);store.set('folio.c.'+it.id,art);
+      const was=it.title;it.title=art.title;saveQ();if(REMOTE&&OWN&&art.title&&was!==art.title&&was===slugTitle(it.url)){const id=it.id,t=art.title;queueWrite('Title: '+t.slice(0,50),d=>{const a=d.articles.find(x=>x.id===id);if(a&&(!a.title||a.title===slugTitle(a.url)))a.title=t})}}
     catch(e){
       if(canFetch!==true)store.set('folio.canFetch',canFetch=false);
       loading(false);showReader(false);openPaste(it,e);return}
@@ -1420,8 +1627,9 @@ const fontsReady=(document.fonts?Promise.race([
   Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px "Hanken Grotesk"','600 20px "Hanken Grotesk"'].map(f=>document.fonts.load(f))),
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
 applySettings();
-let bootMsg='';if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length)));if(l){AL=l.id;saveL()}else bootMsg='That reading list isn’t on this device'}
-renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();route();if(bootMsg)toast(bootMsg);
+{const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
+if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length)));if(l){AL=l.id;saveL()}}
+renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
   .finally(()=>{if(canFetch!==null)store.set('folio.canFetch',canFetch);renderQ()})}
 })();
