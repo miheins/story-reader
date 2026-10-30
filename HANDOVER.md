@@ -98,6 +98,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
 7. **Rate limits.** Visitors who aren't signed in get 60 GitHub requests an hour from each connection; beyond that the app shows the published copy, about a minute behind.
 8. **Notes and progress are per device.** Syncing them would need private storage, not the public repository.
 9. **Dark theme** isn't in the Paper design system yet (Paper tokens hold one value each).
+10. **Paper: three sheets unfinished.** *Menu: unlocked* has only its header so far. *Menu: setup* and *Reader: note sheet* aren't started. Work stopped at Paper's weekly connection limit on 30 Oct; ask Claude to finish them.
 
 ## Decisions so far, and why
 
