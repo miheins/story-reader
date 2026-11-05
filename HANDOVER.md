@@ -2,7 +2,7 @@
 
 Everything you need to pick this project up again. The user guide is in [README.md](README.md); this file covers how it's built, where things are, and what's still open.
 
-*Last updated 30 Oct 2026.*
+*Last updated 5 Nov 2026.*
 
 ## At a glance
 
@@ -19,7 +19,7 @@ Everything you need to pick this project up again. The user guide is in [README.
 
 **Working**
 - Paste links; each plays as a story with one paragraph per slide. Text size steps up for short paragraphs (1×–1.85×), and long paragraphs split between sentences.
-- Overview as a **card stack** (default) or a **list**, with a toggle.
+- Overview as a **card stack** (default) or a **list**, with a toggle. On desktop (720px and wider) the stack becomes a **horizontal slider** of wider cards.
 - **Reading lists**, each with its own address (`#list-<slug>`). The switcher is hidden; on desktop **L** shows it.
 - **Categories** with six colours, a filter to highlight one, and **Read next** that respects it.
 - **Notes** per slide, collected in the Notes tab with the passage each refers to. Copy all as text.
@@ -42,7 +42,7 @@ Everything is in `index.html`. Search for these section markers:
 | `Settings` | Typeface, size steps, line spacing, theme, auto-advance. |
 | `Queue` | Queue model, list view rendering, drag-to-reorder, adding links, clear finished. |
 | `Categories` | Category model, filter chips, row dropdown, menu editing, home-screen install. |
-| `Card stack view` | Stack rendering, swipe and keys, the `VIEW` toggle. |
+| `Card stack view` | Stack rendering, swipe and keys, the `VIEW` toggle. On desktop, `renderSlider()` replaces the stack (see *Desktop slider*). |
 | `Reading lists UI` | List switcher, *Move to…*, menu list management, copy list link. |
 | `Lists online` | GitHub storage, encryption, owner set-up and unlock, read-only mode. Flags `ONLINE` and `SHOW_LOCK` are near the top. |
 | `Notes` | Notes model, Notes tab, note sheet. |
@@ -68,6 +68,16 @@ The interface uses **Product Starter** from the private starter kit (`miheins/st
 - **Components** are built as plain HTML with the kit's `st-` classes (no React): Button, IconButton, TextField, Textarea, Select, Checkbox, Switch, SegmentedControl, Tabs, Toast, StatusMessage, StatusBadge, EmptyState, Spinner, Card, and Dialog styling for the sheets. Icons use the kit's paths (24px grid, 1.75 stroke) through `ic(name)`; a few extra icons (menu, list, stack, external) follow the same rules.
 - **Folio's own** (no kit equivalent): story slides and reader controls, the card stack, coloured category chips and row dropdowns, drag handles, the size stepper, the paste box.
 - The slide container class is `.slide-body`, not `.body`, because the kit's `tokens.css` defines a global `.body` text style.
+
+## Desktop slider
+
+- At 720px and wider, the card stack is shown as a horizontal row of cards (`.slider`), from the kit's Carousel slot: **Blossom Carousel** `@blossom-carousel/core@1.1.9`, loaded from jsDelivr only on mouse or trackpad devices (`hover: hover` and `pointer: fine`). It adds mouse dragging with momentum and snapping. Version is in `BLOSSOM_V`.
+- Without Blossom (touch-screen laptops, or if jsDelivr fails) the row still works with native sideways scrolling and snapping; nothing breaks.
+- The row breaks out of the narrow column to the window edges; the first card lines up with the column. Cards are `clamp(440px, 36vw, 560px)` wide.
+- Controls: ← → buttons and arrow keys scroll one card; click or Enter opens a card. A drag of more than 6px doesn't open.
+- Phones keep the swipeable stack. The tests stub `matchMedia`, so they cover the stack only; the slider was checked in a browser at 1440px (light and dark: drag, buttons, click to open).
+- **Licence note:** npm lists Blossom as MIT, but the package's `LICENSE` file is Apache 2.0. Both permit this use; the kit's entry (`entries/0001-blossom-carousel.md`) says MIT and should be corrected.
+- Blossom's own agent skill (`npx skills add https://blossom-carousel.com`) installs on a local machine only and wasn't installed.
 
 ## Where data lives
 
@@ -115,6 +125,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
 8. **Notes and progress are per device.** Syncing them would need private storage, not the public repository.
 9. **Dark theme** isn't in the Paper design system yet (Paper tokens hold one value each).
 10. **Paper: three sheets unfinished.** *Menu: unlocked* has only its header so far. *Menu: setup* and *Reader: note sheet* aren't started. Work stopped at Paper's weekly connection limit on 30 Oct; ask Claude to finish them.
+11. **Slider on a real desktop.** Check the drag feel on a trackpad and mouse, and that jsDelivr loads (the build was tested with a local copy of Blossom 1.1.9).
 
 ## Decisions so far, and why
 
