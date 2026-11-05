@@ -86,7 +86,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .frame.vdrag{transition:none}
 .frame.enter{animation:enter .32s cubic-bezier(.2,.7,.2,1)}
 @keyframes enter{from{opacity:0;transform:translateX(-50%) scale(.965)}to{opacity:1;transform:translateX(-50%)}}
-@media (min-width:720px){.frame{top:3vh;bottom:3vh;width:min(100%,52vh);border-radius:16px}}
+@media (min-width:720px){.reader{background:var(--bg)}.frame{width:min(100%,52vh)}}
 .stage{position:absolute;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .track{display:flex;height:100%;will-change:transform}
 .track.anim{transition:transform .3s cubic-bezier(.2,.7,.2,1)}
@@ -311,12 +311,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 #nOthers{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--rule);padding-top:16px}
 .nb{position:relative}
 .badge{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:var(--on-accent);font:600 10px/16px var(--f-sans);text-align:center}
-/* Desktop: the overview sits in the same centred phone frame as the reader (matches the Paper design) */
+/* Desktop: the same narrow column as on a phone, centred on the page, with no frame or shadow */
 @media (min-width:720px){
-  body{background:var(--stagebg)}
-  .lib{position:fixed;top:3vh;bottom:3vh;left:50%;transform:translateX(-50%);width:min(100%,52vh);max-width:none;margin:0;box-sizing:border-box;
-    background:var(--bg);border-radius:16px;box-shadow:0 24px 60px rgba(23,24,27,.14);overflow-y:auto;overscroll-behavior:contain;
-    padding-block:24px 60px;padding-left:18px;padding-right:18px}
+  .lib{width:min(100%,52vh);max-width:none;box-sizing:border-box;padding-block:40px 96px}
   .mark{font-size:calc(min(100vw,52vh) * .092)}
   .sheet{left:50%;right:auto;bottom:3vh;width:min(100%,52vh);transform:translateX(-50%);border-radius:var(--radius-lg);border-bottom:1px solid var(--border);max-height:80vh}
   .scrim{background:var(--scrim)}
