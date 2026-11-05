@@ -1,0 +1,99 @@
+/* Product Starter — generated from tokens.json */
+:root, [data-theme="light"] {
+  --neutral-0: #fefdfc;
+  --neutral-50: #f9f7f2;
+  --neutral-100: #e9e7e2;
+  --neutral-150: #e4e1dc;
+  --neutral-200: #d7d4cf;
+  --neutral-300: #bebab4;
+  --neutral-400: #9d9792;
+  --neutral-500: #817874;
+  --neutral-600: #6a615e;
+  --neutral-700: #554a48;
+  --neutral-800: #3b302f;
+  --neutral-850: #2e2323;
+  --neutral-900: #231919;
+  --neutral-950: #190e10;
+  --neutral-975: #13090b;
+  --bg: var(--neutral-50);
+  --surface: var(--neutral-0);
+  --surface-sunken: var(--neutral-100);
+  --text: var(--neutral-950);
+  --text-muted: var(--neutral-700);
+  --text-subtle: var(--neutral-600);
+  --border: var(--neutral-200);
+  --border-strong: var(--neutral-500);
+  --primary: var(--neutral-950);
+  --primary-hover: var(--neutral-800);
+  --on-primary: var(--neutral-0);
+  --focus: #0221dc;
+  --success: #077d39;
+  --success-soft: #dff6e2;
+  --warning: #9e5900;
+  --warning-soft: #ffead7;
+  --error: #c62c31;
+  --error-soft: #ffe6e3;
+  --info: #3261df;
+  --info-soft: #e3efff;
+  --shadow-sm: 0px 1px 2px 0px rgba(25, 14, 16, 0.06), 0px 1px 1px 0px rgba(25, 14, 16, 0.04);
+  --shadow-md: 0px 0px 12.8px 0px rgba(0, 0, 0, 0.1);
+  --shadow-raise: -4px -4px 7px 0px rgba(255, 255, 255, 0.5), 4px 4px 7px 0px rgba(0, 0, 0, 0.1);
+}
+[data-theme="dark"] {
+  --bg: var(--neutral-950);
+  --surface: var(--neutral-900);
+  --surface-sunken: var(--neutral-975);
+  --text: var(--neutral-50);
+  --text-muted: var(--neutral-300);
+  --text-subtle: var(--neutral-400);
+  --border: var(--neutral-800);
+  --border-strong: var(--neutral-500);
+  --primary: var(--neutral-50);
+  --primary-hover: var(--neutral-200);
+  --on-primary: var(--neutral-950);
+  --focus: #5380ec;
+  --success: #559f67;
+  --success-soft: #122d19;
+  --warning: #bb8246;
+  --warning-soft: #372108;
+  --error: #e06862;
+  --error-soft: #3b1c1a;
+  --info: #5f8bf1;
+  --info-soft: #1a263f;
+  --shadow-sm: 0px 1px 2px 0px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0px 0px 12.8px 0px rgba(0, 0, 0, 0.6);
+  --shadow-raise: -4px -4px 7px 0px rgba(255, 255, 255, 0.06), 4px 4px 7px 0px rgba(0, 0, 0, 0.6);
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-lg: 15px;
+  --radius-pill: 999px;
+  --font-sans: "Labil Grotesk", Inter, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "GT Alpina Typewriter", Compagnon, "Courier Prime", ui-monospace, monospace;
+}
+.display { font-family: var(--font-sans); font-size: 32px; line-height: 40px; font-weight: 500; letter-spacing: -0.01em; }
+.heading-lg { font-family: var(--font-sans); font-size: 24px; line-height: 32px; font-weight: 500; letter-spacing: -0.005em; }
+.heading { font-family: var(--font-sans); font-size: 20px; line-height: 28px; font-weight: 500; }
+.heading-sm { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 600; }
+.body { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 400; }
+.body-strong { font-family: var(--font-sans); font-size: 16px; line-height: 24px; font-weight: 500; }
+.body-sm { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 500; }
+.button { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 500; letter-spacing: 0.02em; }
+.label { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 300; letter-spacing: 0.15em; }
+.caption { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 300; letter-spacing: 0.02em; }
+.code { font-family: var(--font-mono); font-size: 13px; line-height: 20px; font-weight: 300; }
+@font-face { font-family: "Labil Grotesk"; src: url("fonts/LabilGrotesk-Light.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Labil Grotesk"; src: url("fonts/LabilGrotesk-Regular.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Labil Grotesk"; src: url("fonts/LabilGrotesk-Medium.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "GT Alpina Typewriter"; src: url("fonts/GTAlpinaTypewriter-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Compagnon"; src: url("fonts/Compagnon-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Compagnon"; src: url("fonts/Compagnon-Roman.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }

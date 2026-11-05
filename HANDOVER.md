@@ -12,8 +12,8 @@ Everything you need to pick this project up again. The user guide is in [README.
 | **Live site** | https://miheins.github.io/story-reader/ (GitHub Pages, deploys from `main` in about a minute) |
 | **Repository** | https://github.com/miheins/story-reader (public) |
 | **Design file** | Paper: [Article Folio](https://app.paper.design/file/01M6429AMHNHA15K5JK8ZC36AA). Page *Screens* holds mobile and desktop views; page *Design system* holds every token. |
-| **Claude artifact** | A private copy on claude.ai, used early on for quick previews. It can't load links or reach GitHub; the GitHub site is the real app. |
-| **Stack** | One HTML file, no build step, no framework. Google Fonts (Newsreader, Hanken Grotesk). Jina Reader for fetching articles. |
+| **Claude artifact** | Retired. An early preview copy on claude.ai; it isn't updated any more, because it can't load the design system's files or the licensed fonts. |
+| **Stack** | One HTML file, no build step, no framework. Product Starter design system (`styles/product-starter/`). Newsreader from Google Fonts for reading. Jina Reader for fetching articles. |
 
 ## Where things stand
 
@@ -38,7 +38,7 @@ Everything is in `index.html`. Search for these section markers:
 
 | Marker | What's there |
 |---|---|
-| `Library` / `Reader (story)` / `Sheets` (CSS) | Styles. Colour tokens are at the top of `<style>`, with light and dark sets. Desktop framing is the `@media (min-width:720px)` block. |
+| `Library` / `Reader (story)` / `Sheets` (CSS) | Folio's styles on top of Product Starter. Folio's token aliases and accent are at the top of `<style>`; component placement is under *Product Starter components in Folio's layout*. Desktop framing is the `@media (min-width:720px)` block. |
 | `Settings` | Typeface, size steps, line spacing, theme, auto-advance. |
 | `Queue` | Queue model, list view rendering, drag-to-reorder, adding links, clear finished. |
 | `Categories` | Category model, filter chips, row dropdown, menu editing, home-screen install. |
@@ -52,6 +52,22 @@ Everything is in `index.html`. Search for these section markers:
 | `Routes` | Addresses: `#list-<slug>`, `#read-<id>`, `#notes`. Back-button handling. |
 
 **Every change to queue, list or category data goes through `edit(message, fn)`.** It applies `fn` here at once and, when unlocked online, queues the same `fn` to run against the latest file on GitHub. New features that change those lists must use `edit()` too, or their changes won't sync.
+
+## Design system
+
+The interface uses **Product Starter** from the private starter kit (`miheins/starter-kit`, `design-systems/product-starter`, copied at commit `8a9b920`).
+
+- **Files:** `styles/product-starter/tokens.css`, `bundle.css` and `fonts/`, loaded in the `<head>` before Folio's own styles. Don't edit them here; re-copy them from the kit when it changes.
+- **Fonts:** the kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are web-licensed to More Yum and are **not** included, so the repository can stay public. Folio overrides `--font-sans` with **Inter** (Google Fonts) and `--font-mono` with **Compagnon** (bundled, SIL Open Font License), the kit's named fallbacks. To use the licensed fonts, the repository must be private first; then copy them into `fonts/` and remove the two overrides.
+- **Theme:** the kit switches on `data-theme="light|dark"` on `<html>`. Folio's *Auto* setting follows the system and sets that attribute; a small script in the `<head>` sets it before first paint.
+- **Folio's layer** (top of the `<style>` block): Folio's older token names (`--fg`, `--muted`, `--rule`, `--chip`, `--sheet`, `--ink`) are aliases of the kit's semantic tokens. The only colours of Folio's own are:
+  - `--accent` `#EA0000` (fills, covers, cards) with `--on-accent` white (4.7:1);
+  - `--accent-text` for small red text: `#C80000` light (5.7:1), `#FF5C5C` dark (6.2:1), because `#EA0000` itself is just under 4.5:1 as small text;
+  - category colours `--c1`…`--c6` (`--c2` is graphite; rust was too close to the accent).
+- **Type:** Inter for the interface and the wordmark, Compagnon for labels (`.st-field__label`, `.kick`, badges). The story slides keep **Newsreader**; the reader's sans option is Inter. The kit's weight scale (400, 500, 600) is kept, with text at 14px or smaller at 500. Inter's 400 is Regular, slightly heavier than Labil's Light, so the interface reads a little bolder than the kit's showcase.
+- **Components** are built as plain HTML with the kit's `st-` classes (no React): Button, IconButton, TextField, Textarea, Select, Checkbox, Switch, SegmentedControl, Tabs, Toast, StatusMessage, StatusBadge, EmptyState, Spinner, Card, and Dialog styling for the sheets. Icons use the kit's paths (24px grid, 1.75 stroke) through `ic(name)`; a few extra icons (menu, list, stack, external) follow the same rules.
+- **Folio's own** (no kit equivalent): story slides and reader controls, the card stack, coloured category chips and row dropdowns, drag handles, the size stepper, the paste box.
+- The slide container class is `.slide-body`, not `.body`, because the kit's `tokens.css` defines a global `.body` text style.
 
 ## Where data lives
 

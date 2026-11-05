@@ -11,7 +11,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 - Paste one or more links on the queue screen and tap **Read next**. Drag the dotted handle to reorder the queue; the top unread article plays next.
 - **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). Switch to the list with the toggle above the queue; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
-- **Aa** sets the typeface (Newsreader or Hanken Grotesk), size, line spacing, theme, and optional auto-advance.
+- **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.
 - **Reading lists:** keep separate queues (e.g. Work, Weekend). Each list has its own address (`#list-weekend`), so you can bookmark it or add it to your home screen. Switch from the menu (☰ → Reading lists → Open, or Copy link), or on desktop press **L** for the list switcher. Move an article with **Move to…** on its row. New links go into the list you have open, and **Read next** stays inside it.
@@ -38,6 +38,7 @@ Your queue, reading positions, notes, categories and settings are kept in your b
 ## Files
 
 - `index.html`: the whole app in one file, with no build step.
+- `styles/product-starter/`: the Product Starter design system (tokens and component styles) from the starter kit, with its free fallback fonts: Inter (Google Fonts) and Compagnon (bundled). The kit's licensed fonts are deliberately left out, so the repository can stay public.
 - `manifest.webmanifest`, `icons/`: home-screen name and icons, generated from `icons/monogram-source.jpg`.
 - `tests/`: simulated-browser checks (`cd tests && npm install && npm test`).
 - `HANDOVER.md`: how it's built, data, decisions and open items.
