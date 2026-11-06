@@ -2,7 +2,7 @@
 
 Everything you need to pick this project up again. The user guide is in [README.md](README.md); this file covers how it's built, where things are, and what's still open.
 
-*Last updated 5 Nov 2026.*
+*Last updated 6 Nov 2026.*
 
 ## At a glance
 
@@ -11,7 +11,7 @@ Everything you need to pick this project up again. The user guide is in [README.
 | **What it is** | A reader that turns article links into Instagram-style stories: one paragraph per slide, typography first. Queue, reading lists, categories, notes, card stack. |
 | **Live site** | https://miheins.github.io/story-reader/ (GitHub Pages, deploys from `main` in about a minute) |
 | **Repository** | https://github.com/miheins/story-reader (public) |
-| **Design file** | Paper: [Article Folio](https://app.paper.design/file/01M6429AMHNHA15K5JK8ZC36AA). Page *Screens* holds mobile and desktop views; page *Design system* holds every token. |
+| **Design file** | Paper: [Article Folio](https://app.paper.design/file/01M6429AMHNHA15K5JK8ZC36AA). Page *v2 · Product Starter* (added 6 Nov) is the current design: mobile stack and list, text slide, cover, settings, menu and note sheets, desktop slider, and a tokens board, built on the `--ps-` tokens. Pages *Screens* and *Design system* are the original v1 (blue accent, Hanken Grotesk), kept for reference. |
 | **Claude artifact** | Retired. An early preview copy on claude.ai; it isn't updated any more, because it can't load the design system's files or the licensed fonts. |
 | **Stack** | One HTML file, no build step, no framework. Product Starter design system (`styles/product-starter/`). Newsreader from Google Fonts for reading. Jina Reader for fetching articles. |
 
@@ -124,7 +124,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
 7. **Rate limits.** Visitors who aren't signed in get 60 GitHub requests an hour from each connection; beyond that the app shows the published copy, about a minute behind.
 8. **Notes and progress are per device.** Syncing them would need private storage, not the public repository.
 9. **Dark theme** isn't in the Paper design system yet (Paper tokens hold one value each).
-10. **Paper: three sheets unfinished.** *Menu: unlocked* has only its header so far. *Menu: setup* and *Reader: note sheet* aren't started. Work stopped at Paper's weekly connection limit on 30 Oct; ask Claude to finish them.
+10. **Paper v1 leftovers.** On the v1 *Screens* page, *Menu: unlocked* is still only a header. The v2 page has complete menu and note sheets, so v1 can stay as it is. Still missing from v2: the dark theme, and the menu's owner states (unlocked, setup).
 11. **Slider on a real desktop.** Check the drag feel on a trackpad and mouse, and that jsDelivr loads (the build was tested with a local copy of Blossom 1.1.9).
 
 ## Decisions so far, and why
