@@ -1,6 +1,6 @@
 {
-  "name": "Article Folio",
-  "short_name": "Article Folio",
+  "name": "Folio",
+  "short_name": "Folio",
   "description": "Read articles as swipeable stories, one paragraph per slide.",
   "id": "./",
   "start_url": "./",

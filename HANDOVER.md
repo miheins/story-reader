@@ -1,8 +1,8 @@
-# Article Folio: handover
+# Folio: handover
 
 Everything you need to pick this project up again. The user guide is in [README.md](README.md); this file covers how it's built, where things are, and what's still open.
 
-*Last updated 6 Nov 2026.*
+*Last updated 7 Nov 2026.*
 
 ## At a glance
 
@@ -55,10 +55,19 @@ Everything is in `index.html`. Search for these section markers:
 
 ## Design system
 
+**v3 (7 Nov 2026), from the user's own edits in Paper** (page *v2 · Product Starter*, artboards *v3 · Overview — Stack*, *v3 · Overview — List*, *v3 · Sheet — Note*):
+- Hand-drawn blackletter **Folio** wordmark (inline SVG, `currentColor`); the visible app name is now *Folio*. The stored-password label and encryption metadata still say *Article Folio* on purpose, so saved logins keep working.
+- White ground (`--bg:#FFFFFF`; dark keeps the kit's dark ground), moss-green accent `#304F0C` (covers, reader avatar, small accent text; dark accent text `#8FB860`), **ink cards** (`--card` = text colour, so they invert in dark), 2px small radius.
+- Adding links moved from the top of the page into an **Add new item** sheet (*Add to list*, *Add and read*); the reader-service note moved there too. *Read next* as a separate button is gone: the top card is the next article.
+- Full-width view toggle; category filters only in the list view, as small mono chips; no *Up next* pill; borderless deck arrows; no swipe hint.
+- List rows: vertical-dot drag handle, mono site, serif title, category as a mono chip (tap to change), status with reading time, a thumbnail when the article has an image, and remove. Opening the original moved to the reader only.
+- Quoted passages (note sheet, Notes tab) sit on soft green; text fields have an ink outline; note-sheet buttons are equal width.
+- Decisions that depart from Paper: list status text is 11px, not 8px, and the site label 10px, not 9px, for legibility; the tab shows the open list's name ("Reading list" by default), so switching lists is visible on phones.
+
 The interface uses **Product Starter** from the private starter kit (`miheins/starter-kit`, `design-systems/product-starter`, copied at commit `8a9b920`).
 
 - **Files:** `styles/product-starter/tokens.css`, `bundle.css` and `fonts/`, loaded in the `<head>` before Folio's own styles. Don't edit them here; re-copy them from the kit when it changes.
-- **Fonts:** the kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are web-licensed to More Yum and are **not** included, so the repository can stay public. Folio overrides `--font-sans` with **Inter** (Google Fonts) and `--font-mono` with **Compagnon** (bundled, SIL Open Font License), the kit's named fallbacks. To use the licensed fonts, the repository must be private first; then copy them into `fonts/` and remove the two overrides.
+- **Fonts:** the kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are web-licensed to More Yum and are **not** included, so the repository can stay public. Folio overrides `--font-sans` with **Inter** (Google Fonts) and `--font-mono` with **Bitcount Single** (bundled in `styles/fonts/`, SIL OFL), set to medium weight with round pixels (`ELSH` 100). It's the free Google Fonts version of the *Bitcount Mono Single* used in Paper. Compagnon is still in the kit's `fonts/` folder but no longer used.
 - **Theme:** the kit switches on `data-theme="light|dark"` on `<html>`. Folio's *Auto* setting follows the system and sets that attribute; a small script in the `<head>` sets it before first paint.
 - **Folio's layer** (top of the `<style>` block): Folio's older token names (`--fg`, `--muted`, `--rule`, `--chip`, `--sheet`, `--ink`) are aliases of the kit's semantic tokens. The only colours of Folio's own are:
   - `--accent` `#EA0000` (fills, covers, cards) with `--on-accent` white (4.7:1);

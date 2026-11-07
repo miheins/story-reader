@@ -1,4 +1,4 @@
-# Article Folio
+# Folio
 
 Turns a blog post or article into a swipeable story for your phone: one paragraph per slide, with typography you can adjust.
 
@@ -8,7 +8,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 
 ## Using it
 
-- Paste one or more links on the queue screen and tap **Read next**. Drag the dotted handle to reorder the queue; the top unread article plays next.
+- Tap **Add new item** at the bottom of the reading list, paste one or more links, then **Add to list** or **Add and read**. Drag the dotted handle (list view) to reorder; the top unread article plays next.
 - **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). On desktop the cards sit side by side in a slider: drag, scroll sideways or use ← →, and click a card to read. Switch to the list with the toggle above the queue; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
 - **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.
@@ -38,7 +38,8 @@ Your queue, reading positions, notes, categories and settings are kept in your b
 ## Files
 
 - `index.html`: the whole app in one file, with no build step.
-- `styles/product-starter/`: the Product Starter design system (tokens and component styles) from the starter kit, with its free fallback fonts: Inter (Google Fonts) and Compagnon (bundled). The kit's licensed fonts are deliberately left out, so the repository can stay public.
+- `styles/product-starter/`: the Product Starter design system (tokens and component styles) from the starter kit. The kit's licensed fonts are deliberately left out, so the repository can stay public.
+- `styles/fonts/`: Bitcount Single (SIL Open Font License, `Bitcount-OFL.txt`), the pixel mono used for labels.
 - `manifest.webmanifest`, `icons/`: home-screen name and icons, generated from `icons/monogram-source.jpg`.
 - `tests/`: simulated-browser checks (`cd tests && npm install && npm test`).
 - `HANDOVER.md`: how it's built, data, decisions and open items.

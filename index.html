@@ -7,9 +7,9 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Article Folio">
+<meta name="apple-mobile-web-app-title" content="Folio">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#f9f7f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#190e10" media="(prefers-color-scheme: dark)">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
 <link rel="stylesheet" href="styles/product-starter/tokens.css">
@@ -18,7 +18,7 @@
 (function(){var t='auto';try{t=(JSON.parse(localStorage.getItem('folio.settings')||'{}').theme)||'auto'}catch(e){}
 if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head><body>
-<title>Article Folio</title>
+<title>Folio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,55 +28,63 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
    only the accent, category colours and reading type are Folio's own. */
 :root{
   --fg:var(--text); --ink:var(--text); --muted:var(--text-muted); --rule:var(--border); --chip:var(--surface-sunken); --sheet:var(--surface);
-  --accent:#EA0000; --on-accent:#FFFFFF; --accent-text:#C80000;
+  /* v3 (Paper, 7 Nov): white ground, moss-green accent, ink cards, pixel-mono labels, 2px small radius */
+  --bg:#FFFFFF; --radius-sm:2px;
+  --accent:#304F0C; --on-accent:#FFFFFF; --accent-text:#304F0C;
+  --card:var(--text); --on-card:var(--bg);
   --oncat:#FFFFFF; --c1:#2747C4; --c2:#554A48; --c3:#15803D; --c4:#9333EA; --c5:#B45309; --c6:#0E7490;
   --cover-bg:var(--accent); --cover-fg:var(--on-accent); --tint:color-mix(in srgb,var(--accent) 6%,var(--surface));
   --stagebg:var(--neutral-150); --scrim:rgba(19,9,11,.48);
   --f-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
-  /* The kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are licensed to More Yum and can't ship in this public repo,
-     so Folio uses the kit's named fallbacks: Inter (Google Fonts, OFL) and Compagnon (bundled, OFL). */
-  --font-sans:Inter,"Helvetica Neue",Arial,sans-serif; --font-mono:Compagnon,"Courier Prime",ui-monospace,monospace;
+  /* The kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are licensed to More Yum and can't ship in this public repo.
+     Folio uses Inter (Google Fonts, OFL) and Bitcount Single (bundled, OFL) with round pixels for labels. */
+  --font-sans:Inter,"Helvetica Neue",Arial,sans-serif; --font-mono:"Bitcount Single","Courier Prime",ui-monospace,monospace;
   --f-sans:var(--font-sans); --f-mono:var(--font-mono);
   --rf:var(--f-serif); --rs:19px; --rl:1.55; color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --accent-text:#FF5C5C; --oncat:#111214;
+  --bg:var(--neutral-950); --accent-text:#8FB860; --oncat:#111214;
   --c1:#98AAFF; --c2:#BEBAB4; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE;
   --stagebg:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 :root[data-face="sans"]{--rf:var(--f-sans)}
+@font-face{font-family:"Bitcount Single";src:url(styles/fonts/BitcountSingle-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
+/* every mono label: medium weight, round pixels (Paper: "Bitcount Mono Single Regular Circle") */
+.st-field__label,.lbl,.kick,.ckick,.qdom,.fchip,.catsel select,.st-badge,.ref figcaption,.nref small,.st-tabs__count,.wm-mono{font-variation-settings:"ELSH" 100}
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* ---------- Library ---------- */
-.lib{max-width:620px;margin:0 auto;padding-block:32px 96px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
-.top{display:flex;flex-direction:column-reverse;gap:14px}
-.top > .row{align-self:flex-end;margin-bottom:-6px}
-.mark{font:500 clamp(30px,9.2vw,48px)/1 var(--f-sans);letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;margin:0}
-.mark b{font-style:normal;font-weight:600;color:var(--accent-text)}
-.lede{font:400 15px/1.5 var(--f-sans);color:var(--muted);margin:8px 0 0;max-width:34em}
+.lib{max-width:620px;margin:0 auto;padding-block:16px 64px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.mark{margin:0;line-height:0;color:var(--text)}
+.wordmark{display:block;width:122px;height:auto}
 .add{display:flex;flex-direction:column;gap:10px}
-.lbl{font:300 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
+.lbl{font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
 textarea,input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--rule);background:var(--sheet);color:var(--fg);border-radius:12px;padding:12px 14px;font:400 15px/1.45 var(--f-sans);resize:vertical}
 textarea::placeholder,input::placeholder{color:var(--muted)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .qhead{display:flex;justify-content:space-between;align-items:baseline}
 .queue{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
-.queue li{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:4px 10px;border-top:1px solid var(--rule);background:var(--bg)}
-.grip{width:34px;height:48px;margin-left:-8px;border:0;background:none;color:var(--muted);cursor:grab;touch-action:none;display:grid;place-items:center;border-radius:8px}
-.grip::before{content:"";width:10px;height:16px;background:radial-gradient(circle,currentColor 1.5px,transparent 1.8px) 0 0/5px 5.4px}
+.queue li{display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;gap:0 12px;border-top:1px solid var(--rule);background:var(--bg);padding:14px 0}
+.grip{width:24px;margin-left:-6px;align-self:stretch;border:0;background:none;color:var(--border-strong);cursor:grab;touch-action:none;display:grid;place-items:center;border-radius:6px}
+.grip::before{content:"";width:4px;height:18px;background:radial-gradient(circle,currentColor 1.9px,transparent 2.1px) 0 0/4px 7px}
 .grip:hover{color:var(--fg)}
 .queue li.dragging{position:relative;z-index:2;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);border-top-color:transparent;background:var(--sheet)}
 .queue li.dragging .grip{cursor:grabbing;color:var(--accent-text)}
 .queue.sorting li:not(.dragging){transition:none}
-.qopen{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:16px 0;min-width:0}
+.qmid{display:flex;flex-direction:column;gap:6px;min-width:0}
+.qopen{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-width:0}
 .qopen:focus-visible{outline:2px solid var(--accent);outline-offset:4px}
-.qdom{font:600 11px/1.2 var(--f-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.qdom .nx{color:var(--accent-text)}
-.qt{font:500 19px/1.28 var(--f-serif);text-wrap:balance;color:var(--fg)}
-.qright{display:flex;align-items:center;gap:6px}
+.qdom{font:500 10px/12px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.qt{font:500 20px/1.08 var(--f-serif);text-wrap:balance;color:var(--fg)}
+.qmeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding-top:4px}
+.qst{font:500 11px/14px var(--f-sans);color:var(--text-muted);font-variant-numeric:tabular-nums}
+.qact{display:flex;align-items:center;gap:0;margin-left:auto}
+.qact .st-icon-btn{color:var(--text-subtle)}
+.qthumb{width:67px;align-self:stretch;min-height:72px;object-fit:cover;background:var(--surface-sunken);border-radius:var(--radius-sm);display:block}
 #srcLink{text-decoration:none}
 .note{font:500 13px/1.5 var(--f-sans);color:var(--muted);margin:0}
 
@@ -111,7 +119,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 
 .cover{background:var(--cover-bg);color:var(--cover-fg)}
 .cover .slide-body{justify-content:flex-end;gap:16px;padding-bottom:2%}
-.kick{margin:0;font:300 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--accent-text)}
+.kick{margin:0;font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--accent-text)}
 .cover .kick{color:inherit;opacity:.82}
 .ctitle{font-family:var(--rf);font-weight:480;line-height:1.04;letter-spacing:-.022em;text-wrap:balance;color:inherit;margin:0}
 :root[data-face="sans"] .ctitle{font-weight:600;letter-spacing:-.03em}
@@ -187,7 +195,8 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .pastebox.full .pstat{color:var(--accent-text);font-weight:600}
 .why{font-size:13px!important}
 .listsw{display:flex;align-items:center;gap:10px;position:relative;min-width:0}
-.qhead{align-items:center;justify-content:flex-end}
+.qhead{align-items:center;justify-content:flex-end;gap:10px}
+#viewSeg{flex:1;display:flex}#viewSeg .st-seg__opt{flex:1;justify-content:center}
 .qhead .listsw{margin-right:auto}
 .listsw.pop{animation:pop .18s ease-out}@keyframes pop{from{opacity:0;transform:translateY(-4px)}}
 .qcat{gap:6px;flex-wrap:wrap}
@@ -195,7 +204,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
-.ro .owneronly,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
+.ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
 .obox .osync{font-size:13px;color:var(--muted)}
@@ -206,15 +215,15 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .prow{display:flex;gap:8px}.prow input{flex:1;min-width:0}
 .obox .ohint{font-size:13px}
 .stackv{display:flex;flex-direction:column;gap:14px}
-.deck{position:relative;height:clamp(300px,46vh,430px);margin-top:28px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.deck{position:relative;height:clamp(300px,42vh,400px);margin-top:24px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .card2{position:absolute;inset:0;border-radius:22px;overflow:hidden;box-sizing:border-box;padding:20px 22px 22px;display:flex;flex-direction:column;gap:14px;
-  background:var(--cover-bg);color:var(--cover-fg);cursor:pointer;outline:none;
+  background:var(--card);color:var(--on-card);cursor:pointer;outline:none;
   transform:translateY(calc(var(--k) * -14px)) scale(calc(1 - var(--k) * .05));transform-origin:50% 0;
-  transition:transform .34s cubic-bezier(.2,.7,.2,1),opacity .34s;box-shadow:0 14px 34px rgba(23,24,27,.14),0 1px 2px rgba(23,24,27,.08)}
-.card2.cat{background:var(--cc);color:var(--oncat)}
+  transition:transform .34s cubic-bezier(.2,.7,.2,1),opacity .34s}
+.card2.cat{background:var(--card);color:var(--on-card)}
 .card2.k1,.card2.k2{pointer-events:none}
 .card2.k1 > *,.card2.k2 > *{opacity:0}
-.card2.k2{opacity:.85}
+.card2.k1{opacity:.6}.card2.k2{opacity:.35}
 .card2.drag{transition:none}
 .card2:focus-visible{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--accent)}
 .card2 > *{position:relative;z-index:1;transition:opacity .25s}
@@ -222,7 +231,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .card2.img{background:#0c0c0e;color:#fff}
 .card2.img::after{content:"";position:absolute;inset:0;z-index:0;background:linear-gradient(to top,rgba(0,0,0,.84),rgba(0,0,0,.42) 45%,rgba(0,0,0,.12) 70%,rgba(0,0,0,.35))}
 .ctop{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:26px}
-.ckick{font:300 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ckick{font:500 13px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cnext{flex:none;font:600 11px/1 var(--f-sans);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.2);background:color-mix(in srgb,currentColor 18%,transparent)}
 .cmain{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;gap:12px;overflow:hidden}
 .ctl{margin:0;font-family:var(--f-serif);font-weight:480;font-size:clamp(26px,7.4vw,34px);line-height:1.06;letter-spacing:-.02em;text-wrap:balance;
@@ -232,42 +241,52 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 :root[data-face="sans"] .cdek{font-family:var(--f-sans);font-size:15px}
 .cfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 13px/1.3 var(--f-sans);font-variant-numeric:tabular-nums}
 .cfoot > span:first-child{opacity:.85}
-.ccat{flex:none;padding:6px 10px;border-radius:999px;border:1px solid currentColor;font-weight:600;font-size:12px;opacity:.9}
+.ccat{flex:none;padding:3px 6px 1px;border-radius:var(--radius-sm);background:var(--cc);color:var(--oncat);font:500 10px/12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;font-variation-settings:"ELSH" 100}
 .cprog{position:absolute;left:0;bottom:0;height:4px;background:currentColor;opacity:.9;z-index:1}
 .card2.done .ctl,.card2.done .cdek{opacity:.6}
-.deckbar{display:flex;align-items:center;justify-content:center;gap:18px}
+.deckbar{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.deckbar .st-icon-btn{border-color:transparent;background:transparent}
 .dkn{font:600 13px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums;min-width:64px;text-align:center}
-.dkhint{font:500 12.5px/1.4 var(--f-sans);color:var(--muted);text-align:center;margin:-4px 0 0}
+.dkhint{display:none}
+.linkbtn{all:unset;cursor:pointer;align-self:center;font:500 13px/18px var(--f-sans);color:var(--text);text-decoration:underline 1px;text-underline-offset:3px;padding:8px}
+.linkbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.addbar{display:flex;align-items:center;justify-content:center;gap:6px;height:38px;border:0;border-radius:var(--radius-md);background:var(--surface-sunken);color:var(--text);font:500 15px/20px var(--f-sans)}
+.addbar .st-icon{width:20px;height:20px}
+.addbar:hover{background:color-mix(in srgb,var(--text) 10%,var(--surface-sunken))}
+.row.eq > .st-btn{flex:1}
 @media (prefers-reduced-motion: reduce){.card2{transition:none}}
-.filters{display:flex;flex-wrap:wrap;gap:6px;margin-top:-10px}
+.filters{display:flex;flex-wrap:wrap;gap:5px}
 .filters:empty{display:none}
-.fchip{border:1px solid var(--rule);background:transparent;border-radius:999px;height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:7px;font:600 13px/1 var(--f-sans);color:var(--fg)}
-.fchip i{width:9px;height:9px;border-radius:50%;background:var(--cc,var(--muted))}
-.fchip span{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
-.fchip[aria-pressed="true"]{border-color:var(--cc,var(--fg));background:color-mix(in srgb,var(--cc,var(--fg)) 14%,transparent);box-shadow:inset 0 0 0 1px var(--cc,var(--fg))}
-.fchip.manage{border-style:dashed;color:var(--muted)}
-.queue li .qopen{padding-bottom:10px}
-.queue li .qcat{grid-column:2;padding:0 0 14px;display:flex}
+.fchip{border:0;background:var(--surface-sunken);border-radius:var(--radius-sm);height:22px;padding:2px 9px 0 6px;display:inline-flex;align-items:center;gap:6px;font:500 13px/16px var(--font-mono);color:var(--text)}
+.fchip:first-child{padding-left:6px;padding-right:6px}
+.fchip i{width:6px;height:6px;border-radius:50%;background:var(--cc,var(--muted))}
+.fchip[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.queue li .qcat{display:flex}
 .catsel{position:relative;display:inline-flex;align-items:center}
-.catsel i{position:absolute;left:10px;width:8px;height:8px;border-radius:50%;background:var(--cc,transparent);box-shadow:inset 0 0 0 1px var(--cc,var(--muted));pointer-events:none}
-.catsel::after{content:"";position:absolute;right:11px;width:5px;height:5px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-2px) rotate(45deg);pointer-events:none}
-.catsel select{appearance:none;-webkit-appearance:none;border:0;border-radius:999px;background:var(--chip);color:var(--fg);font:500 12.5px/1 var(--f-sans);height:28px;padding:0 28px 0 24px;max-width:220px;text-overflow:ellipsis}
-.catsel select.none{color:var(--muted)}
+.catsel i{display:none}
+.catsel b{display:block;border-radius:var(--radius-sm);background:var(--cc,transparent);color:var(--oncat);font:500 10px/12px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.07em;text-transform:uppercase;padding:3px 6px 1px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.catsel b.none{background:transparent;color:var(--text-muted);box-shadow:inset 0 0 0 1px var(--border)}
+.catsel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.catsel:focus-within b{outline:2px solid var(--focus);outline-offset:2px}
+.catsel.mv b{background:transparent;color:var(--text-muted);box-shadow:inset 0 0 0 1px var(--border)}
 .queue.filtering li[data-id]:not(.hl){opacity:.35}
-.queue li.hl{background:var(--tint);background:color-mix(in srgb,var(--cc) 9%,var(--bg));box-shadow:inset 3px 0 0 var(--cc)}
+.queue li.hl{background:color-mix(in srgb,var(--cc) 7%,var(--bg))}
 .queue li{transition:opacity .2s,background .2s}
 .cats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .cats li{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center}
 .cats .dot{width:30px;height:30px;border-radius:50%;border:0;background:var(--cc);box-shadow:inset 0 0 0 3px var(--sheet),0 0 0 1px var(--cc)}
 .cats .ct{font:500 12px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums;min-width:20px;text-align:right}
 .catadd{display:flex;gap:8px}
-.view{display:flex;flex-direction:column;gap:28px}
+.view{display:flex;flex-direction:column;gap:24px}
+.add{gap:14px}
 /* Product Starter components in Folio's layout */
 .lib .st-field,.sheet .st-field{width:100%}
+.st-input{border-color:var(--text)}
+.st-tabs__tab .st-tabs__count{font:500 16px/1 var(--font-mono);color:var(--text-subtle);background:none;padding:0;min-width:0;height:auto}
 .lib > .st-tabs__list{margin-bottom:-12px}
 .st-tabs__count:empty{display:none}
 .st-seg__opt .st-icon{width:20px;height:20px}
-.qhead .st-seg__opt{padding:0 10px}
+.qhead .st-seg__opt{padding:0 10px;height:32px}
 .st-icon-btn.aa{font:500 17px/40px var(--f-serif);display:flex;justify-content:center;align-items:baseline;color:var(--text)}
 .st-icon-btn.aa span{font-size:12px}
 .lib .top .st-icon-btn{color:var(--text)}
@@ -276,9 +295,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .sz .st-icon-btn{border-radius:var(--radius-md)}
 .prow{display:flex;gap:var(--space-2)}.prow .st-input{flex:1;min-width:0}
 .cats .st-input{height:40px}
-.qright .st-icon-btn,.nghead .st-icon-btn{color:var(--text-muted)}
+.nghead .st-icon-btn{color:var(--text-muted)}
 .queue li .st-badge{flex:none}
-.queue li.empty-row{display:block;border-top:1px solid var(--rule)}
+.queue li.empty-row{display:block;border-top:1px solid var(--rule);padding:0}
 .note{font:500 13px/18px var(--f-sans);color:var(--text-muted);margin:0}
 .st-status .st-status__text b{color:var(--text);font-weight:600}
 .loading .st-spinner{color:currentColor;margin-bottom:16px}
@@ -295,18 +314,19 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .ngroup{border-top:1px solid var(--rule);padding-block:18px 6px;display:flex;flex-direction:column;gap:14px}
 .nghead{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
 .nghead > div{display:flex;flex-direction:column;gap:5px;min-width:0}
-.note-i{display:flex;flex-direction:column;gap:8px;padding-left:14px;border-left:2px solid var(--rule)}
-.nref{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.note-i{display:flex;flex-direction:column;gap:8px}
+.nref{all:unset;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:8px;background:var(--success-soft)}
 .nref:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-.nref small{font:600 11px/1.2 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text)}
+.nref small{font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
 .nref q{font:italic 400 15px/1.45 var(--f-serif);color:var(--muted);quotes:"“" "”"}
 .ntext{margin:0;font:400 16px/1.5 var(--f-sans);color:var(--fg);white-space:pre-wrap;overflow-wrap:anywhere}
 .nmeta{display:flex;gap:12px;align-items:center;font:500 12.5px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums}
 .nmeta button{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font:inherit}
-.ref{margin:0;display:flex;flex-direction:column;gap:6px}
-.ref figcaption{font:600 11.5px/1.2 var(--f-sans);letter-spacing:.12em;text-transform:uppercase;color:var(--accent-text)}
-.ref blockquote{margin:0;padding-left:12px;border-left:2px solid var(--accent);font:italic 400 16px/1.45 var(--f-serif);color:var(--fg)}
+.ref{margin:0;display:flex;flex-direction:column;gap:2px;padding:8px;background:var(--success-soft)}
+.ref figcaption{font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
+.ref blockquote{margin:0;font:italic 400 17px/26px var(--f-serif);color:var(--text-muted)}
 #nText{min-height:120px;font-size:16px}
+#nDel{color:var(--error);border-color:var(--error)}
 #nOthers:empty{display:none}
 #nOthers{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--rule);padding-top:16px}
 .nb{position:relative}
@@ -314,7 +334,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 /* Desktop: the same narrow column as on a phone, centred on the page, with no frame or shadow */
 @media (min-width:720px){
   .lib{width:min(100%,52vh);max-width:none;box-sizing:border-box;padding-block:40px 96px}
-  .mark{font-size:calc(min(100vw,52vh) * .092)}
+  .wordmark{width:140px}
   .sheet{left:50%;right:auto;bottom:3vh;width:min(100%,52vh);transform:translateX(-50%);border-radius:var(--radius-lg);border-bottom:1px solid var(--border);max-height:80vh}
   .scrim{background:var(--scrim)}
 }
@@ -339,8 +359,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 <main class="lib" id="lib">
   <header class="top">
     <div>
-      <h1 class="mark">Article Folio</h1>
-      <p class="lede">Paste article links. Each one plays as a story, one paragraph per slide.</p>
+      <h1 class="mark"><svg class="wordmark" viewBox="0 0 222.02 93.2" role="img" aria-label="Folio" fill="currentColor"><path d="M194.611 55.778C194.611 65.376 199.128 69.553 207.935 69.553C211.435 69.553 213.806 69.102 215.952 68.311C215.952 65.15 213.468 63.343 209.403 61.085C203.305 57.698 200.257 53.633 200.257 46.971C200.257 43.471 201.16 40.196 202.854 37.148L202.628 36.922C197.547 42.567 194.611 49.568 194.611 55.778ZM180.836 73.279C180.836 63.005 186.707 58.601 186.707 47.987C186.707 45.955 186.143 43.809 184.675 41.89C192.805 40.874 202.967 34.889 206.693 29.131L207.032 29.3C205.338 33.365 206.58 35.793 212.677 39.632C218.887 43.471 221.823 47.987 221.823 56.907C221.823 72.715 210.645 80.845 211.322 92.475L211.096 92.587C210.08 91.12 207.596 90.329 202.402 90.329C187.159 90.329 180.836 84.119 180.836 73.279Z"/><path d="M151.697 77.232C151.697 69.892 158.697 60.408 158.697 55.327C158.697 51.262 157.342 49.681 153.842 49.681C152.487 49.681 150.906 50.02 150.229 50.472L150.003 50.246C153.729 44.826 154.858 35.906 153.164 29.357L153.503 29.131C157.794 32.18 163.891 33.535 169.537 33.874C168.633 38.051 168.069 42.003 168.069 48.1C168.069 62.892 169.763 68.199 174.279 68.199C176.199 68.199 177.553 67.409 178.683 65.602L179.021 65.828C174.166 73.393 172.811 87.62 173.376 92.475L173.15 92.588C172.134 91.12 169.198 90.555 165.585 89.878C155.31 87.959 151.697 84.345 151.697 77.232ZM153.616 28.115C156.213 17.727 165.133 4.629 171.005 0L171.795 0.79C168.295 3.387 165.924 6.21 163.948 8.92C168.803 9.259 171.569 10.953 171.569 14.34C171.569 20.55 159.375 23.599 153.616 28.115Z"/><path d="M123.857 77.232C123.857 69.893 130.857 62.666 130.857 52.166C130.857 38.842 122.728 26.648 122.728 16.824C122.728 13.098 124.534 11.292 128.034 11.292C132.438 11.292 136.729 12.759 140.568 12.759C144.915 12.759 146.778 9.372 145.479 4.404L145.874 4.291C146.213 5.194 146.552 7.453 146.552 8.92C146.552 22.131 140.229 38.165 140.229 56.118C140.229 63.457 141.923 68.199 146.439 68.199C148.359 68.199 149.601 67.296 150.843 65.602L151.181 65.828C146.326 73.393 144.971 87.62 145.536 92.475L145.31 92.588C144.294 91.12 141.358 90.556 137.745 89.878C127.47 87.959 123.857 84.346 123.857 77.232Z"/><path d="M97.524 55.778C97.524 65.376 102.041 69.553 110.848 69.553C114.348 69.553 116.719 69.102 118.865 68.311C118.865 65.15 116.381 63.343 112.316 61.085C106.219 57.698 103.17 53.633 103.17 46.971C103.17 43.471 104.073 40.196 105.767 37.148L105.541 36.922C100.46 42.567 97.524 49.568 97.524 55.778ZM83.749 73.279C83.749 63.005 89.62 58.601 89.62 47.987C89.62 45.955 89.056 43.809 87.588 41.89C95.718 40.874 105.88 34.889 109.606 29.131L109.945 29.3C108.251 33.365 109.493 35.793 115.59 39.632C121.8 43.471 124.736 47.987 124.736 56.907C124.736 72.715 113.558 80.845 114.235 92.475L114.009 92.587C112.993 91.12 110.509 90.329 105.315 90.329C90.072 90.329 83.749 84.119 83.749 73.279Z"/><path d="M85.474 5.646H85.926C85.023 10.276 84.797 12.986 84.797 16.034C84.797 22.132 86.265 25.293 86.265 31.39C86.265 37.262 83.668 39.746 78.474 39.746C68.82 39.746 60.295 37.657 51.601 35.455C50.415 37.205 50.246 38.391 50.246 39.746C50.246 44.206 56.738 46.859 63.569 49.569C69.328 45.504 74.861 43.359 79.151 43.359C83.103 43.359 84.571 44.601 84.571 47.65C84.571 49.682 83.781 52.731 83.668 59.731H83.216C83.329 51.263 76.329 48.553 72.49 48.553C69.78 48.553 67.409 49.005 64.981 50.134C72.207 53.013 79.377 56.118 79.377 61.651C79.377 66.28 77.119 69.216 68.312 72.603C61.989 75.087 60.634 77.233 57.472 84.12C54.762 89.992 52.391 92.024 48.1 92.024C41.213 92.024 34.382 88.58 27.55 85.475C23.655 88.863 16.767 91.911 9.823 91.911C5.646 91.911 3.839 91.008 3.839 89.088C3.839 86.83 5.871 83.556 5.871 78.926C5.871 76.104 4.968 72.603 4.968 67.974C4.968 62.215 7.678 59.28 13.098 59.28C24.389 59.28 32.97 66.675 41.834 71.813C44.149 69.385 46.407 66.958 48.383 64.643C43.415 62.667 39.068 59.844 39.068 54.312C39.068 48.271 43.528 41.044 50.98 35.342C40.818 32.745 30.43 29.923 17.727 29.923C8.581 29.923 3.5 31.729 3.5 35.455C3.5 38.052 5.533 39.294 9.485 39.294C15.243 39.294 21.453 36.697 29.357 36.697C35.003 36.697 37.713 38.504 37.713 42.569C37.713 49.456 32.857 51.828 31.615 63.006H31.051C31.841 57.36 26.873 55.441 11.404 55.666C2.032 55.779 0 54.312 0 48.44C0 39.633 3.613 35.004 3.613 29.923C3.613 25.745 2.484 24.164 2.484 20.664C2.484 14.905 9.71 11.292 21.227 11.292C37.825 11.292 58.94 16.712 75.425 16.712C81.41 16.712 84.12 13.325 85.474 5.646ZM6.21 82.878C6.21 84.911 9.372 85.927 15.469 85.927C20.832 85.927 23.712 85.645 26.478 85.024C21.34 82.709 16.316 80.733 11.291 80.733C7.791 80.733 6.21 81.41 6.21 82.878ZM42.794 72.377C47.141 74.805 51.601 76.555 56.456 76.555C60.521 76.555 63.118 75.2 63.118 73.055C63.118 68.764 55.892 67.466 49.343 65.038C47.367 67.409 45.165 69.893 42.794 72.377Z"/></svg></h1>
     </div>
     <div class="row" style="gap:2px;flex-wrap:nowrap">
       <button type="button" class="st-icon-btn aa" id="libAa" aria-label="Reading settings" title="Reading settings">A<span>a</span></button>
@@ -349,22 +368,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   </header>
 
   <div class="st-tabs__list" role="tablist" aria-label="Overview">
-    <button type="button" role="tab" class="st-tabs__tab is-on" id="tabQueue" aria-selected="true" aria-controls="viewQueue">Queue</button>
+    <button type="button" role="tab" class="st-tabs__tab is-on" id="tabQueue" aria-selected="true" aria-controls="viewQueue"><span id="tabListName">Reading list</span></button>
     <button type="button" role="tab" class="st-tabs__tab" id="tabNotes" aria-selected="false" aria-controls="viewNotes" tabindex="-1">Notes <span class="st-tabs__count" id="noteTotal"></span></button>
   </div>
 
   <div id="viewQueue" class="view" role="tabpanel" aria-labelledby="tabQueue">
-  <section class="add">
-    <div class="st-field">
-      <label class="st-field__label owneronly" for="links">Add links</label>
-      <textarea id="links" class="st-input st-textarea" rows="3" placeholder="One or more links, any separator"></textarea>
-    </div>
-    <div class="row">
-      <button type="button" class="st-btn st-btn--primary" id="readNext">Read next</button>
-      <button type="button" class="st-btn st-btn--secondary" id="addBtn">Add to queue</button>
-    </div>
-  </section>
-
   <section class="add">
     <div class="qhead">
       <div class="st-field listsw" id="listSw" hidden><label class="st-field__label" for="listSel">Reading list</label><div class="st-select"><select id="listSel" class="st-input st-select__el"></select><svg class="st-icon st-select__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div></div>
@@ -376,9 +384,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <div class="filters" id="filters" role="group" aria-label="Highlight a category"></div>
     <div class="stackv" id="stack" hidden></div>
     <ul class="queue" id="queue"></ul>
-    <button type="button" class="st-btn st-btn--ghost st-btn--sm" id="clearRead" style="align-self:flex-start">Clear finished</button>
-    <div class="note" id="modeNote">Links load through a reader service. Where a page can’t be reached, Article Folio asks you to paste its text.</div>
+    <button type="button" class="linkbtn" id="clearRead">Clear finished</button>
   </section>
+  <button type="button" class="addbar owneronly" id="openAdd"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6M9 8h6M9 12h4M17 15v6M14 18h6"/></svg>Add new item</button>
   </div>
 
   <div id="viewNotes" class="view" role="tabpanel" aria-labelledby="tabNotes" hidden>
@@ -437,6 +445,21 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   </div>
 </div>
 
+<div class="sheet" id="addSheet" hidden role="dialog" aria-modal="true" aria-labelledby="aTitle">
+  <div class="in">
+    <div class="st-dialog__head"><h2 class="st-dialog__title" id="aTitle">Add new item</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="aX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="st-field">
+      <label class="st-field__label" for="links">Links</label>
+      <textarea id="links" class="st-input st-textarea" rows="4" placeholder="One or more links, any separator"></textarea>
+    </div>
+    <div class="row eq">
+      <button type="button" class="st-btn st-btn--primary" id="addBtn">Add to list</button>
+      <button type="button" class="st-btn st-btn--secondary" id="readNext">Add and read</button>
+    </div>
+    <div class="note" id="modeNote">Links load through a reader service. Where a page can’t be reached, Folio asks you to paste its text.</div>
+  </div>
+</div>
+
 <div class="sheet" id="pasteSheet" hidden role="dialog" aria-modal="true" aria-labelledby="pTitle">
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="pTitle">Paste the article</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="pX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -471,7 +494,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     </div>
     <div class="set" id="installSet"><span class="st-field__label">Home screen</span>
       <p id="installHow"></p>
-      <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Article Folio to home screen</button>
+      <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Folio to home screen</button>
     </div>
     <div class="set"><span class="st-field__label">Reading</span><button type="button" class="st-btn st-btn--secondary" id="mReading" style="align-self:flex-start">Typeface, size and theme</button></div>
   </div>
@@ -482,7 +505,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="nTitle">Note</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="nX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <figure class="ref"><figcaption id="nWhere"></figcaption><blockquote id="nRef"></blockquote></figure>
     <div class="st-field"><label class="st-field__label" for="nText">Your note</label><textarea id="nText" class="st-input st-textarea" rows="5" placeholder="What do you want to remember about this?"></textarea></div>
-    <div class="row"><button type="button" class="st-btn st-btn--primary" id="nSave">Save note</button><button type="button" class="st-btn st-btn--secondary" id="nDel" hidden>Delete note</button></div>
+    <div class="row eq"><button type="button" class="st-btn st-btn--primary" id="nSave">Save note</button><button type="button" class="st-btn st-btn--secondary" id="nDel" hidden>Delete note</button></div>
     <div id="nOthers"></div>
   </div>
 </div>
@@ -540,8 +563,8 @@ $('#szDn').onclick=()=>S.size>0&&setS('size',S.size-1);
 $('#szUp').onclick=()=>S.size<SIZES.length-1&&setS('size',S.size+1);
 
 /* ---------- Sample (original text) ---------- */
-const SAMPLE={id:'sample',title:'Reading as a story',site:'Article Folio',url:null,date:null,hero:null,blocks:[
- {t:'p',html:'Article Folio plays a long article as a story. Every paragraph gets a slide of its own.'},
+const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:null,hero:null,blocks:[
+ {t:'p',html:'Folio plays a long article as a story. Every paragraph gets a slide of its own.'},
  {t:'p',html:'Short paragraphs are set large. Longer ones step down towards your reading size, so a one-line thought lands with weight and a dense passage still reads comfortably. Sizes move on a fixed scale, which keeps the rhythm steady from slide to slide.'},
  {t:'h',html:'Moving through'},
  {t:'p',html:'Tap the right side to go on and the left side to go back, or swipe. Hold anywhere to pause. Swipe down to close.'},
@@ -590,7 +613,7 @@ const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch=
 function renderMode(){
   const n=$('#modeNote');
   if(canFetch===false){n.className='st-status st-status--info';n.setAttribute('role','status');n.innerHTML=ic('info','st-status__icon')+'<div class="st-status__body"><p class="st-status__title">Paste mode</p><p class="st-status__text">This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</p></div>';}
-  else{n.className='note';n.textContent='Links load through a reader service. Where a page can’t be reached, Article Folio asks you to paste its text.'}
+  else{n.className='note';n.textContent='Links load through a reader service. Where a page can’t be reached, Folio asks you to paste its text.'}
 }
 function renderQ(){renderMode();
   const ul=$('#queue');const nx=nextUnread(null);
@@ -598,16 +621,22 @@ function renderQ(){renderMode();
   if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet','Paste a link above and it lands here.')}</li>`;}
   else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
-    <button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}${nx&&nx.id===it.id?' <span class="nx">· Next</span>':''}</span><span class="qt">${esc(it.title)}</span></button>
-    <div class="qright">${it.url?`<a class="st-icon-btn st-icon-btn--sm" href="${esc(it.url)}" target="_blank" rel="noopener" aria-label="Open original on ${esc(it.site||"site")}">${LINK_ICON}</a>`:''}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:chip(it)}<button class="st-icon-btn st-icon-btn--sm" data-rm="${it.id}" aria-label="Remove">${ic('close')}</button></div>${catSelect(it,moveSelect(it))}</li>`}).join('');
-  $('#readNext').disabled=!nx;
-  const fc=F&&C.find(c=>c.id===F);$('#readNext').textContent=fc?'Read next in '+fc.name:'Read next';
+    <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span></button>
+    <div class="qmeta">${catSelect(it,moveSelect(it))}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:`<span class="qst">${statusText(it)}</span>`}
+      <span class="qact"><button class="st-icon-btn st-icon-btn--sm" data-rm="${it.id}" aria-label="Remove">${ic('close')}</button></span></div></div>
+    ${thumbOf(it)?`<img class="qthumb" src="${esc(thumbOf(it))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span></span>'}</li>`}).join('');
+  $('#tabListName').textContent=listName(AL);
   renderFilters();
   $('#vStack').checked=VIEW==='stack';$('#vList').checked=VIEW==='list';$('#vStack').parentNode.classList.toggle('is-on',VIEW==='stack');$('#vList').parentNode.classList.toggle('is-on',VIEW==='list');
-  ul.hidden=VIEW!=='list';$('#stack').hidden=VIEW!=='stack';
+  ul.hidden=VIEW!=='list';$('#stack').hidden=VIEW!=='stack';$('#filters').hidden=VIEW!=='list';
   $('#clearRead').hidden=VIEW!=='list'||!VQ.some(i=>i.status==='read');
   if(VIEW==='stack')renderStack();
 }
+function artOf(it){return it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null)}
+function thumbOf(it){const a=artOf(it);return a&&a.hero||''}
+function minsOf(it){const a=artOf(it);const w=a&&a.blocks?words(a.blocks.map(b=>b.html||'').join(' ')):0;return w?Math.max(1,Math.round(w/230))+' min':''}
+function statusText(it){const st=it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':it.id==='sample'&&it.status==='new'?'Sample':'Unread';
+  return [st,it.status==='read'?'':minsOf(it)].filter(Boolean).join(' · ')}
 function nextUnread(after){
   let i=after?Q.findIndex(q=>q.id===after.id)+1:0;
   for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id)&&(!F||it.cat===F)&&it.list===AL)return it}
@@ -649,13 +678,16 @@ function addLinks(){
   let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u))}else if(ex.list!==AL)elsewhere=ex.list}
   const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10);add.forEach(a=>{a.list=lid;a.added=day});
   if(n)edit(`Add ${n} link${n>1?'s':''} to ${listName(lid)}`,d=>add.forEach(a=>{if(!d.articles.some(x=>x.id===a.id))d.articles.push({...a})}));
-  $('#links').value='';saveQ();renderQ();
+  $('#links').value='';saveQ();renderQ();if(n&&!$('#addSheet').hidden)closeSheets();
   if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:elsewhere?`Already in ${listName(elsewhere)}`:'Already in this list');
   else toast('No links found in that text');
   return n;
 }
 $('#addBtn').onclick=addLinks;
-$('#readNext').onclick=()=>{if($('#links').value.trim())addLinks();const it=nextUnread(null);if(it)openItem(it)};
+$('#readNext').onclick=()=>{const first=($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/)||[''])[0].replace(/[),.;]+$/,'');
+  if(first)addLinks();const it=(first&&Q.find(q=>q.url===first))||nextUnread(null);if(it)openItem(it)};
+$('#openAdd').onclick=()=>{renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
+$('#aX').onclick=closeSheets;
 $('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
   edit(`Clear ${gone.length} finished`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));renderQ();
   toast(`Cleared ${gone.length}`,()=>{edit('Restore finished',d=>gone.forEach(g=>{if(!d.articles.some(a=>a.id===g.id))d.articles.push({...g})}));renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
@@ -682,8 +714,7 @@ function renderFilters(){
   const box=$('#filters');if(F&&!C.some(c=>c.id===F))F=null;
   if(!C.length){box.innerHTML='';$('#queue').classList.remove('filtering');return}
   box.innerHTML=`<button class="fchip" data-f="" aria-pressed="${!F}">All</button>`+
-    C.map(c=>`<button class="fchip" data-f="${c.id}" aria-pressed="${F===c.id}" style="--cc:${ccv(c)}"><i></i>${esc(c.name)}<span>${Q.filter(q=>q.cat===c.id&&inList(q)).length}</span></button>`).join('')+
-    `<button class="fchip manage" data-f="__manage">Edit categories</button>`;
+    C.map(c=>`<button class="fchip" data-f="${c.id}" aria-pressed="${F===c.id}" style="--cc:${ccv(c)}" aria-label="${esc(c.name)}, ${Q.filter(q=>q.cat===c.id&&inList(q)).length} articles"><i></i>${esc(c.name)}</button>`).join('');
   $('#queue').classList.toggle('filtering',!!F);
 }
 $('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
@@ -691,9 +722,9 @@ $('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
   F=b.dataset.f||null;saveC();renderQ()};
 function catSelect(it,extra=''){
   const c=catOf(it);
-  return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c):''}"><i></i>
+  return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c):''}"><b class="${c?'':'none'}" aria-hidden="true">${c?esc(c.name):'+ Category'}</b>
     <select data-cat="${it.id}" class="${c?'':'none'}" aria-label="Category for ${esc(it.title)}">
-      <option value="">${C.length?'No category':'Add a category…'}</option>
+      <option value="">${C.length?'+ Category':'+ Category'}</option>
       ${C.map(k=>`<option value="${k.id}"${it.cat===k.id?' selected':''}>${esc(k.name)}</option>`).join('')}
       ${C.length?'<option value="__manage">Edit categories…</option>':''}
     </select></label>${extra}</div>`;
@@ -712,10 +743,10 @@ function renderInstall(){
   const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
   const ios=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const how=$('#installHow'),btn=$('#installBtn');btn.hidden=true;
-  if(standalone){how.textContent='You’re using Article Folio from your home screen.';return}
+  if(standalone){how.textContent='You’re using Folio from your home screen.';return}
   if(installEvt){how.textContent='Opens full screen, like an app, with its own icon.';btn.hidden=false;return}
   how.innerHTML=ios
-    ?'In Safari, tap <b>Share</b> <span aria-hidden="true"><svg width="13" height="15" viewBox="0 0 13 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6.5 1v8.5M3.5 4l3-3 3 3"/><path d="M4 6.5H1.5v7.5h10V6.5H9"/></svg></span>, scroll down and tap <b>Add to Home Screen</b>. It opens full screen with the Article Folio icon.'
+    ?'In Safari, tap <b>Share</b> <span aria-hidden="true"><svg width="13" height="15" viewBox="0 0 13 15" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M6.5 1v8.5M3.5 4l3-3 3 3"/><path d="M4 6.5H1.5v7.5h10V6.5H9"/></svg></span>, scroll down and tap <b>Add to Home Screen</b>. It opens full screen with the Folio icon.'
     :'In your browser’s menu, choose <b>Install app</b> or <b>Add to Home screen</b>.';
 }
 $('#installBtn').onclick=async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;renderInstall()};
@@ -756,7 +787,7 @@ function cardFor(it,k,nx){
   const st=needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
   return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. Tap to read.">
     ${hero?`<img class="cbg" src="${esc(hero)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('img');this.remove()">`:''}
-    <div class="ctop"><span class="ckick">${esc(it.site||'')}</span>${nx&&nx.id===it.id?'<span class="cnext">Up next</span>':''}</div>
+    <div class="ctop"><span class="ckick">${esc(it.site||'')}</span></div>
     <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek">${esc(blurb)}</p>`:''}</div>
     <div class="cfoot"><span>${[mins,st].filter(Boolean).join(' · ')}</span>${c?`<span class="ccat">${esc(c.name)}</span>`:''}</div>
     ${it.status==='reading'?`<i class="cprog" style="width:${it.pct}%"></i>`:''}
@@ -850,7 +881,7 @@ $('#listSel').addEventListener('change',e=>{const v=e.target.value;
   switchList(v)});
 function moveSelect(it){
   if(LS.length<2)return'';
-  return `<label class="catsel mv"><select data-move="${it.id}" aria-label="Move ${esc(it.title)} to another list">
+  return `<label class="catsel mv"><b aria-hidden="true">Move to…</b><select data-move="${it.id}" aria-label="Move ${esc(it.title)} to another list">
     <option value="" selected>Move to…</option>${LS.filter(l=>l.id!==it.list).map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('')}</select></label>`;
 }
 $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-move]');if(!sel||!sel.value)return;
@@ -1460,7 +1491,7 @@ function renderCards(){
   const p=$('#prog');
   p.innerHTML=c.length<=60?c.map(()=>'<i><b></b></i>').join(''):'<i><b></b></i>';
   p.classList.toggle('cont',c.length>60);
-  $('#src').textContent=a.site||'Article Folio';
+  $('#src').textContent=a.site||'Folio';
   const sl=$('#srcLink');sl.hidden=!a.url;if(a.url)sl.href=a.url;
   $('#av').textContent=(a.site||'F').replace(/^www\./,'').charAt(0);
 }
@@ -1643,7 +1674,7 @@ document.addEventListener('keydown',e=>{
   if((e.key==='l'||e.key==='L')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&reader.hidden&&$('#scrim').hidden&&!(e.target.closest&&e.target.closest('input,textarea,[contenteditable="true"]'))){
     e.preventDefault();toggleListSw();return}
   if(e.key==='Escape'&&!$('#listSw').hidden&&reader.hidden&&$('#scrim').hidden){toggleListSw(false);return}
-  if(!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
+  if(!$('#addSheet').hidden||!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
   if(reader.hidden)return;
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();next()}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}
@@ -1654,7 +1685,7 @@ let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(rela
 
 /* sheets */
 function openSheet(id){$('#scrim').hidden=false;$(id).hidden=false}
-function closeSheets(){$('#scrim').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true;$('#noteSheet').hidden=true;$('#menuSheet').hidden=true}
+function closeSheets(){$('#scrim').hidden=true;$('#addSheet').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true;$('#noteSheet').hidden=true;$('#menuSheet').hidden=true}
 $('#scrim').onclick=closeSheets;$('#setX').onclick=closeSheets;$('#setDone').onclick=closeSheets;
 $('#libAa').onclick=$('#rdAa').onclick=()=>openSheet('#setSheet');
 
@@ -1664,8 +1695,8 @@ function openPaste(it,err){
   pasteFor=it;pastedHTML=null;
   $('#pTitle').textContent='Paste this article';
   $('#pWhy').textContent=canFetch===true
-    ?`Article Folio couldn’t load ${it.site||'this page'}. ${err&&err.message?err.message:''} Open it, copy the article text and paste it below.`
-    :`This copy of Article Folio can’t reach other websites, so links need their text pasted in. Open the article, select the text, copy, and paste it below. Hosted on your own site, Article Folio loads links directly.`;
+    ?`Folio couldn’t load ${it.site||'this page'}. ${err&&err.message?err.message:''} Open it, copy the article text and paste it below.`
+    :`This copy of Folio can’t reach other websites, so links need their text pasted in. Open the article, select the text, copy, and paste it below. Hosted on your own site, Folio loads links directly.`;
   $('#pOpen').href=it.url||'#';$('#pOpen').hidden=!it.url;
   $('#pName').value=it.title||'';$('#pText').value='';pasteStat();
   if(it.status!=='read'){it.status='paste';saveQ();renderQ()}
@@ -1676,7 +1707,7 @@ function pasteStat(){
   const w=words($('#pText').value),box=$('#pBox');
   box.classList.toggle('full',w>0);$('#pGo').disabled=w<30;
   $('#pStat').textContent=w===0?'Tap the box, then Paste. Copied text or the page’s source code both work.'
-    :w>=30&&isSource($('#pText').value)?'Page source detected. Article Folio will pull the article, title and images out of it.'
+    :w>=30&&isSource($('#pText').value)?'Page source detected. Folio will pull the article, title and images out of it.'
     :w<30?'That looks too short to be the article. Paste the full text.'
     :`${w.toLocaleString('en-GB')} words pasted. About ${Math.max(1,Math.round(w/230))} min of reading.`;
 }
@@ -1696,14 +1727,14 @@ $('#pGo').onclick=()=>{
   else blocks=(pastedHTML&&pastedText===$('#pText').value)?htmlToBlocks(pastedHTML,{base:it.url}):textToBlocks(raw);
   if(!title||title===slugTitle(it.url||'')){const h=blocks.find(b=>b.t==='h'||b.t==='p');if(h&&words(h.html)<=18){title=strip(h.html)}}
   blocks=clean(blocks,title);const dek=blocks.dek;
-  if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Article Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
+  if(words(blocks.map(b=>b.html||'').join(' '))<60){$('#pWhy').textContent='Folio couldn’t find the article in that. Some sites build their pages with scripts, so the source has no text. Copy the text from the page itself instead.';return}
   const art={title:title||'Untitled',date:meta.date||null,site:meta.site||it.site||'Pasted',url:it.url,hero:meta.hero||null,blocks,dek};
   store.set('folio.c.'+it.id,art);it.title=art.title;it.status='new';saveQ();openItem(it);
 };
 
 /* boot */
 const fontsReady=(document.fonts?Promise.race([
-  Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px Inter','500 20px Inter','300 12px Compagnon'].map(f=>document.fonts.load(f))),
+  Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px Inter','500 20px Inter','500 12px "Bitcount Single"'].map(f=>document.fonts.load(f))),
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
 applySettings();
 if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
