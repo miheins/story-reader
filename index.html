@@ -284,7 +284,8 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .add{gap:14px}
 /* Product Starter components in Folio's layout */
 .lib .st-field,.sheet .st-field{width:100%}
-.st-input{border-color:var(--text)}
+input.st-input,textarea.st-input,select.st-input{border-color:var(--text)}
+input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--focus)}
 .st-tabs__tab .st-tabs__count{font:500 16px/1 var(--font-mono);color:var(--text-subtle);background:none;padding:0;min-width:0;height:auto}
 .lib > .st-tabs__list{margin-bottom:-12px}
 .st-tabs__count:empty{display:none}
@@ -337,6 +338,34 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 #nOthers{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--rule);padding-top:16px}
 .nb{position:relative}
 .badge{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:var(--on-accent);font:600 10px/16px var(--f-sans);text-align:center}
+/* List admin (#admin-<slug>) */
+.admin{gap:32px;width:100%;max-width:760px}
+.adtop{display:flex}
+.adtop .linkbtn{align-self:flex-start;padding:4px 0;text-decoration:none}
+.adtitle{margin:-16px 0 0;font:500 28px/1.15 var(--f-serif);letter-spacing:-.01em;color:var(--text);text-wrap:balance}
+.adsec{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--rule);padding-top:16px}
+.adsec .st-field__label{margin:0}
+.adsec .st-field__label span{color:var(--text-subtle)}
+.adhead{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.adall{display:flex;align-items:center;gap:8px;font:500 13px/1 var(--f-sans);color:var(--text-muted);cursor:pointer}
+.adurl{margin:0;display:flex;align-items:center;flex-wrap:wrap;gap:8px;font:500 13px/18px var(--f-sans);color:var(--text-muted)}
+.adurl code{font:500 13px/18px var(--font-mono);font-variation-settings:"ELSH" 100;color:var(--text);overflow-wrap:anywhere}
+.adurl .linkbtn{padding:0}
+.aditems{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.aditems li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:10px 0;border-bottom:1px solid var(--rule)}
+.aditems li:last-child{border-bottom:0}
+.aditems input,.adall input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--text)}
+.aditems label{display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer}
+.aditems .t{font:500 17px/1.2 var(--f-serif);color:var(--text)}
+.aditems .m{font:500 12px/16px var(--f-sans);color:var(--text-muted)}
+.adhint{margin:0;font:500 13px/18px var(--f-sans);color:var(--text-muted)}
+.addanger{align-self:flex-start;color:var(--error);padding:4px 0}
+.linkbtn:disabled{opacity:.4;cursor:default}
+#adNotes{display:flex;flex-direction:column;gap:14px}
+.adnote{display:flex;flex-direction:column;gap:6px}
+.adnote .nh{font:500 12px/16px var(--f-sans);color:var(--text-muted)}
+.ro #adNameForm button,.ro #adMoveL,.ro #adMoveL ~ *,.ro .adall,.ro .aditems input{display:none!important}
+
 /* Desktop: the same narrow column as on a phone, centred on the page, with no frame or shadow */
 @media (min-width:720px){
   .lib{--gut:32px;width:100%;max-width:none}
@@ -373,7 +402,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     </div>
   </header>
 
-  <div class="st-tabs__list" role="tablist" aria-label="Overview">
+  <div class="st-tabs__list" role="tablist" aria-label="Overview" id="tabs">
     <button type="button" role="tab" class="st-tabs__tab is-on" id="tabQueue" aria-selected="true" aria-controls="viewQueue"><span id="tabListName">Reading list</span></button>
     <button type="button" role="tab" class="st-tabs__tab" id="tabNotes" aria-selected="false" aria-controls="viewNotes" tabindex="-1">Notes <span class="st-tabs__count" id="noteTotal"></span></button>
   </div>
@@ -393,6 +422,37 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <button type="button" class="linkbtn" id="clearRead">Clear finished</button>
   </section>
   <button type="button" class="addbar owneronly" id="openAdd"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6M9 8h6M9 12h4M17 15v6M14 18h6"/></svg>Add new item</button>
+  </div>
+
+  <div id="viewAdmin" class="view admin" hidden aria-labelledby="adTitle">
+    <div class="adtop"><a class="linkbtn" id="adBack" href="#">← <span id="adBackName">Back</span></a></div>
+    <h2 class="adtitle" id="adTitle">Manage list</h2>
+
+    <section class="adsec" aria-labelledby="adNameL">
+      <h3 class="st-field__label" id="adNameL">Name</h3>
+      <form class="prow" id="adNameForm"><input type="text" id="adName" class="st-input" maxlength="40" autocomplete="off" aria-labelledby="adNameL"><button type="submit" class="st-btn st-btn--secondary">Save</button></form>
+      <p class="adurl">Address <code id="adUrl"></code> <button type="button" class="linkbtn" id="adCopy">Copy link</button></p>
+    </section>
+
+    <section class="adsec" aria-labelledby="adItemsL">
+      <div class="adhead"><h3 class="st-field__label" id="adItemsL">Items <span id="adItemsN"></span></h3>
+        <label class="adall"><input type="checkbox" id="adAll"> Select all</label></div>
+      <ul class="aditems" id="adItems"></ul>
+    </section>
+
+    <section class="adsec" aria-labelledby="adNotesL">
+      <h3 class="st-field__label" id="adNotesL">Notes <span id="adNotesN"></span></h3>
+      <div id="adNotes"></div>
+    </section>
+
+    <section class="adsec" aria-labelledby="adMoveL">
+      <h3 class="st-field__label" id="adMoveL">Move to</h3>
+      <p class="adhint" id="adMoveHint"></p>
+      <div class="prow"><div class="st-select"><select id="adMoveTo" class="st-input st-select__el" aria-labelledby="adMoveL"></select><svg class="st-icon st-select__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+        <button type="button" class="st-btn st-btn--primary" id="adMove">Move</button></div>
+      <button type="button" class="linkbtn addanger" id="adRemove">Remove selected items</button>
+      <button type="button" class="linkbtn addanger" id="adDelete">Delete this list</button>
+    </section>
   </div>
 
   <div id="viewNotes" class="view" role="tabpanel" aria-labelledby="tabNotes" hidden>
@@ -621,7 +681,7 @@ function renderMode(){
   if(canFetch===false){n.className='st-status st-status--info';n.setAttribute('role','status');n.innerHTML=ic('info','st-status__icon')+'<div class="st-status__body"><p class="st-status__title">Paste mode</p><p class="st-status__text">This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</p></div>';}
   else{n.className='note';n.textContent='Links load through a reader service. Where a page can’t be reached, Folio asks you to paste its text.'}
 }
-function renderQ(){renderMode();
+function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmin();
   const ul=$('#queue');const nx=nextUnread(null);
   const VQ=Q.filter(inList);renderListSel();
   if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet','Paste a link above and it lands here.')}</li>`;}
@@ -878,12 +938,13 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    (isRO()?'':'<option value="__new">New list…</option><option value="__edit">Edit lists…</option>');
+    `<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
   if(tab==='notes')showTab('queue');renderQ();if(changed)toast('Opened '+listName(id))}
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
+  if(v==='__admin'){renderListSel();openAdmin(AL);return}
   if(v==='__new'||v==='__edit'){renderListSel();openMenu();if(v==='__new')setTimeout(()=>{try{$('#listName').focus()}catch(_){}},80);return}
   switchList(v)});
 function moveSelect(it){
@@ -899,7 +960,7 @@ $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-move
 function renderLists(){const ro=isRO();
   $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name"${ro?' readonly':''}>
     <div style="display:flex;align-items:center;gap:2px">${l.id===AL?'<span class="cur">Open</span>':`<button class="st-btn st-btn--ghost st-btn--sm" data-lopen="${l.id}" style="margin-right:6px">Open</button>`}
-    <button class="st-btn st-btn--ghost st-btn--sm" data-lcopy="${l.id}" style="margin-right:6px">Copy link</button><span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1&&!ro?`<button class="st-icon-btn st-icon-btn--sm" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">${ic('close')}</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
+    <button class="st-btn st-btn--ghost st-btn--sm" data-ladmin="${l.id}" style="margin-right:6px">Manage</button><span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1&&!ro?`<button class="st-icon-btn st-icon-btn--sm" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">${ic('close')}</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
 }
 $('#listForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#listName').value.trim();if(!n)return;
   if(LS.some(l=>l.name.toLowerCase()===n.toLowerCase())){toast('That list already exists');return}
@@ -908,6 +969,7 @@ $('#listForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#list
 $('#listList').addEventListener('click',e=>{
   const o=e.target.closest('[data-lopen]'),d=e.target.closest('[data-ldel]');
   if(o){switchList(o.dataset.lopen);renderLists();closeSheets()}
+  const ad=e.target.closest('[data-ladmin]');if(ad){openAdmin(ad.dataset.ladmin);return}
   const cp=e.target.closest('[data-lcopy]');if(cp){const url=location.origin+location.pathname+listHash(cp.dataset.lcopy);
     try{navigator.clipboard.writeText(url).then(()=>toast('Link copied: '+listHash(cp.dataset.lcopy)),()=>toast(url))}catch(_){toast(url)}}
   if(d){const id=d.dataset.ldel,i=LS.findIndex(l=>l.id===id),l={...LS[i]},to=LS[i>0?i-1:1].id,had=Q.filter(q=>q.list===id).map(q=>q.id);
@@ -920,6 +982,64 @@ $('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lre
   const ns=uniqueSlug(n,l),alt=ns!==l.slug?[...new Set([...(l.alt||[]),l.slug])]:(l.alt||[]),id=l.id;
   edit('Rename list '+n,dd=>{const x=dd.lists.find(z=>z.id===id);if(x){x.name=n;x.slug=ns;if(alt.length)x.alt=alt}});
   if(id===AL&&!isReadHash())setHash(listHash(),false);renderLists();renderQ()});
+
+/* ---------- List admin: #admin-<slug> ---------- */
+const ADMIN='#admin-';var AD=null;
+const adminHash=(id=AL)=>ADMIN+(LS.find(l=>l.id===id)||LS[0]).slug;
+function openAdmin(id,fromRoute){
+  if(!LS.some(l=>l.id===id))return;
+  if(AL!==id){AL=id;F=null;saveL();saveC()}
+  AD=id;if(!fromRoute&&location.hash!==adminHash(id))setHash(adminHash(id),true);
+  toggleListSw(false);closeSheets();
+  $('#tabs').hidden=$('#viewQueue').hidden=$('#viewNotes').hidden=true;$('#viewAdmin').hidden=false;
+  renderAdmin();window.scrollTo(0,0);
+}
+function closeAdmin(){if(AD===null)return;AD=null;$('#viewAdmin').hidden=true;$('#tabs').hidden=false;showTab(tab==='notes'?'notes':'queue');renderQ()}
+const adSel=()=>[...$('#adItems').querySelectorAll('input[data-ad]:checked')].map(x=>x.dataset.ad);
+function adSync(){
+  const all=[...$('#adItems').querySelectorAll('input[data-ad]')],n=adSel().length,others=LS.filter(l=>l.id!==AD);
+  $('#adAll').checked=!!all.length&&n===all.length;$('#adAll').indeterminate=n>0&&n<all.length;
+  $('#adMoveHint').textContent=!others.length?'Create a second list in the menu to move articles between lists.'
+    :n?`Move ${n} selected article${n>1?'s':''} to another list.`:`Select articles above, or move all ${all.length}.`;
+  $('#adMove').textContent=n?`Move ${n}`:'Move all';$('#adMove').disabled=!others.length||!all.length;
+  $('#adRemove').disabled=!n;$('#adRemove').textContent=n?`Remove ${n} selected`:'Remove selected items';
+}
+function renderAdmin(){
+  if(AD===null)return;const l=Repo.list(AD);if(!l){closeAdmin();return}
+  const items=Repo.items(AD),notes=Repo.notes(AD),edit_=can('list.rename',AD);
+  $('#adTitle').textContent=l.name;$('#adBackName').textContent=l.name;$('#adBack').href=listHash(AD);
+  if(document.activeElement!==$('#adName'))$('#adName').value=l.name;$('#adName').readOnly=!edit_;
+  $('#adUrl').textContent=listHash(AD);
+  $('#adItemsN').textContent='· '+items.length;$('#adNotesN').textContent='· '+notes.length;
+  $('#adItems').innerHTML=items.length?items.map(it=>{const c=catOf(it);return `<li><input type="checkbox" id="ad_${it.id}" data-ad="${it.id}" aria-label="Select ${esc(it.title)}"><label for="ad_${it.id}"><span class="t">${esc(it.title)}</span><span class="m">${esc([it.site,statusText(it),c&&c.name].filter(Boolean).join(' · '))}</span></label></li>`}).join('')
+    :`<li class="empty-row" style="display:block;border:0">${emptyState('inbox','No articles in this list','Add links from the list itself, or move articles here from another list.')}</li>`;
+  $('#adNotes').innerHTML=notes.length?notes.sort((a,b)=>b.at-a.at).map(n=>`<div class="adnote"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)} · ${esc(clip(n.title||'',8))}</small><q>${esc(n.excerpt)}</q></button><p class="ntext">${esc(n.text)}</p><span class="nh">${fmtWhen(n.at)}</span></div>`).join('')
+    :'<p class="adhint">No notes on articles in this list yet. Notes stay on the device where you wrote them.</p>';
+  $('#adMoveTo').innerHTML=LS.filter(x=>x.id!==AD).map(x=>`<option value="${x.id}">${esc(x.name)} · ${Q.filter(q=>q.list===x.id).length}</option>`).join('');
+  $('#adDelete').hidden=LS.length<2||!can('list.delete',AD);
+  adSync();
+}
+$('#adItems').addEventListener('change',adSync);
+$('#adAll').onchange=e=>{$('#adItems').querySelectorAll('input[data-ad]').forEach(x=>x.checked=e.target.checked);adSync()};
+$('#adBack').onclick=e=>{e.preventDefault();const id=AD;closeAdmin();switchList(id)};
+$('#adNameForm').addEventListener('submit',e=>{e.preventDefault();const r=Repo.renameList(AD,$('#adName').value);
+  if(!r.ok){toast(r.error,null,null,'info');return}
+  setHash(adminHash(AD),false);renderAdmin();renderLists();toast('Renamed to '+listName(AD))});
+$('#adCopy').onclick=()=>{const url=location.origin+location.pathname+listHash(AD);
+  try{navigator.clipboard.writeText(url).then(()=>toast('Link copied'),()=>toast(url))}catch(_){toast(url)}};
+$('#adMove').onclick=()=>{const to=$('#adMoveTo').value,sel=adSel(),ids=sel.length?sel:Repo.items(AD).map(i=>i.id);
+  const r=Repo.moveItems(ids,to);if(!r.ok){toast(r.error,null,null,'info');return}
+  renderAdmin();toast(`Moved ${r.n} to ${listName(to)}`,()=>{r.undo();renderAdmin()})};
+$('#adRemove').onclick=()=>{const r=Repo.removeItems(adSel());if(!r.ok){toast(r.error,null,null,'info');return}
+  renderAdmin();toast(`Removed ${r.n}`,()=>{r.undo();renderAdmin()},r.commit)};
+$('#adDelete').onclick=()=>{
+  const b=$('#adDelete');if(!b.dataset.arm){b.dataset.arm='1';b.textContent=`Tap again to delete “${listName(AD)}”`;setTimeout(()=>{delete b.dataset.arm;b.textContent='Delete this list'},4000);return}
+  delete b.dataset.arm;b.textContent='Delete this list';
+  const r=Repo.deleteList(AD);if(!r.ok){toast(r.error,null,null,'info');return}
+  AD=null;closeAdmin();setHash(listHash(r.to),false);switchList(r.to,true);
+  toast(`Deleted ${r.name}; ${r.n} article${r.n===1?'':'s'} moved to ${listName(r.to)}`,()=>{r.undo();renderLists();renderQ()})};
+$('#adNotes').onclick=e=>{const j=e.target.closest('[data-jump]');if(!j)return;
+  const n=N.find(x=>x.id===j.dataset.jump),it=n&&Q.find(q=>q.id===n.art);if(it)openItem(it,{pos:n.pos})};
 
 /* ---------- Lists online: GitHub as the store, passphrase-protected owner access ---------- */
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
@@ -936,6 +1056,56 @@ function reorderList(arr,lid,ids){const pos=[];arr.forEach((a,i)=>{if(a.list===l
   const sorted=[...ids.map(id=>inL.find(a=>a.id===id)).filter(Boolean),...inL.filter(a=>!ids.includes(a.id))];pos.forEach((p,k)=>arr[p]=sorted[k])}
 /* one change, applied here at once and, when unlocked, to the file on GitHub */
 function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();saveC();if(REMOTE&&OWN)queueWrite(msg,fn)}
+
+/* ---------- Data layer ----------
+   Every list and article change the admin view makes goes through Repo: one named command,
+   plain-JSON arguments, no direct access to LS/Q from the UI. Today each command runs here and,
+   when unlocked, on GitHub (through edit). For Supabase, re-implement each method as a table
+   update or RPC with the same name and arguments; docs/supabase.md maps them.
+   can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
+   Later: the signed-in user's role on that list, enforced again by row-level security. */
+function can(action,listId){
+  if(action==='read')return true;
+  return !isRO();   /* 'list.rename' | 'list.delete' | 'items.move' | 'items.remove' */
+}
+const Repo={
+  lists:()=>LS.map(l=>({id:l.id,name:l.name,slug:l.slug,count:Q.filter(q=>q.list===l.id).length})),
+  list:id=>LS.find(l=>l.id===id)||null,
+  items:id=>Q.filter(q=>q.list===id),
+  notes:id=>{const ids=new Set(Q.filter(q=>q.list===id).map(q=>q.id));return N.filter(n=>ids.has(n.art))},
+  renameList(id,name){
+    name=String(name||'').trim().slice(0,40);const l=Repo.list(id);
+    if(!can('list.rename',id))return{ok:false,error:'Only the owner can rename this list'};
+    if(!l||!name)return{ok:false,error:'Give the list a name'};
+    if(LS.some(x=>x.id!==id&&x.name.toLowerCase()===name.toLowerCase()))return{ok:false,error:'Another list already has that name'};
+    const slug=uniqueSlug(name,l),alt=slug!==l.slug?[...new Set([...(l.alt||[]),l.slug])]:(l.alt||[]);
+    edit('Rename list '+name,d=>{const x=d.lists.find(z=>z.id===id);if(x){x.name=name;x.slug=slug;if(alt.length)x.alt=alt}});
+    return{ok:true,slug};
+  },
+  moveItems(ids,to){
+    if(!can('items.move',to))return{ok:false,error:'Only the owner can move articles'};
+    if(!Repo.list(to))return{ok:false,error:'Choose a list to move to'};
+    const from=Object.fromEntries(Q.filter(q=>ids.includes(q.id)).map(q=>[q.id,q.list]));const n=Object.keys(from).length;
+    if(!n)return{ok:false,error:'Select at least one article'};
+    edit(`Move ${n} to ${listName(to)}`,d=>d.articles.forEach(a=>{if(ids.includes(a.id))a.list=to}));
+    return{ok:true,n,undo:()=>edit('Undo move',d=>d.articles.forEach(a=>{if(from[a.id])a.list=from[a.id]}))};
+  },
+  removeItems(ids){
+    if(!can('items.remove'))return{ok:false,error:'Only the owner can remove articles'};
+    const gone=Q.map((it,i)=>({it:{...it},i})).filter(x=>ids.includes(x.it.id));if(!gone.length)return{ok:false,error:'Select at least one article'};
+    edit(`Remove ${gone.length}`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));
+    return{ok:true,n:gone.length,undo:()=>edit('Restore '+gone.length,d=>gone.forEach(({it,i})=>{if(!d.articles.some(a=>a.id===it.id))d.articles.splice(Math.min(i,d.articles.length),0,{...it})})),
+      commit:()=>gone.forEach(({it})=>store.del('folio.c.'+it.id))};
+  },
+  deleteList(id){
+    if(!can('list.delete',id))return{ok:false,error:'Only the owner can delete this list'};
+    if(LS.length<2)return{ok:false,error:'Folio needs at least one list'};
+    const i=LS.findIndex(l=>l.id===id),l={...LS[i]},to=LS[i>0?i-1:1].id,had=Q.filter(q=>q.list===id).map(q=>q.id);
+    edit('Delete list '+l.name,d=>{rmWhere(d.lists,x=>x.id===id);d.articles.forEach(a=>{if(a.list===id)a.list=to})});
+    if(AL===id){AL=to;saveL()}
+    return{ok:true,to,n:had.length,name:l.name,undo:()=>edit('Restore list '+l.name,d=>{if(!d.lists.some(x=>x.id===id))d.lists.splice(Math.min(i,d.lists.length),0,{...l});d.articles.forEach(a=>{if(had.includes(a.id))a.list=id})})};
+  }
+};
 const toB64=str=>{const b=new TextEncoder().encode(str);let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)};
 const fromB64=b=>new TextDecoder().decode(Uint8Array.from(atob(String(b).replace(/\s/g,'')),c=>c.charCodeAt(0)));
 function ownerInfo(){for(const k of ['sessionStorage','localStorage']){try{const o=JSON.parse(window[k].getItem(OWNER_K)||'null');if(o&&o.tok&&(!o.exp||o.exp>Date.now()))return o}catch(e){}}return null}
@@ -1548,10 +1718,10 @@ function relayout(){
   go(atEnd?R.cards.length-1:idxFor(pos));
 }
 let wake=null;
-/* ---------- Routes: #list-<slug> for a list, #read-<id> for an article, #notes for the notes tab ---------- */
+/* ---------- Routes: #list-<slug> for a list, #admin-<slug> to manage it, #read-<id> for an article, #notes for the notes tab ---------- */
 const READ='#read-';
 const isReadHash=()=>location.hash.startsWith(READ);
-const baseHash=()=>tab==='notes'?'#notes':listHash();
+const baseHash=()=>typeof AD!=='undefined'&&AD!==null?adminHash(AD):tab==='notes'?'#notes':listHash();
 function setHash(h,push){
   const url=location.pathname+location.search+h;
   try{push?history.pushState({fo:1},'',url):history.replaceState({fo:1},'',url)}catch(e){try{location.replace(url)}catch(_){}}
@@ -1580,6 +1750,13 @@ function route(){
     setHash(baseHash(),false);toast(REMOTE?'That article isn’t in any list any more':'That article isn’t in the queue on this device');
   }
   if(!reader.hidden){R.pushed=false;showReader(false)}
+  if(h.startsWith(ADMIN)){
+    const l=listBySlug(decodeURIComponent(h.slice(ADMIN.length)));
+    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);toast('That reading list doesn’t exist');return}
+    if(l.slug!==h.slice(ADMIN.length))setHash(adminHash(l.id),false);
+    openAdmin(l.id,true);return;
+  }
+  if(AD!==null)closeAdmin();
   if(h.startsWith(LIST)){
     const l=listBySlug(decodeURIComponent(h.slice(LIST.length)));
     if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}

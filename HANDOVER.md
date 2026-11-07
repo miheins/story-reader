@@ -43,15 +43,17 @@ Everything is in `index.html`. Search for these section markers:
 | `Queue` | Queue model, list view rendering, drag-to-reorder, adding links, clear finished. |
 | `Categories` | Category model, filter chips, row dropdown, menu editing, home-screen install. |
 | `Card stack view` | Stack rendering, swipe and keys, the `VIEW` toggle. On desktop, `renderSlider()` replaces the stack (see *Desktop slider*). |
-| `Reading lists UI` | List switcher, *Move to…*, menu list management, copy list link. |
+| `Reading lists UI` | List switcher (L, with *Manage …*), menu list management. |
+| `Data layer` | `Repo` (named commands for lists and articles) and `can()` (the one permission check). The seam for Supabase; see [docs/supabase.md](docs/supabase.md). |
+| `List admin` | `#admin-<slug>`: name, items, notes, move to, remove, delete list. |
 | `Lists online` | GitHub storage, encryption, owner set-up and unlock, read-only mode. Flags `ONLINE` and `SHOW_LOCK` are near the top. |
 | `Notes` | Notes model, Notes tab, note sheet. |
 | `Parsing` | Jina fetch, HTML and markdown to blocks, `clean()` (keeps only the main reading text). |
 | `Story building` | Fits each paragraph to the largest size step that fits the slide. |
 | `Reader` | Slides, progress bars, timer, gestures (tap, swipe, hold, swipe down). |
-| `Routes` | Addresses: `#list-<slug>`, `#read-<id>`, `#notes`. Back-button handling. |
+| `Routes` | Addresses: `#list-<slug>`, `#admin-<slug>`, `#read-<id>`, `#notes`. Back-button handling. |
 
-**Every change to queue, list or category data goes through `edit(message, fn)`.** It applies `fn` here at once and, when unlocked online, queues the same `fn` to run against the latest file on GitHub. New features that change those lists must use `edit()` too, or their changes won't sync.
+**The list admin changes data only through `Repo`**, and checks permission only through `can()`; new list or article features should do the same, so the Supabase move stays a matter of re-implementing those two. Underneath, **every change to queue, list or category data goes through `edit(message, fn)`.** It applies `fn` here at once and, when unlocked online, queues the same `fn` to run against the latest file on GitHub. New features that change those lists must use `edit()` too, or their changes won't sync.
 
 ## Design system
 
@@ -120,6 +122,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
   - `routes`: article addresses, Back, Forward, close, opening an article link directly.
   - `stack`: stack default, flipping, toggle, opening.
   - `lists`: list addresses, the L key, opening a list link directly, unknown lists.
+  - `admin`: `#admin-<slug>`, rename (address follows), move and remove with Undo, notes, the L switcher's *Manage*, Back.
   - `online`: a stand-in for GitHub across four devices: set-up, publish, visitor read-only, unlock and merge, wrong passphrase, simultaneous adds, opening a list link on a fresh device.
 - **Design round trip:** edit in Paper, preferably by changing tokens, then ask Claude to "pull the Paper changes". It reads exact values from the file, not screenshots.
 
