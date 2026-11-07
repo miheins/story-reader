@@ -61,6 +61,7 @@ Everything is in `index.html`. Search for these section markers:
 - Adding links moved from the top of the page into an **Add new item** sheet (*Add to list*, *Add and read*); the reader-service note moved there too. *Read next* as a separate button is gone: the top card is the next article.
 - Full-width view toggle; category filters only in the list view, as small mono chips; no *Up next* pill; borderless deck arrows; no swipe hint.
 - List rows: vertical-dot drag handle, mono site, serif title, category as a mono chip (tap to change), status with reading time, a thumbnail when the article has an image, and remove. Opening the original moved to the reader only.
+- **Undo** after remove, clear finished and category delete: the notice sits at the bottom on every screen size, names the article, has a filled *Undo* button, and stays 8 seconds (paused while hovered or focused).
 - Quoted passages (note sheet, Notes tab) sit on soft green; text fields have an ink outline; note-sheet buttons are equal width.
 - Decisions that depart from Paper: list status text is 11px, not 8px, and the site label 10px, not 9px, for legibility; the tab shows the open list's name ("Reading list" by default), so switching lists is visible on phones.
 
