@@ -57,7 +57,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
 
 /* ---------- Library ---------- */
-.lib{max-width:620px;margin:0 auto;padding-block:16px 64px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+.lib{--gut:18px;max-width:620px;margin:0 auto;box-sizing:border-box;padding:var(--gut) max(var(--gut),env(safe-area-inset-right,0px)) var(--gut) max(var(--gut),env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:28px}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .mark{margin:0;line-height:0;color:var(--text)}
 .wordmark{display:block;width:122px;height:auto}
@@ -68,7 +68,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .qhead{display:flex;justify-content:space-between;align-items:baseline}
 .queue{list-style:none;margin:0;padding:0;border-bottom:1px solid var(--rule)}
-.queue li{display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;gap:0 12px;border-top:1px solid var(--rule);background:var(--bg);padding:14px 0}
+.queue li{position:relative;display:grid;grid-template-columns:auto 1fr auto;align-items:stretch;gap:0 12px;border-top:1px solid var(--rule);background:var(--bg);padding:14px 0}
+.queue li .qmid{padding-right:30px}
+.queue li:has(.qthumb) .qmid{padding-right:0}
+.qdel{position:absolute;top:8px;right:0;z-index:1;color:var(--text-subtle)}
+.queue li:has(.qthumb) .qdel{top:18px;right:4px;background:var(--surface);border-radius:50%;width:28px;height:28px;color:var(--text)}
 .grip{width:24px;margin-left:-6px;align-self:stretch;border:0;background:none;color:var(--border-strong);cursor:grab;touch-action:none;display:grid;place-items:center;border-radius:6px}
 .grip::before{content:"";width:4px;height:18px;background:radial-gradient(circle,currentColor 1.9px,transparent 2.1px) 0 0/4px 7px}
 .grip:hover{color:var(--fg)}
@@ -82,9 +86,8 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .qt{font:500 20px/1.08 var(--f-serif);text-wrap:balance;color:var(--fg)}
 .qmeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding-top:4px}
 .qst{font:500 11px/14px var(--f-sans);color:var(--text-muted);font-variant-numeric:tabular-nums}
-.qact{display:flex;align-items:center;gap:0;margin-left:auto}
-.qact .st-icon-btn{color:var(--text-subtle)}
-.qthumb{width:67px;align-self:stretch;min-height:72px;object-fit:cover;background:var(--surface-sunken);border-radius:var(--radius-sm);display:block}
+
+.qthumb{width:104px;align-self:stretch;min-height:96px;object-fit:cover;background:var(--surface-sunken);border-radius:var(--radius-sm);display:block}
 #srcLink{text-decoration:none}
 .note{font:500 13px/1.5 var(--f-sans);color:var(--muted);margin:0}
 
@@ -336,7 +339,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .badge{position:absolute;top:3px;right:2px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--accent);color:var(--on-accent);font:600 10px/16px var(--f-sans);text-align:center}
 /* Desktop: the same narrow column as on a phone, centred on the page, with no frame or shadow */
 @media (min-width:720px){
-  .lib{width:min(100%,52vh);max-width:none;box-sizing:border-box;padding-block:40px 96px}
+  .lib{--gut:32px;width:100%;max-width:none}
   .wordmark{width:140px}
   .sheet{left:50%;right:auto;bottom:3vh;width:min(100%,52vh);transform:translateX(-50%);border-radius:var(--radius-lg);border-bottom:1px solid var(--border);max-height:80vh}
   .scrim{background:var(--scrim)}
@@ -344,9 +347,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 @media (min-width:720px){
   /* Desktop slider: breaks out of the narrow column to the window edges; the first card lines up with the column */
   html{overflow-x:clip}
-  .stackv{--col:min(100vw,52vh);--pad:calc(50vw - var(--col) / 2 + 18px)}
+  .stackv{--pad:var(--gut)}
   .slider{position:relative;display:block;white-space:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;
-    margin-inline:calc(var(--pad) * -1);padding:8px var(--pad) 26px;scroll-padding-inline:var(--pad);box-sizing:border-box;width:100vw;max-width:100vw;outline:none}
+    margin-inline:calc(var(--pad) * -1);padding:8px var(--pad) 26px;scroll-padding-inline:var(--pad);box-sizing:border-box;width:calc(100% + var(--pad) * 2);max-width:none;outline:none}
   .slider::-webkit-scrollbar{display:none}
   .slider:focus-visible{box-shadow:inset 0 0 0 2px var(--focus)}
   .slider > .card2.slide{position:relative;inset:auto;transform:none;display:inline-flex;vertical-align:top;white-space:normal;
@@ -486,7 +489,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="mTitle">Menu</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="mX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
     <div class="set"><span class="st-field__label">Reading lists</span>
-      <p>Each article lives in one list. Move an article with <b>Move to…</b> on its row.</p>
+      <p>Each article lives in one list.</p>
       <ul class="cats lists" id="listList"></ul>
       <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
     </div>
@@ -625,8 +628,8 @@ function renderQ(){renderMode();
   else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span></button>
-    <div class="qmeta">${catSelect(it,moveSelect(it))}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:`<span class="qst">${statusText(it)}</span>`}
-      <span class="qact"><button class="st-icon-btn st-icon-btn--sm" data-rm="${it.id}" aria-label="Remove">${ic('close')}</button></span></div></div>
+    <div class="qmeta">${catSelect(it)}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:`<span class="qst">${statusText(it)}</span>`}</div></div>
+    <button class="st-icon-btn st-icon-btn--sm qdel" data-rm="${it.id}" aria-label="Remove ${esc(it.title)}" title="Remove">${ic('close')}</button>
     ${thumbOf(it)?`<img class="qthumb" src="${esc(thumbOf(it))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span></span>'}</li>`}).join('');
   $('#tabListName').textContent=listName(AL);
   renderFilters();

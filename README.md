@@ -14,7 +14,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 - **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.
-- **Reading lists:** keep separate queues (e.g. Work, Weekend). Each list has its own address (`#list-weekend`), so you can bookmark it or add it to your home screen. Switch from the menu (☰ → Reading lists → Open, or Copy link), or on desktop press **L** for the list switcher. Move an article with **Move to…** on its row. New links go into the list you have open, and **Read next** stays inside it.
+- **Reading lists:** keep separate queues (e.g. Work, Weekend). Each list has its own address (`#list-weekend`), so you can bookmark it or add it to your home screen. Switch from the menu (☰ → Reading lists → Open, or Copy link), or on desktop press **L** for the list switcher. New links go into the list you have open, and **Read next** stays inside it.
 - **Categories:** create them in the menu (☰), set one per article from the dropdown on its row, and tap a category above the queue to highlight its articles. **Read next** then stays within that category.
 - **Links:** every article has its own address (`#read-<id>`), so Back returns to the list you came from and reloading keeps you in the article.
 - **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
