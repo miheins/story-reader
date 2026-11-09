@@ -9,6 +9,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 ## Using it
 
 - Tap **Add new item** at the bottom of the reading list, paste one or more links, then **Add to list** or **Add and read**. Drag the dotted handle (list view) to reorder; the top unread article plays next.
+- **Just link:** in the Add panel, switch to **Just link** to save a page as a link instead of a story. Folio fetches its title and share image (Open Graph); tapping it opens the original page. *Read next* skips links.
 - **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). On desktop the cards sit side by side in a slider: drag, scroll sideways or use ← →, and click a card to read. Switch to the list with the toggle above the queue; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
 - **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.

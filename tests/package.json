@@ -3,7 +3,7 @@
   "private": true,
   "description": "Simulated-browser checks for index.html (jsdom). Run: npm install && npm test",
   "scripts": {
-    "test": "node routes.test.js && node stack.test.js && node lists.test.js && node online.test.js && node admin.test.js"
+    "test": "node routes.test.js && node stack.test.js && node lists.test.js && node online.test.js && node admin.test.js && node link.test.js"
   },
   "devDependencies": {
     "jsdom": "24.1.0"

@@ -257,6 +257,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .addbar .st-icon{width:20px;height:20px}
 .addbar:hover{background:color-mix(in srgb,var(--text) 10%,var(--surface-sunken))}
 .row.eq > .st-btn{flex:1}
+.addkind{display:flex}.addkind .st-seg__opt{flex:1;justify-content:center}
 @media (prefers-reduced-motion: reduce){.card2{transition:none}}
 .filters{display:flex;flex-wrap:wrap;gap:5px}
 .filters:empty{display:none}
@@ -514,6 +515,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 <div class="sheet" id="addSheet" hidden role="dialog" aria-modal="true" aria-labelledby="aTitle">
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="aTitle">Add new item</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="aX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="st-seg addkind" role="radiogroup" aria-label="How to save" id="segKind">
+      <label class="st-seg__opt"><input type="radio" name="kind" value="story" class="st-seg__input" id="kStory" checked>Story</label>
+      <label class="st-seg__opt"><input type="radio" name="kind" value="link" class="st-seg__input" id="kLink">Just link</label>
+    </div>
+    <p class="adhint" id="kindHint">Each paragraph becomes a slide.</p>
     <div class="st-field">
       <label class="st-field__label" for="links">Links</label>
       <textarea id="links" class="st-input st-textarea" rows="4" placeholder="One or more links, any separator"></textarea>
@@ -651,7 +657,24 @@ const EXAMPLES=['https://www.itsnicethat.com/features/ffern-film-spotlight-23032
 let Q=store.get('folio.queue',null);
 if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(mkItem)];}
 {const sm=Q.find(q=>q.id==='sample');if(sm)sm.title=SAMPLE.title}
-function mkItem(u){return{id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0,list:typeof AL!=='undefined'?AL:'main'}}
+function mkItem(u,kind){const it={id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0,list:typeof AL!=='undefined'?AL:'main'};if(kind==='link')it.kind='link';return it}
+/* "Just link" items: title and image from the page's Open Graph tags; tapping opens the original page */
+const isLink=it=>!!it&&it.kind==='link';
+async function fetchLinkMeta(it){
+  if(!it||canFetch===false)return;
+  try{const txt=await jina(it.url,true);const k=txt.search(/<!doctype|<html[\s>]|<head[\s>]/i);
+    const doc=new DOMParser().parseFromString(k>=0?txt.slice(k):txt,'text/html');const m=sourceMeta(doc,it.url);
+    const title=(m.title||'').replace(/\s+/g,' ').trim().slice(0,200),img=m.hero||'',site=(m.site||'').trim(),id=it.id;
+    if(!title&&!img)return;
+    edit('Link details: '+(title||it.url),d=>{const a=d.articles.find(x=>x.id===id);if(!a)return;if(title)a.title=title;if(img)a.img=img;if(site)a.site=site});
+    renderQ();
+  }catch(e){}
+}
+function openLink(it){
+  let w=null;try{w=window.open(it.url,'_blank','noopener')}catch(e){}
+  if(it.status!=='read'){it.status='read';saveQ();renderQ()}
+  if(!w)location.href=it.url;
+}
 /* reading lists: every article lives in one list; the overview shows the active one */
 var LS=store.get('folio.lists',null);if(!Array.isArray(LS)||!LS.length)LS=[{id:'main',name:'Reading list'}];
 var AL=store.get('folio.alist',LS[0].id);if(!LS.some(l=>l.id===AL))AL=LS[0].id;
@@ -675,7 +698,7 @@ function chip(it){
   if(it.status==='paste')return badge('warning','Needs text');
   return badge('neutral','Unread');
 }
-const needsText=it=>it.url&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.c.'+it.id,null)));
+const needsText=it=>it.url&&!isLink(it)&&it.status!=='read'&&(it.status==='paste'||(canFetch===false&&!store.get('folio.c.'+it.id,null)));
 function renderMode(){
   const n=$('#modeNote');
   if(canFetch===false){n.className='st-status st-status--info';n.setAttribute('role','status');n.innerHTML=ic('info','st-status__icon')+'<div class="st-status__body"><p class="st-status__title">Paste mode</p><p class="st-status__text">This copy can’t load websites, so each link asks for its text. Tap <b>Paste text</b> on a link.</p></div>';}
@@ -699,13 +722,13 @@ function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmi
   if(VIEW==='stack')renderStack();
 }
 function artOf(it){return it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null)}
-function thumbOf(it){const a=artOf(it);return a&&a.hero||''}
+function thumbOf(it){if(it.img)return it.img;const a=artOf(it);return a&&a.hero||''}
 function minsOf(it){const a=artOf(it);const w=a&&a.blocks?words(a.blocks.map(b=>b.html||'').join(' ')):0;return w?Math.max(1,Math.round(w/230))+' min':''}
-function statusText(it){const st=it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':it.id==='sample'&&it.status==='new'?'Sample':'Unread';
+function statusText(it){if(isLink(it))return it.status==='read'?'Link · opened':'Link';const st=it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':it.id==='sample'&&it.status==='new'?'Sample':'Unread';
   return [st,it.status==='read'?'':minsOf(it)].filter(Boolean).join(' · ')}
 function nextUnread(after){
   let i=after?Q.findIndex(q=>q.id===after.id)+1:0;
-  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&(!after||it.id!==after.id)&&(!F||it.cat===F)&&it.list===AL)return it}
+  for(let k=0;k<Q.length;k++){const it=Q[(i+k)%Q.length];if(it.status!=='read'&&!isLink(it)&&(!after||it.id!==after.id)&&(!F||it.cat===F)&&it.list===AL)return it}
   return null;
 }
 $('#queue').onclick=e=>{
@@ -739,17 +762,27 @@ ul.addEventListener('keydown',e=>{const gp=e.target.closest('[data-grip]');if(!g
   if(e.key==='ArrowUp'&&li.previousElementSibling)ul.insertBefore(li,li.previousElementSibling);
   else if(e.key==='ArrowDown'&&li.nextElementSibling)ul.insertBefore(li.nextElementSibling,li);
   commitOrder(gp.dataset.grip)});
+function addKind(){const r=document.querySelector('input[name="kind"]:checked');return r?r.value:'story'}
 function addLinks(){
+  const kind=addKind();
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
-  let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u))}else if(ex.list!==AL)elsewhere=ex.list}
+  let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u,kind))}else if(ex.list!==AL)elsewhere=ex.list}
   const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10);add.forEach(a=>{a.list=lid;a.added=day});
   if(n)edit(`Add ${n} link${n>1?'s':''} to ${listName(lid)}`,d=>add.forEach(a=>{if(!d.articles.some(x=>x.id===a.id))d.articles.push({...a})}));
   $('#links').value='';saveQ();renderQ();if(n&&!$('#addSheet').hidden)closeSheets();
+  if(kind==='link')add.forEach(a=>fetchLinkMeta(Q.find(q=>q.id===a.id)));
   if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:elsewhere?`Already in ${listName(elsewhere)}`:'Already in this list');
   else toast('No links found in that text');
   return n;
 }
 $('#addBtn').onclick=addLinks;
+function syncKind(){const link=addKind()==='link';
+  document.querySelectorAll('#segKind .st-seg__opt').forEach(o=>o.classList.toggle('is-on',o.querySelector('input').checked));
+  $('#kindHint').textContent=link?'Saves the page’s title and image. Tapping it opens the original page.':'Each paragraph becomes a slide.';
+  $('#readNext').textContent=link?'Add and open':'Add and read';$('#addBtn').textContent=link?'Add link':'Add to list';
+  store.set('folio.addKind',addKind())}
+$('#segKind').addEventListener('change',syncKind);
+if(store.get('folio.addKind','story')==='link')$('#kLink').checked=true;syncKind();
 $('#readNext').onclick=()=>{const first=($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/)||[''])[0].replace(/[),.;]+$/,'');
   if(first)addLinks();const it=(first&&Q.find(q=>q.url===first))||nextUnread(null);if(it)openItem(it)};
 $('#openAdd').onclick=()=>{renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
@@ -848,11 +881,11 @@ function cardFor(it,k,nx){
   const c=catOf(it);const a=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);
   const w=a&&a.blocks?words(a.blocks.map(b=>b.html||'').join(' ')):0;
   const mins=w?Math.max(1,Math.round(w/230))+' min':'';
-  const hero=a&&a.hero;
+  const hero=thumbOf(it);
   let blurb=a&&a.dek?a.dek:'';
   if(!blurb&&a&&a.blocks){const p=a.blocks.find(b=>b.t==='p'&&words(b.html)>12);if(p)blurb=clip(strip(p.html),40)}
-  const st=needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
-  return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. Tap to read.">
+  const st=isLink(it)?(it.status==='read'?'Link · opened':'Link'):needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
+  return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. ${isLink(it)?'Opens the original page':'Tap to read'}.">
     ${hero?`<img class="cbg" src="${esc(hero)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('img');this.remove()">`:''}
     <div class="ctop"><span class="ckick">${esc(it.site||'')}</span></div>
     <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek">${esc(blurb)}</p>`:''}</div>
@@ -1132,7 +1165,7 @@ function normDoc(d){d.lists=Array.isArray(d.lists)&&d.lists.length?d.lists:[{id:
 function serialize(d){return JSON.stringify({v:1,updated:new Date().toISOString(),
   lists:d.lists.map(({id,name,slug,alt})=>({id,name,slug,...(alt&&alt.length?{alt}:{})})),
   categories:d.categories.map(({id,name,c})=>({id,name,c})),
-  articles:d.articles.filter(a=>a.url).map(a=>({id:a.id,url:a.url,title:a.title,site:a.site,list:a.list,...(a.cat?{cat:a.cat}:{}),added:a.added||new Date().toISOString().slice(0,10)}))},null,2)+'\n'}
+  articles:d.articles.filter(a=>a.url).map(a=>({id:a.id,url:a.url,title:a.title,site:a.site,list:a.list,...(a.cat?{cat:a.cat}:{}),...(a.kind?{kind:a.kind}:{}),...(a.img?{img:a.img}:{}),added:a.added||new Date().toISOString().slice(0,10)}))},null,2)+'\n'}
 function applyRemote(doc,sha,cache=true){
   normDoc(doc);
   if(!REMOTE&&!store.get('folio.stashDone',false)){const own=Q.filter(q=>q.url&&!doc.articles.some(a=>a.id===q.id));
@@ -1778,6 +1811,7 @@ function loading(on,title,sub){$('#loading').hidden=!on;if(on){$('#loadT').textC
 
 async function openItem(it,opt={}){
   if(!it)return;
+  if(isLink(it)){if(opt.fromRoute)setHash(baseHash(),false);else openLink(it);return}
   SI=it.id;
   closeSheets();stopTimer();
   let art=it.id==='sample'?SAMPLE:store.get('folio.c.'+it.id,null);

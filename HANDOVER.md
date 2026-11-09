@@ -64,6 +64,7 @@ Everything is in `index.html`. Search for these section markers:
 - Full-width view toggle; category filters only in the list view, as small mono chips; no *Up next* pill; borderless deck arrows; no swipe hint.
 - List rows: vertical-dot drag handle, mono site, serif title, category as a mono chip (tap to change), status with reading time, a thumbnail when the article has an image, and remove. Opening the original moved to the reader only.
 - **Undo** after remove, clear finished and category delete: the notice sits at the bottom on every screen size, names the article, has a filled *Undo* button, and stays 8 seconds (paused while hovered or focused).
+- **Just link** (Add panel): an article with `kind:'link'`; `fetchLinkMeta()` reads `og:title`, `og:image` and `og:site_name` through the reader service and stores them on the article (`title`, `img`, `site`), so they sync with Lists online. Opening goes to the original page and marks it opened; *Read next* and the reader's next-article offer skip links. The last choice is remembered (`folio.addKind`).
 - Quoted passages (note sheet, Notes tab) sit on soft green; text fields have an ink outline; note-sheet buttons are equal width.
 - Decisions that depart from Paper: list status text is 11px, not 8px, and the site label 10px, not 9px, for legibility; the tab shows the open list's name ("Reading list" by default), so switching lists is visible on phones.
 
@@ -122,6 +123,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
   - `routes`: article addresses, Back, Forward, close, opening an article link directly.
   - `stack`: stack default, flipping, toggle, opening.
   - `lists`: list addresses, the L key, opening a list link directly, unknown lists.
+  - `link`: Just link saves title, image and site from Open Graph, shows *Link* and a thumbnail, opens the original page.
   - `admin`: `#admin-<slug>`, rename (address follows), move and remove with Undo, notes, the L switcher's *Manage*, Back.
   - `online`: a stand-in for GitHub across four devices: set-up, publish, visitor read-only, unlock and merge, wrong passphrase, simultaneous adds, opening a list link on a fresh device.
 - **Design round trip:** edit in Paper, preferably by changing tokens, then ask Claude to "pull the Paper changes". It reads exact values from the file, not screenshots.

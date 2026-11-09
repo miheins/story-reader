@@ -49,7 +49,8 @@ create table articles (
   url         text not null,
   title       text,
   site        text,
-  hero        text,
+  kind        text not null default 'story' check (kind in ('story','link')),  -- 'link' = "Just link"
+  hero        text,                 -- og:image for links, the article's lead image for stories
   category_id uuid references categories on delete set null,
   position    int not null default 0,
   added_at    timestamptz not null default now(),
