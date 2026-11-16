@@ -1,7 +1,7 @@
 /* Supabase with list keys, against an in-memory stand-in for the database functions in supabase/schema.sql.
    (The SQL itself was checked on a real Postgres; this covers the app side: two devices, one list key.) */
 const {JSDOM}=require('jsdom');const fs=require('fs');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const URL_='https://proj.supabase.co',KEY='sb_publishable_test',ADMIN='admin-key-123';
 function server(){const lists=[];const log=[];let n=0,up=true;
   const json=(status,body)=>({ok:status<300,status,json:async()=>body});const err=m=>json(400,{code:'P0001',message:m});

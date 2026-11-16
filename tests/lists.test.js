@@ -1,5 +1,5 @@
 const {JSDOM}=require('jsdom');const fs=require('fs');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const lists=[{id:'main',name:'Reading list'},{id:'w',name:'Weekend Reads'}];
 const q=[{id:'sample',url:null,title:'Sample',site:'Sample',status:'new',list:'main'},{id:'a',url:'https://a.com/x',title:'A weekend piece',site:'a.com',status:'new',list:'w'}];
 function mk(url){return new JSDOM(html,{runScripts:'dangerously',url,pretendToBeVisual:true,

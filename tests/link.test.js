@@ -1,6 +1,6 @@
 /* "Just link": saved with the page's Open Graph title and image; opening goes to the original page */
 const {JSDOM}=require('jsdom');const fs=require('fs');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const page=`<!doctype html><html><head><title>Fallback</title><meta property="og:title" content="A Beautiful Studio Site"><meta property="og:image" content="/img/share.jpg"><meta property="og:site_name" content="Studio Name"></head><body><p>hi</p></body></html>`;
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'ok   ':'FAIL ')+name+(extra?' | '+extra:''))};

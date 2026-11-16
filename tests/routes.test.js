@@ -1,5 +1,5 @@
 const {JSDOM}=require('jsdom');const fs=require('fs');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 function mk(url){return new JSDOM(html,{runScripts:'dangerously',url,pretendToBeVisual:true,
   beforeParse(w){w.fetch=()=>Promise.reject(new TypeError('blocked'));w.matchMedia=()=>({matches:false,addListener(){}});}})}
 const wait=ms=>new Promise(r=>setTimeout(r,ms));

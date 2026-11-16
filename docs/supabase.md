@@ -8,7 +8,7 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 2. SQL Editor → paste [`supabase/schema.sql`](../supabase/schema.sql) → Run.
 3. In the same editor, set your **admin key** (your own long phrase), then delete the line:
    `select public.folio_set_admin_key('choose-a-long-admin-key');`
-4. In Folio: ☰ → **Supabase** → paste the Project URL and the **publishable** key (Project Settings → API Keys; the older *anon* key also works) → **Connect**.
+4. *(Done: this project's URL and publishable key are built into `index.html` as `SB_URL` / `SB_KEY`, so this step is skipped.)* In Folio: ☰ → **Supabase** → paste the Project URL and the **publishable** key (Project Settings → API Keys; the older *anon* key also works) → **Connect**.
    To skip this on other devices, fill in `SB_URL` and `SB_KEY` at the top of the Supabase section in `index.html`; the publishable key is meant to be public.
 
 ## Using it

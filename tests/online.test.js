@@ -1,5 +1,5 @@
 const {JSDOM}=require('jsdom');const fs=require('fs');const nodeCrypto=require('crypto');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const TOK='github_pat_'+'A'.repeat(40);
 /* a tiny fake of the GitHub contents API, shared by all "devices" */
 const files={};let shaN=0,puts=0;

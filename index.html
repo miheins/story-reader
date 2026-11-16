@@ -1124,7 +1124,7 @@ const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
    What syncs per list: its name and address, its articles (order, category, "Just link" details) and the notes on them.
    Reading progress stays on each device. Local storage stays the working copy: after each save the rows that changed since the
    last sync go up (sbPushList); on start, on return to the tab and on "Sync now", everything also comes down (sbApplyList). */
-const SB_URL='',SB_KEY='';
+const SB_URL='https://glbhytitpuakocsjzuph.supabase.co',SB_KEY='sb_publishable_1Dk2iMjh3BeMyS2_x0DOLw_l6MxFvQ-';   /* public by design; never put a secret key here */
 var SBC=(()=>{const c=store.get('folio.sb',null)||{};const url=String(SB_URL||c.url||'').trim().replace(/\/+$/,''),key=String(SB_KEY||c.key||'').trim();return url&&key?{url,key}:null})();
 var SBK=store.get('folio.sb.keys',{})||{},SB_SNAP=store.get('folio.sb.snap',{})||{};   /* per online list id: its key on this device, and what Supabase last had */
 var sbTimer=null,sbChain=null,SB_APPLYING=false,SB_STATE='',SB_AT=null,SB_ERR='',SB_LAST=0;

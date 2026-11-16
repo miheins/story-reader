@@ -1,6 +1,6 @@
 /* List admin: #admin-<slug> route, rename, move, remove, notes, L switcher entry, read-only visitors */
 const {JSDOM}=require('jsdom');const fs=require('fs');
-const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/<link[^>]+>/g,'');
+const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const lists=[{id:'main',name:'Reading list'},{id:'w',name:'Weekend Reads'}];
 const q=[{id:'a',url:'https://a.com/1',title:'First piece',site:'a.com',status:'new',list:'main'},
          {id:'b',url:'https://b.com/2',title:'Second piece',site:'b.com',status:'new',list:'main'},
