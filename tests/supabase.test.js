@@ -86,6 +86,18 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   $B('#adListK').value='brand-new-key-9';submit(B,'#adRelock');await wait(300);
   ok('B unlocks with the new key',!!$B('#adSyncNow'));
 
+  // private link: the key travels in the link, then leaves the address bar
+  let link='';Object.defineProperty(A.navigator,'clipboard',{value:{writeText:t=>{link=t;return Promise.resolve()}},configurable:true});
+  A.document.querySelector('#adPrivLink').click();await wait(50);
+  ok('private link carries slug and key',/#list-sunday&key=brand-new-key-9$/.test(link),link);
+  const P=device(srv,{},link.slice(link.indexOf('#'))).window;await wait(500);
+  ok('private link opens the list without typing',ls(P,'folio.lists').some(l=>l.rid===L.id)&&P.document.querySelector('#unlockSheet').hidden,P.document.querySelector('#uMsg').textContent);
+  ok('key removed from the address',P.location.hash==='#list-sunday'&&!P.location.href.includes('key='),P.location.href);
+  const bad=device(srv,{},'#list-sunday&key=wrong-key-000').window;await wait(500);
+  ok('bad private link asks for the key',!bad.document.querySelector('#unlockSheet').hidden&&/doesn’t open/.test(bad.document.querySelector('#uMsg').textContent)&&!bad.location.href.includes('key='),bad.document.querySelector('#uMsg').textContent);
+  bad.document.querySelector('#uRef').value=link;bad.document.querySelector('#uKey').value='';bad.document.querySelector('#uForm').dispatchEvent(new bad.Event('submit',{bubbles:true,cancelable:true}));await wait(300);
+  ok('pasting the private link into Unlock works',ls(bad,'folio.lists').some(l=>l.rid===L.id));
+
   // first connection, and a project without the functions
   const C=device(srv,{},'',false).window;await wait(300);C.document.querySelector('#menuBtn').click();await wait(50);
   ok('no email or password asked',!C.document.querySelector('#sbBox input[type=password]')&&!C.document.querySelector('#sbBox input[type=email]'));

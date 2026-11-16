@@ -15,6 +15,7 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 
 - **Put a list online:** the list's **Manage** page (L → *Manage …*) → *Online* → enter the admin key and choose a list key → **Put online**.
 - **Open it elsewhere:** open the list's address (`…/#list-weekend`) and Folio asks for the key; or ☰ → Supabase → **Unlock a list…**, or L → *Unlock a list…*.
+- **Private link:** Manage → Online → **Copy private link** (or L → *Copy private link*). It's the list's address with the key in it (`…#list-weekend&key=…`): opening it unlocks the list without typing, and Folio removes the key from the address bar straight away. Anyone holding the link can open and edit the list; to cut old links off, change the key. The link can also be pasted into *Unlock a list*.
 - **Change a key / take offline:** Manage → Online → *Change the key or take offline* (admin key needed). Devices with the old key are locked until given the new one; they keep their copy.
 - You can also change a key in Supabase alone: `select public.folio_set_key('admin key', '<list id>', 'new list key');`
 

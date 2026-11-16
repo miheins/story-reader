@@ -558,7 +558,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     <p>Enter the list’s address and the key you were given. The list then stays on this device and keeps in sync.</p>
     <form class="oform" id="uForm">
       <div class="st-field"><label class="st-field__label" for="uRef">List address</label><input type="text" id="uRef" class="st-input" placeholder="weekend, or the full link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>
-      <div class="st-field"><label class="st-field__label" for="uKey">List key</label><input type="text" id="uKey" class="st-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>
+      <div class="st-field"><label class="st-field__label" for="uKey">List key</label><input type="text" id="uKey" class="st-input" placeholder="Not needed if you pasted a private link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
       <button type="submit" class="st-btn st-btn--primary" id="uGo">Unlock</button>
       <p class="ohint" id="uMsg" role="status"></p>
     </form>
@@ -1005,7 +1005,7 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+`<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
+    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+`<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
@@ -1013,6 +1013,7 @@ function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
   if(v==='__add'){renderListSel();$('#openAdd').click();return}
   if(v==='__unlock'){renderListSel();openUnlock('');return}
+  if(v==='__plink'){renderListSel();const l=LS.find(x=>x.id===AL),url=privateLink(l);try{navigator.clipboard.writeText(url).then(()=>toast('Private link copied'),()=>toast(url))}catch(_){toast(url)}return}
   if(v==='__admin'){renderListSel();openAdmin(AL);return}
   if(v==='__new'||v==='__edit'){renderListSel();openMenu();if(v==='__new')setTimeout(()=>{try{$('#listName').focus()}catch(_){}},80);return}
   switchList(v)});
@@ -1264,11 +1265,23 @@ function openUnlock(ref){
 }
 $('#uX').onclick=closeSheets;
 $('#uForm').addEventListener('submit',async e=>{
-  e.preventDefault();const ref=sbRef($('#uRef').value),key=$('#uKey').value.trim();if(!ref||!key)return;
+  e.preventDefault();let raw=$('#uRef').value.trim(),key=$('#uKey').value.trim();
+  const km=raw.match(/&key=([^&\s]+)/);if(km){try{key=key||decodeURIComponent(km[1])}catch(_){}raw=raw.slice(0,km.index)}
+  const ref=sbRef(raw);if(!ref)return;if(!key){$('#uMsg').textContent='Enter the list key, or paste the private link.';return}
   $('#uGo').disabled=true;$('#uMsg').textContent='Opening…';
   try{const l=await sbUnlock(ref,key);closeSheets();switchList(l.id);toast('Unlocked '+l.name)}
   catch(err){$('#uGo').disabled=false;$('#uMsg').textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
 });
+/* private links: the list's address with its key, so the person opening it doesn't type the key */
+const privateLink=l=>location.origin+location.pathname+LIST+encodeURIComponent(l.slug)+'&key='+encodeURIComponent(SBK[l.rid]);
+async function linkUnlock(slug,key){
+  const have=listBySlug(slug);
+  if(have&&have.rid&&SBK[have.rid]===key){switchList(have.id,true);return}
+  if(!SBC||!key){if(have)switchList(have.id,true);else openUnlock(slug);return}
+  try{const l=await sbUnlock(have&&have.rid?have.rid:slug,key);switchList(l.id,true);toast('Unlocked '+l.name)}
+  catch(err){if(have)switchList(have.id,true);openUnlock(slug);$('#uMsg').textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
+}
+
 /* list admin → Online */
 function renderAdOnline(){
   const box=$('#adOnline');if(!box||AD===null||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
@@ -1280,7 +1293,8 @@ function renderAdOnline(){
   if(!SBK[l.rid]){box.innerHTML=`<p class="adhint">Online, but locked on this device: its key was changed. Enter the new key to carry on.</p>
     <form class="oform" id="adRelock">${keyInput('adListK','List key')}<button type="submit" class="st-btn st-btn--primary">Unlock</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
   box.innerHTML=`<p class="adhint"><b>Online.</b> Anyone with the address <code>${esc(listHash(l.id))}</code> and the list key can open and edit it. ${esc(sbStatusText())}</p>${sbErrHtml()}
-    <div class="row"><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show list key</button></div>
+    <div class="row"><button type="button" class="st-btn st-btn--primary" id="adPrivLink">Copy private link</button><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show list key</button></div>
+    <p class="adhint">The private link includes the key: whoever has it can open and edit the list. To cut off old links, change the key.</p>
     <details class="adkey"><summary>Change the key or take offline</summary>
       <form class="oform" id="adRekey">${keyInput('adAdminK','Admin key')}${keyInput('adListK','New list key','At least 8 characters')}
         <div class="row"><button type="submit" class="st-btn st-btn--secondary">Change key</button><button type="button" class="linkbtn addanger" id="adOffline">Take offline</button></div>
@@ -1300,6 +1314,8 @@ $('#adOnline').addEventListener('submit',async e=>{
 });
 $('#adOnline').addEventListener('click',async e=>{
   const l=LS.find(x=>x.id===AD);if(!l)return;
+  if(e.target.closest('#adPrivLink')){const url=privateLink(l);
+    try{navigator.clipboard.writeText(url).then(()=>toast('Private link copied'),()=>toast(url))}catch(_){toast(url)}return}
   if(e.target.closest('#adSyncNow'))sbSync(true,l);
   else if(e.target.closest('#adShowKey')){const b=e.target.closest('#adShowKey');b.textContent=b.dataset.on?'Show list key':SBK[l.rid];b.dataset.on=b.dataset.on?'':'1'}
   else if(e.target.closest('#adOffline')){const b=e.target.closest('#adOffline'),say=t=>{$('#adOnMsg').textContent=t};
@@ -2031,6 +2047,11 @@ function route(){
     openAdmin(l.id,true);return;
   }
   if(AD!==null)closeAdmin();
+  if(h.startsWith(LIST)&&/&key=/.test(h)){
+    const i=h.indexOf('&key='),slug=decodeURIComponent(h.slice(LIST.length,i));let key='';try{key=decodeURIComponent(h.slice(i+5))}catch(e){}
+    try{history.replaceState(history.state,'',location.pathname+location.search+LIST+encodeURIComponent(slug))}catch(e){}
+    linkUnlock(slug,key);return;
+  }
   if(h.startsWith(LIST)){
     const l=listBySlug(decodeURIComponent(h.slice(LIST.length)));
     if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);if(SBC){openUnlock(decodeURIComponent(h.slice(LIST.length)));return}toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
@@ -2205,7 +2226,7 @@ const fontsReady=(document.fonts?Promise.race([
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
 applySettings();
 if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
-if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length)));if(l){AL=l.id;saveL()}}
+if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length).split('&key=')[0]));if(l){AL=l.id;saveL()}}
 renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
   .finally(()=>{if(canFetch!==null)store.set('folio.canFetch',canFetch);renderQ()})}
