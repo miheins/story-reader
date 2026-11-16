@@ -8,15 +8,15 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 2. SQL Editor → paste [`supabase/schema.sql`](../supabase/schema.sql) → Run.
 3. In the same editor, set your **admin key** (your own long phrase), then delete the line:
    `select public.folio_set_admin_key('choose-a-long-admin-key');`
-4. *(Done: this project's URL and publishable key are built into `index.html` as `SB_URL` / `SB_KEY`, so this step is skipped.)* In Folio: ☰ → **Supabase** → paste the Project URL and the **publishable** key (Project Settings → API Keys; the older *anon* key also works) → **Connect**.
+4. *(Done: this project's URL and publishable key are built into `index.html` as `SB_URL` / `SB_KEY`, so this step is skipped.)* In Folio: ☰ → **Admin** → paste the Project URL and the **publishable** key (Project Settings → API Keys; the older *anon* key also works) → **Connect**.
    To skip this on other devices, fill in `SB_URL` and `SB_KEY` at the top of the Supabase section in `index.html`; the publishable key is meant to be public.
 
 ## Using it
 
-- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Supabase → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open lists they have a key or private link for, add and remove articles, and take notes, but sees no *New list*, *Manage* or delete. Renaming an online list is also enforced in the database: `folio_push` refuses a name or address change without the admin key.
+- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Admin → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open lists they have a key or private link for, add and remove articles, and take notes, but sees no *New list*, *Manage* or delete. Renaming an online list is also enforced in the database: `folio_push` refuses a name or address change without the admin key.
 
 - **Put a list online:** the list's **Manage** page (L → *Manage …*) → *Online* → enter the admin key and choose a list key → **Put online**.
-- **Open it elsewhere:** open the list's address (`…/#list-weekend`) and Folio asks for the key; or ☰ → Supabase → **Unlock a list…**, or L → *Unlock a list…*.
+- **Open it elsewhere:** open the list's address (`…/#list-weekend`) and Folio asks for the key; or ☰ → Admin → **Unlock a list…**, or L → *Unlock a list…*.
 - **Private link:** Manage → Online → **Copy private link** (or L → *Copy private link*). It's the list's address with the key in it (`…#list-weekend&key=…`): opening it unlocks the list without typing, and Folio removes the key from the address bar straight away. Anyone holding the link can open and edit the list; to cut old links off, change the key. The link can also be pasted into *Unlock a list*.
 - **Change a key / take offline:** Manage → Online → *Change the key or take offline* (admin key needed). Devices with the old key are locked until given the new one; they keep their copy.
 - You can also change a key in Supabase alone: `select public.folio_set_key('admin key', '<list id>', 'new list key');`

@@ -587,23 +587,23 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 <div class="sheet" id="menuSheet" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="mTitle">Menu</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="mX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="set" id="sbSet"><span class="st-field__label">Supabase</span><div id="sbBox" class="obox"></div></div>
-    <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
-    <div class="set"><span class="st-field__label">Reading lists</span>
-      <p>Each article lives in one list.</p>
-      <ul class="cats lists" id="listList"></ul>
-      <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
-    </div>
+    <div class="set"><span class="st-field__label">Reading</span><button type="button" class="st-btn st-btn--secondary" id="mReading" style="align-self:flex-start">Typeface, size and theme</button></div>
     <div class="set owneronly" id="catSet"><span class="st-field__label">Categories</span>
       <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
       <ul class="cats" id="catList"></ul>
       <form class="st-field catadd" id="catForm"><label class="st-field__label" for="catName">New category</label><div class="prow"><input type="text" id="catName" class="st-input" placeholder="For example, Branding" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add category</button></div></form>
     </div>
+    <div class="set"><span class="st-field__label">Reading lists</span>
+      <p>Each article lives in one list.</p>
+      <ul class="cats lists" id="listList"></ul>
+      <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
+    </div>
     <div class="set" id="installSet"><span class="st-field__label">Home screen</span>
       <p id="installHow"></p>
       <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Folio to home screen</button>
     </div>
-    <div class="set"><span class="st-field__label">Reading</span><button type="button" class="st-btn st-btn--secondary" id="mReading" style="align-self:flex-start">Typeface, size and theme</button></div>
+    <div class="set" id="sbSet"><span class="st-field__label">Admin</span><div id="sbBox" class="obox"></div></div>
+    <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
   </div>
 </div>
 
@@ -1308,7 +1308,7 @@ async function linkUnlock(slug,key){
 function renderAdOnline(){
   const box=$('#adOnline');if(!box||AD===null||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
   const l=LS.find(x=>x.id===AD);if(!l)return;
-  if(!SBC){box.innerHTML='<p class="adhint">Only on this device. To put it online, connect a Supabase project first: menu → Supabase.</p>';return}
+  if(!SBC){box.innerHTML='<p class="adhint">Only on this device. To put it online, connect a Supabase project first: menu → Admin.</p>';return}
   if(!l.rid){box.innerHTML=`<p class="adhint">Only on this device. Put it online and anyone with its address and the list key can open and edit it.</p>
     <form class="oform" id="adPub">${keyInput('adListK','List key','At least 8 characters; you choose it')}
       <button type="submit" class="st-btn st-btn--primary">Put online</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}

@@ -24,7 +24,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 
 ## Supabase (your own database)
 
-Put a reading list online in your own Supabase project, with no accounts: each online list has a **key**, and anyone with the list's address and key can open and edit it on any device. Run `supabase/schema.sql` in the project's SQL editor, set an admin key, then ☰ → **Supabase** → Connect, and put a list online from its **Manage** page. To share a list, copy its **private link** (Manage → Online); it includes the key, so the other person doesn't type it. Full steps and how it's protected: [docs/supabase.md](docs/supabase.md). Once connected, the GitHub option below is switched off.
+Put a reading list online in your own Supabase project, with no accounts: each online list has a **key**, and anyone with the list's address and key can open and edit it on any device. Run `supabase/schema.sql` in the project's SQL editor, set an admin key, then ☰ → **Admin** → Connect, and put a list online from its **Manage** page. To share a list, copy its **private link** (Manage → Online); it includes the key, so the other person doesn't type it. Full steps and how it's protected: [docs/supabase.md](docs/supabase.md). Once connected, the GitHub option below is switched off.
 
 ## Lists online (GitHub)
 
