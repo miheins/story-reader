@@ -1,4 +1,31 @@
-# Moving Folio to Supabase
+# Folio and Supabase
+
+## Built (16 Nov 2026): one account, private data
+
+Lists, categories, articles (with reading progress) and notes sync to a Supabase project, private to the signed-in account.
+
+**Set up, once**
+1. Create a project at supabase.com.
+2. SQL Editor → paste [`supabase/schema.sql`](../supabase/schema.sql) → Run. It creates four tables (`folio_lists`, `folio_categories`, `folio_articles`, `folio_notes`) and their row-level security.
+3. Authentication → Users → **Add user** (email and password, *Auto Confirm User* on). Optional but sensible: Authentication → Sign In / Providers → turn off *Allow new users to sign up*.
+4. In Folio: ☰ → **Supabase** → paste the Project URL and the **publishable** key (Project Settings → API Keys; the older *anon* key also works), then the email and password → **Connect**.
+5. On other devices: the same step 4. To skip the URL and key there, fill in `SB_URL` and `SB_KEY` at the top of the Supabase section in `index.html`; the publishable key is meant to be public.
+
+**How it works**
+- No library: plain `fetch` to Supabase's Auth (`/auth/v1/token`) and REST (`/rest/v1/…`) APIs. Section `Supabase` in `index.html`.
+- Local storage stays the working copy, so the app works offline. After each save, only the rows that changed since the last sync are upserted or deleted (`sbPush`, 1.5 s after the last change). On start, on returning to the tab and on **Sync now**, pending changes go up, then everything comes down (`sbPull`, `sbApply`).
+- A device's first sync only *adds* what the account doesn't have; it never overwrites. After that, the last change wins per row.
+- The starter example links don't sync until opened. Cached article text stays on each device and is re-fetched elsewhere.
+- Once a project is connected, the GitHub store (`ONLINE`) switches itself off.
+- Never put a **secret** / `service_role` key in the app; the form refuses one.
+
+**Not built yet** (the plan below): sharing a list with other people, public list links, uuid ids, a separate progress table, soft delete. Today's tables use the app's own text ids and keep progress on the article row, which is right for one owner and can be migrated.
+
+**Tested** against an in-memory stand-in for Supabase (`tests/supabase.test.js`), **not yet against a real project**. First real run: watch for the upsert (`on_conflict=owner_id,id`) and the first sign-in.
+
+---
+
+# Plan: sharing and roles (not built)
 
 A plan, not yet built. The app is already shaped for it: every list and article change in the list admin goes through **`Repo`** (one named command, plain-JSON arguments), and every permission question goes through **`can(action, listId)`**. Moving to Supabase means re-implementing those two things; the UI stays as it is.
 

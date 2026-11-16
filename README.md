@@ -21,7 +21,11 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 - **Links:** every article has its own address (`#read-<id>`), so Back returns to the list you came from and reloading keeps you in the article.
 - **Home screen:** open the menu (☰) for install instructions. On iPhone: Safari → Share → Add to Home Screen.
 
-## Lists online
+## Supabase (your own database)
+
+Keep lists, articles, reading progress and notes in your own Supabase project, private to your account and the same on every device. Run `supabase/schema.sql` in the project's SQL editor, add a user, then ☰ → **Supabase** → paste the project URL and publishable key, sign in. Full steps: [docs/supabase.md](docs/supabase.md). Once connected, the GitHub option below is switched off.
+
+## Lists online (GitHub)
 
 Your lists can live in this repository (`data/folio.json`), so every device sees the same lists and each list's address keeps working anywhere. Anyone with a link can read; only the owner can add or edit.
 

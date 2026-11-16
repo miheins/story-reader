@@ -553,6 +553,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 <div class="sheet" id="menuSheet" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="mTitle">Menu</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="mX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="set" id="sbSet"><span class="st-field__label">Supabase</span><div id="sbBox" class="obox"></div></div>
     <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
     <div class="set"><span class="st-field__label">Reading lists</span>
       <p>Each article lives in one list.</p>
@@ -655,7 +656,7 @@ const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:
 /* ---------- Queue ---------- */
 const EXAMPLES=['https://www.itsnicethat.com/features/ffern-film-spotlight-230326','https://howtorunacountry.substack.com/p/the-enemy-is-inertia','https://designerfund.com/blog/designer-founders-stephen-haney'];
 let Q=store.get('folio.queue',null);
-if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(mkItem)];}
+if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(u=>({...mkItem(u),eg:true}))];}   /* eg: starter examples; they don't sync to Supabase until opened */
 {const sm=Q.find(q=>q.id==='sample');if(sm)sm.title=SAMPLE.title}
 function mkItem(u,kind){const it={id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0,list:typeof AL!=='undefined'?AL:'main'};if(kind==='link')it.kind='link';return it}
 /* "Just link" items: title and image from the page's Open Graph tags; tapping opens the original page */
@@ -679,7 +680,7 @@ function openLink(it){
 var LS=store.get('folio.lists',null);if(!Array.isArray(LS)||!LS.length)LS=[{id:'main',name:'Reading list'}];
 var AL=store.get('folio.alist',LS[0].id);if(!LS.some(l=>l.id===AL))AL=LS[0].id;
 Q.forEach(q=>{if(!q.list||!LS.some(l=>l.id===q.list))q.list=LS[0].id});
-const saveL=()=>{store.set('folio.lists',LS);store.set('folio.alist',AL)};
+const saveL=()=>{store.set('folio.lists',LS);store.set('folio.alist',AL);sbTouch()};
 const inList=it=>it.list===AL;
 const listName=id=>(LS.find(l=>l.id===id)||{}).name||'';
 const slugify=n=>String(n).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'list';
@@ -688,7 +689,7 @@ LS.forEach(l=>{if(!l.slug)l.slug=uniqueSlug(l.name,l)});
 const LIST='#list-';
 const listHash=(id=AL)=>LIST+(LS.find(l=>l.id===id)||LS[0]).slug;
 const listBySlug=sl=>LS.find(l=>l.slug===sl)||LS.find(l=>(l.alt||[]).includes(sl))||LS.find(l=>l.id===sl);
-const saveQ=()=>store.set('folio.queue',Q);
+const saveQ=()=>{store.set('folio.queue',Q);sbTouch()};
 let canFetch=store.get('folio.canFetch',null);
 
 function chip(it){
@@ -807,7 +808,7 @@ const LINK_ICON=ic('external');
 /* ---------- Categories ---------- */
 const CC=6;
 let C=store.get('folio.cats',[]);let F=store.get('folio.filter',null);
-const saveC=()=>{store.set('folio.cats',C);store.set('folio.filter',F)};
+const saveC=()=>{store.set('folio.cats',C);store.set('folio.filter',F);sbTouch()};
 const catOf=it=>C.find(c=>c.id===it.cat)||null;
 const ccv=c=>c?`var(--c${c.c+1})`:'';
 function renderFilters(){
@@ -834,7 +835,7 @@ $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
   const v=sel.value||null,id=it.id;edit('Set category',d=>{const a=d.articles.find(x=>x.id===id);if(a)a.cat=v});renderQ()});
 $('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
-function openMenu(){$('#ownerSet').hidden=!ONLINE;if(ONLINE)renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
+function openMenu(){$('#ownerSet').hidden=!ONLINE;renderSb();if(ONLINE)renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
 /* home-screen install */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
@@ -1078,8 +1079,149 @@ $('#adNotes').onclick=e=>{const j=e.target.closest('[data-jump]');if(!j)return;
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
   return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
 const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
-/* ONLINE: GitHub storage and passphrase-protected editing. SHOW_LOCK: the Lock button in the menu (hidden for now; set to true to bring it back). */
-const ONLINE=true,SHOW_LOCK=false;
+/* ---------- Supabase: lists, categories, articles (with reading progress) and notes, private to the signed-in account ----------
+   Set up: run supabase/schema.sql in the project's SQL editor, create a user (Authentication → Users), then connect in the menu.
+   SB_URL / SB_KEY: fill these in to bake the project into the app for every device; left empty, each device asks once (menu → Supabase).
+   The key is the project's publishable (anon) key. It is safe in public code: row-level security in schema.sql is what protects the data.
+   How it syncs: local storage stays the working copy. After every save, the rows that changed since the last sync are upserted or
+   deleted (sbPush). On start, on return to the tab and on "Sync now", pending changes go up first, then everything comes down (sbPull). */
+const SB_URL='',SB_KEY='';
+const SB_T=['lists','categories','articles','notes'];
+var SBC=(()=>{const c=store.get('folio.sb',null)||{};const url=String(SB_URL||c.url||'').trim().replace(/\/+$/,''),key=String(SB_KEY||c.key||'').trim();return url&&key?{url,key}:null})();
+var SBS=store.get('folio.sb.session',null),SB_SNAP=store.get('folio.sb.snap',null);
+var sbTimer=null,sbChain=null,SB_APPLYING=false,SB_STATE='',SB_AT=null,SB_ERR='',SB_LAST=0;
+if(SB_SNAP&&(!SBS||SB_SNAP.uid!==SBS.uid))SB_SNAP=null;
+function sbSetState(st,err){SB_STATE=st;SB_ERR=err||'';if(st==='synced')SB_AT=new Date();if($('#menuSheet')&&!$('#menuSheet').hidden)renderSb()}
+async function sbAuth(grant,body){
+  const r=await fetch(`${SBC.url}/auth/v1/token?grant_type=${grant}`,{method:'POST',headers:{apikey:SBC.key,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.access_token){const e=new Error(j.error_description||j.msg||j.message||('Supabase answered '+r.status));e.status=r.status;throw e}
+  SBS={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,email:(j.user&&j.user.email)||body.email||(SBS&&SBS.email)||'',uid:(j.user&&j.user.id)||(SBS&&SBS.uid)||''};
+  store.set('folio.sb.session',SBS);return SBS;
+}
+function sbSignOut(msg){SBS=null;SB_SNAP=null;store.del('folio.sb.session');store.del('folio.sb.snap');clearTimeout(sbTimer);sbSetState(msg?'error':'',msg);renderSb()}
+async function sbToken(){
+  if(!SBS)throw new Error('Not signed in');
+  if(SBS.expires_at-Date.now()<60e3){
+    try{await sbAuth('refresh_token',{refresh_token:SBS.refresh_token})}
+    catch(e){if(e.status){sbSignOut('Your sign-in has expired. Sign in again.');e.signedOut=true}throw e}
+  }
+  return SBS.access_token;
+}
+async function sbRest(method,path,body,prefer){
+  const tok=await sbToken();
+  const r=await fetch(`${SBC.url}/rest/v1/${path}`,{method,headers:{apikey:SBC.key,Authorization:'Bearer '+tok,...(body?{'Content-Type':'application/json'}:{}),...(prefer?{Prefer:prefer}:{})},body:body?JSON.stringify(body):undefined});
+  if(!r.ok){const j=await r.json().catch(()=>({}));
+    const missing=r.status===404||/^PGRST20|^42P01/.test(j.code||'');
+    const e=new Error(missing?'The Folio tables aren’t in this project yet. Run supabase/schema.sql in the Supabase SQL editor, then sync again.':(j.message||('Supabase answered '+r.status)));e.status=r.status;throw e}
+  return method==='GET'?r.json():null;
+}
+/* local state as table rows; the same shape is kept as the snapshot of what Supabase last had */
+function sbRows(){return{
+  lists:LS.map((l,i)=>({id:String(l.id),name:l.name,slug:l.slug||'',alt:l.alt||[],position:i})),
+  categories:C.map((c,i)=>({id:String(c.id),name:c.name,c:c.c||0,position:i})),
+  articles:Q.filter(a=>a.url&&!(a.eg&&a.status==='new')).map((a,i)=>({id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',list_id:String(a.list),cat_id:a.cat||null,kind:a.kind==='link'?'link':'story',img:a.img||null,
+    added:a.added||null,position:i,status:a.status==='read'||a.status==='reading'?a.status:'new',pos:Number.isFinite(a.pos)?a.pos:-1,pct:a.pct||0})),
+  notes:N.map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))
+}}
+async function sbPush(){
+  const cur=sbRows(),first=!SB_SNAP,snap=SB_SNAP||{},uid=SBS.uid;
+  for(const t of SB_T){
+    const old=new Map((snap[t]||[]).map(r=>[r.id,JSON.stringify(r)])),ids=new Set(cur[t].map(r=>r.id));
+    const up=cur[t].filter(r=>old.get(r.id)!==JSON.stringify(r)),del=[...old.keys()].filter(id=>!ids.has(id));
+    /* first sync from this device: only add what the account doesn't have yet, never overwrite */
+    if(up.length)await sbRest('POST',`folio_${t}?on_conflict=owner_id,id`,up.map(r=>({owner_id:uid,...r})),`resolution=${first?'ignore':'merge'}-duplicates,return=minimal`);
+    if(del.length)await sbRest('DELETE',`folio_${t}?owner_id=eq.${uid}&id=in.(${del.map(id=>encodeURIComponent('"'+id.replace(/"/g,'')+'"')).join(',')})`);
+  }
+  SB_SNAP={uid,...cur};store.set('folio.sb.snap',SB_SNAP);
+}
+const sbPull=()=>Promise.all(SB_T.map(t=>sbRest('GET',`folio_${t}?select=*&order=${t==='notes'?'noted_at':'position'}`)));
+function sbApply([l,c,a,n]){
+  SB_APPLYING=true;
+  try{
+    if(l.length){LS.length=0;l.forEach(r=>LS.push({id:r.id,name:r.name,...(r.slug?{slug:r.slug}:{}),...(Array.isArray(r.alt)&&r.alt.length?{alt:r.alt}:{})}));LS.forEach(x=>{if(!x.slug)x.slug=uniqueSlug(x.name,x)})}
+    C.length=0;c.forEach(r=>C.push({id:r.id,name:r.name,c:r.c}));
+    const prev=new Map(Q.map(q=>[q.id,q])),local=Q.filter(q=>!q.url),arts=[];
+    a.forEach(r=>{const o=prev.get(r.id)||{};
+      Object.assign(o,{id:r.id,url:r.url,title:r.title||o.title||slugTitle(r.url),site:r.site,list:LS.some(x=>x.id===r.list_id)?r.list_id:LS[0].id,cat:r.cat_id&&C.some(x=>x.id===r.cat_id)?r.cat_id:null,
+        status:o.status==='paste'&&r.status==='new'?'paste':r.status,pos:r.pos,pct:r.pct,added:r.added||o.added});
+      if(r.kind==='link')o.kind='link';else delete o.kind;if(r.img)o.img=r.img;else delete o.img;arts.push(o)});
+    Q.length=0;Q.push(...local,...arts);
+    N.length=0;n.forEach(r=>N.push({id:r.id,art:r.article_id,title:r.title,site:r.site,url:r.url,pos:r.pos,where:r.where_label,excerpt:r.excerpt,text:r.body,at:Number(r.noted_at)}));
+    if(!LS.some(x=>x.id===AL))AL=LS[0].id;if(F&&!C.some(x=>x.id===F))F=null;
+    saveQ();saveL();saveC();saveN();
+  }finally{SB_APPLYING=false}
+  SB_SNAP={uid:SBS.uid,...sbRows()};store.set('folio.sb.snap',SB_SNAP);
+  renderQ();renderNotes();if(!$('#menuSheet').hidden){renderLists();renderCats()}
+}
+/* one sync at a time. pull=true also fetches everything afterwards; skipped if something changed here meanwhile (the next sync catches up). */
+function sbSync(pull){
+  if(!SBC||!SBS)return Promise.resolve(false);
+  clearTimeout(sbTimer);
+  const run=async()=>{
+    if(!SBS)return false;
+    sbSetState(pull?'syncing':'saving');
+    try{
+      await sbPush();
+      if(pull){const before=JSON.stringify(sbRows()),rows=await sbPull();
+        if(JSON.stringify(sbRows())===before)sbApply(rows);else sbTouch();
+        SB_LAST=Date.now()}
+      sbSetState('synced');return true;
+    }catch(e){if(!e.signedOut)sbSetState(e.status?'error':'offline',e.status?e.message:'');return false}
+  };
+  return sbChain=(sbChain||Promise.resolve()).then(run,run);
+}
+function sbTouch(){if(SB_APPLYING||!SBC||!SBS)return;clearTimeout(sbTimer);sbTimer=setTimeout(()=>sbSync(false),1500)}
+document.addEventListener('visibilitychange',()=>{if(!SBC||!SBS)return;if(document.visibilityState==='hidden')sbSync(false);else if(Date.now()-SB_LAST>30e3)sbSync(true)});
+window.addEventListener('online',()=>{if(SBC&&SBS)sbSync(true)});
+function sbStatusText(){
+  return SB_STATE==='syncing'?'Syncing…':SB_STATE==='saving'?'Saving…':SB_STATE==='offline'?'Offline. Changes are kept here and sent when you’re back online.'
+    :SB_STATE==='synced'&&SB_AT?'Synced '+SB_AT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
+}
+function renderSb(){
+  const box=$('#sbBox');if(!box||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
+  const err=SB_STATE==='error'&&SB_ERR?`<div class="st-status st-status--error" role="alert">${ic('error','st-status__icon')}<div class="st-status__body"><p class="st-status__text">${esc(SB_ERR)}</p></div></div>`:'';
+  if(SBC&&SBS){box.innerHTML=`<p>Signed in as <b>${esc(SBS.email||'your account')}</b>. Lists, articles, reading progress and notes are stored in your Supabase project and follow you to every device.</p>
+    <p class="osync" id="sbSyncT">${esc(sbStatusText())}</p>${err}
+    <div class="row"><button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Sign out</button></div>`;return}
+  const fixed=!!(SB_URL&&SB_KEY),c=store.get('folio.sb',null)||{};
+  box.innerHTML=`<p>${SBC?'Sign in to load your lists, articles and notes on this device.':'Store your lists, articles and notes in your own Supabase project, private to your account and the same on every device.'}</p>${err}
+    <form class="oform" id="sbForm" autocomplete="on">
+      ${fixed?'':`<div class="st-field"><label class="st-field__label" for="sbUrl">Project URL</label><input type="url" id="sbUrl" class="st-input" placeholder="https://your-project.supabase.co" value="${esc(c.url||'')}" autocapitalize="off" spellcheck="false" required></div>
+      <div class="st-field"><label class="st-field__label" for="sbKey">Publishable key</label><input type="text" id="sbKey" class="st-input" placeholder="sb_publishable_… or the anon key" value="${esc(c.key||'')}" autocapitalize="off" autocomplete="off" spellcheck="false" required></div>`}
+      <div class="st-field"><label class="st-field__label" for="sbEmail">Email</label><input type="email" id="sbEmail" class="st-input" autocomplete="username" autocapitalize="off" required></div>
+      <div class="st-field"><label class="st-field__label" for="sbPass">Password</label><input type="password" id="sbPass" class="st-input" autocomplete="current-password" required></div>
+      <button type="submit" class="st-btn st-btn--primary" id="sbGo">${SBC?'Sign in':'Connect'}</button>
+      <p class="ohint" id="sbMsg" role="status"></p>
+    </form>`;
+}
+$('#sbBox').addEventListener('submit',async e=>{
+  if(e.target.id!=='sbForm')return;e.preventDefault();
+  const msg=$('#sbMsg'),go=$('#sbGo'),say=t=>{msg.textContent=t};
+  let fresh=false;
+  if($('#sbUrl')){const url=$('#sbUrl').value.trim().replace(/\/+$/,''),key=$('#sbKey').value.trim();
+    if(!/^https:\/\/[^\s/]+$/.test(url)){say('The project URL looks like https://your-project.supabase.co');return}
+    if(/^sb_secret_|service_role/.test(key)){say('That looks like a secret key. Use the publishable (anon) key; a secret key must never go in a browser.');return}
+    fresh=!SBC||SBC.url!==url||SBC.key!==key;SBC={url,key}}
+  go.disabled=true;say('Signing in…');
+  try{await sbAuth('password',{email:$('#sbEmail').value.trim(),password:$('#sbPass').value})}
+  catch(err){go.disabled=false;say(err.status?(/invalid/i.test(err.message)?'That email and password don’t match a user in this project.':err.message):'Couldn’t reach Supabase. Check the project URL and your connection.');
+    if(fresh&&!store.get('folio.sb',null))SBC=null;return}
+  if($('#sbUrl'))store.set('folio.sb',{url:SBC.url,key:SBC.key});
+  SB_SNAP=null;store.del('folio.sb.snap');SB_STATE='';SB_ERR='';
+  if(fresh&&ONLINE){location.reload();return}   /* the GitHub store steps aside once Supabase is connected */
+  document.activeElement&&document.activeElement.blur();renderSb();
+  const ok=await sbSync(true);if(ok)toast('Connected to Supabase');
+});
+$('#sbBox').addEventListener('click',e=>{
+  if(e.target.closest('#sbNow')){sbSync(true)}
+  else if(e.target.closest('#sbOut')){const tok=SBS&&SBS.access_token;
+    if(tok)fetch(`${SBC.url}/auth/v1/logout`,{method:'POST',headers:{apikey:SBC.key,Authorization:'Bearer '+tok}}).catch(()=>{});
+    sbSignOut();toast('Signed out. Your lists stay on this device.')}
+});
+
+/* ONLINE: GitHub storage and passphrase-protected editing. It steps aside when a Supabase project is connected. SHOW_LOCK: the Lock button in the menu (hidden for now; set to true to bring it back). */
+const ONLINE=!SBC,SHOW_LOCK=false;
 const DATA_F='data/folio.json',OWNER_F='data/owner.json',OWNER_K='folio.owner';
 var REMOTE=false,SHA=null,GH_OK=null,SYNCED=false,BOOTING=true,PENDING_ROUTE=false,LAST_SYNC=0,SYNC_STATE='',SYNC_AT=null;
 var OWNER_FILE=null,OWNER_DOC=null,OWN=false,WQ=[],wTimer=null,writing=null;
@@ -1185,7 +1327,7 @@ function mergeInto(d,src){(src.lists||[]).forEach(l=>{if(!d.lists.some(x=>x.id==
   (src.categories||[]).forEach(c=>{if(!d.categories.some(x=>x.id===c.id))d.categories.push({...c})});
   (src.articles||[]).forEach(a=>{if(a.url&&!d.articles.some(x=>x.id===a.id))d.articles.push({...a})})}
 async function syncDown(){
-  if(!ONLINE){SYNCED=true;if(PENDING_ROUTE){PENDING_ROUTE=false;route()}return}
+  if(!ONLINE){if(SBC&&SBS)await sbSync(true);SYNCED=true;if(PENDING_ROUTE){PENDING_ROUTE=false;route()}return}
   if(WQ.length||writing)return;
   const r=await ghGet(DATA_F);LAST_SYNC=Date.now();
   if(r.ok&&r.found){try{const doc=JSON.parse(r.text);if(!WQ.length&&!writing)applyRemote(doc,r.sha||SHA);setSync(r.stale?'stale':'synced')}catch(e){setSync('error')}}
@@ -1310,7 +1452,7 @@ async function afterUnlock(){roClass();const st=store.get('folio.stash',null);st
 
 /* ---------- Notes ---------- */
 let N=store.get('folio.notes',[]);
-const saveN=()=>store.set('folio.notes',N);
+const saveN=()=>{store.set('folio.notes',N);sbTouch()};
 const fmtWhen=t=>new Date(t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 const clip=(t,n=34)=>{const w=t.split(/\s+/).filter(Boolean);return w.length>n?w.slice(0,n).join(' ')+'…':w.join(' ')};
 let tab=store.get('folio.tab','queue');

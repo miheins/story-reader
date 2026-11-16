@@ -2,7 +2,7 @@
 
 Everything you need to pick this project up again. The user guide is in [README.md](README.md); this file covers how it's built, where things are, and what's still open.
 
-*Last updated 7 Nov 2026.*
+*Last updated 16 Nov 2026.*
 
 ## At a glance
 
@@ -46,6 +46,7 @@ Everything is in `index.html`. Search for these section markers:
 | `Reading lists UI` | List switcher (L, with *Manage …*), menu list management. |
 | `Data layer` | `Repo` (named commands for lists and articles) and `can()` (the one permission check). The seam for Supabase; see [docs/supabase.md](docs/supabase.md). |
 | `List admin` | `#admin-<slug>`: name, items, notes, move to, remove, delete list. |
+| `Supabase` | Sign-in (email and password), `sbPush` / `sbPull` / `sbApply`, the menu section. Syncs lists, categories, articles with progress, and notes. Set-up and design: [docs/supabase.md](docs/supabase.md); tables and security: `supabase/schema.sql`. |
 | `Lists online` | GitHub storage, encryption, owner set-up and unlock, read-only mode. Flags `ONLINE` and `SHOW_LOCK` are near the top. |
 | `Notes` | Notes model, Notes tab, note sheet. |
 | `Parsing` | Jina fetch, HTML and markdown to blocks, `clean()` (keeps only the main reading text). |
@@ -125,10 +126,13 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
   - `lists`: list addresses, the L key, opening a list link directly, unknown lists.
   - `link`: Just link saves title, image and site from Open Graph, shows *Link* and a thumbnail, opens the original page.
   - `admin`: `#admin-<slug>`, rename (address follows), move and remove with Undo, notes, the L switcher's *Manage*, Back.
+  - `supabase`: a stand-in for Supabase with two devices: sign-in, wrong password, first upload, second device joins without overwriting, delete and rename travel, token refresh, deep link on a new device, missing tables, sign-out.
   - `online`: a stand-in for GitHub across four devices: set-up, publish, visitor read-only, unlock and merge, wrong passphrase, simultaneous adds, opening a list link on a fresh device.
 - **Design round trip:** edit in Paper, preferably by changing tokens, then ask Claude to "pull the Paper changes". It reads exact values from the file, not screenshots.
 
 ## Open items
+
+0. **First real Supabase run.** Built and tested against a stand-in only. Needs a project, `supabase/schema.sql` run, a user, then Connect in the menu. Storage keys: `folio.sb` (URL, key), `folio.sb.session` (tokens), `folio.sb.snap` (what the account last had).
 
 1. **First real set-up of Lists online.** Only tested against a stand-in for GitHub. Watch for: the token check, the first publish, and unlocking on a second device. If something fails, note the exact error text.
 2. **Article extraction for itsnicethat.** Reworked to read `<article>` from Jina's HTML. Not yet confirmed on the live page. It also depends on Jina accepting the `X-Return-Format` header from a browser; if not, it silently falls back to markdown.
