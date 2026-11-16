@@ -79,6 +79,7 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   B.location.hash='#admin-weekend';await wait(200);
   ok('B can’t open the manage page',$B('#viewAdmin').hidden&&B.location.hash==='#list-weekend',B.location.hash);
   ok('B has no New list or Manage',B.document.documentElement.classList.contains('noadmin')&&![...$B('#listSel').options].some(o=>o.value==='__new'||o.value==='__admin'));
+  ok('B can’t switch lists',[...$B('#listSel').options].filter(o=>!o.value.startsWith('__')).length===1&&B.getComputedStyle($B('#sbSet .subset')).display==='none');
   $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
   $B('[data-rm="a2"]').click();await wait(2200);
   ok('removal reaches Supabase',L.articles.length===1);

@@ -221,7 +221,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
-.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin]{display:none!important}
+.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
 .ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
@@ -1010,7 +1010,7 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 /* ---------- Reading lists UI ---------- */
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
-  sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
+  sel.innerHTML=LS.filter(l=>l.id===AL||can('list.switch',l.id)).map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
     (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+(can('list.manage',AL)?`<option value="__admin">Manage ${esc(listName(AL))}…</option>`:'')+(isRO()||!can('list.create')?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
@@ -1043,7 +1043,7 @@ $('#listForm').addEventListener('submit',e=>{e.preventDefault();if(!can('list.cr
   const l={id:'l'+Date.now().toString(36),name:n};l.slug=uniqueSlug(n,l);edit('Add list '+n,d=>{if(!d.lists.some(x=>x.id===l.id))d.lists.push({...l})});$('#listName').value='';renderLists();renderQ();
   toast(`Created ${n}`,null)});
 $('#listList').addEventListener('click',e=>{
-  const o=e.target.closest('[data-lopen]'),d=can('list.delete')?e.target.closest('[data-ldel]'):null;
+  const o=can('list.switch')?e.target.closest('[data-lopen]'):null,d=can('list.delete')?e.target.closest('[data-ldel]'):null;
   if(o){switchList(o.dataset.lopen);renderLists();closeSheets()}
   const ad=e.target.closest('[data-ladmin]');if(ad){openAdmin(ad.dataset.ladmin);return}
   const cp=e.target.closest('[data-lcopy]');if(cp){const url=location.origin+location.pathname+listHash(cp.dataset.lcopy);
@@ -1370,7 +1370,7 @@ function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();sav
    update or RPC with the same name and arguments; docs/supabase.md maps them.
    can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
    Later: the signed-in user's role on that list, enforced again by row-level security. */
-const ADMIN_ACTS=['list.create','list.rename','list.delete','list.manage','items.move'];
+const ADMIN_ACTS=['list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
 function can(action,listId){
   if(action==='read')return true;
   if(ADMIN_ACTS.includes(action)&&typeof SBC!=='undefined'&&SBC)return isAdmin();
