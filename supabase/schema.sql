@@ -35,6 +35,9 @@ create table if not exists public.folio_lists (
   updated_at timestamptz not null default now()
 );
 
+-- added later: an intro shown under Folio, above the tabs (admin sets it)
+alter table public.folio_lists add column if not exists intro text not null default '';
+
 create table if not exists public.folio_articles (
   list_id  uuid not null references public.folio_lists (id) on delete cascade,
   id       text not null,                                   -- the app's id: a hash of the URL
@@ -155,7 +158,7 @@ declare l public.folio_lists;
 begin
   l := folio__list(p_ref, p_key);
   return jsonb_build_object(
-    'list', jsonb_build_object('id', l.id, 'name', l.name, 'slug', l.slug, 'alt', l.alt),
+    'list', jsonb_build_object('id', l.id, 'name', l.name, 'slug', l.slug, 'alt', l.alt, 'intro', l.intro),
     'articles', coalesce((select jsonb_agg(to_jsonb(a) - 'list_id' order by a.position, a.id) from folio_articles a where a.list_id = l.id), '[]'::jsonb),
     'notes', coalesce((select jsonb_agg(to_jsonb(n) - 'list_id' order by n.noted_at, n.id) from folio_notes n where n.list_id = l.id), '[]'::jsonb));
 end $$;
@@ -173,6 +176,7 @@ begin
     begin
       update folio_lists set
         name = left(coalesce(nullif(trim(p_meta->>'name'), ''), name), 80),
+        intro = case when p_meta ? 'intro' then left(coalesce(p_meta->>'intro', ''), 600) else intro end,
         slug = coalesce(nullif(lower(trim(p_meta->>'slug')), ''), slug),
         alt  = case when jsonb_typeof(p_meta->'alt') = 'array' then p_meta->'alt' else alt end,
         updated_at = now()

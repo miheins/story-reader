@@ -13,10 +13,10 @@ function server(){const lists=[];const log=[];let n=0,up=true;
     folio_set_key:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOLIST';l.key=a.p_key;return null},
     folio_delete_list:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const i=lists.findIndex(x=>x.id===a.p_list);if(i>=0)lists.splice(i,1);return null},
     folio_open:a=>{const l=find(a.p_ref,a.p_key);if(typeof l==='string')return l;
-      return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt},articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
+      return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt,intro:l.intro||''},articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
     folio_push:a=>{const l=find(a.p_list,a.p_key);if(typeof l==='string')return l;
       if(a.p_meta&&a.p_admin!==ADMIN)return'FOLIO_ADMIN';
-      if(a.p_meta){l.name=a.p_meta.name;l.slug=a.p_meta.slug;l.alt=a.p_meta.alt||[]}
+      if(a.p_meta){l.intro=a.p_meta.intro||'';l.name=a.p_meta.name;l.slug=a.p_meta.slug;l.alt=a.p_meta.alt||[]}
       for(const [k,rows,del] of [['articles',a.p_articles,a.p_del_articles],['notes',a.p_notes,a.p_del_notes]]){
         l[k]=l[k].filter(r=>!del.includes(r.id));rows.forEach(r=>{const i=l[k].findIndex(x=>x.id===r.id);if(i<0)l[k].push(r);else l[k][i]=r})}
       return null}};
@@ -90,7 +90,12 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('admin rename reaches Supabase',L.name==='Sunday'&&L.slug==='sunday'&&L.alt.includes('weekend'));
   $B('[data-dk],#vStack')&&0;B.dispatchEvent(new B.Event('focus'));
   const before=srv.log.length;await wait(1800);ok('nothing sent when nothing changed',srv.log.length===before);
+  $A('#adIntro').value='Read these first.\nThen the rest.';submit(A,'#adIntroForm');await wait(2200);
+  ok('intro saved and synced',L.intro==='Read these first.\nThen the rest.',L.intro);
+  ok('intro hidden on the manage page',$A('#listIntro').hidden);
   $B('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);$B('#mX').click();
+  ok('B shows the intro above the tabs',!$B('#listIntro').hidden&&$B('#listIntro').textContent==='Read these first.\nThen the rest.');
+  ok('B can’t edit the intro',B.eval("1")&&!B.document.querySelector('#viewAdmin:not([hidden])'));
   ok('B sees the rename',ls(B,'folio.lists').find(l=>l.rid===L.id).name==='Sunday');
   $A('#adSyncNow').click();await wait(300);
   ok('A sees both, keeps its progress',!ls(A,'folio.queue').some(q=>q.id==='a2')&&ls(A,'folio.lists').find(l=>l.id==='w').name==='Sunday'&&ls(A,'folio.queue').find(q=>q.id==='a1').pct===40);

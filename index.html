@@ -61,6 +61,8 @@ button{font:inherit;color:inherit;cursor:pointer}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .mark{margin:0;line-height:0;color:var(--text)}
 .wordmark{display:block;width:122px;height:auto}
+.lintro{margin:-8px 0 0;max-width:36em;font:400 15px/1.5 var(--f-sans);color:var(--text-muted);white-space:pre-line;overflow-wrap:anywhere;text-wrap:pretty}
+#adIntro{min-height:84px;font-size:16px}
 .add{display:flex;flex-direction:column;gap:10px}
 .lbl{font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
 textarea,input[type=text]{width:100%;box-sizing:border-box;border:1px solid var(--rule);background:var(--sheet);color:var(--fg);border-radius:12px;padding:12px 14px;font:400 15px/1.45 var(--f-sans);resize:vertical}
@@ -423,6 +425,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     </div>
   </header>
 
+  <p class="lintro" id="listIntro" hidden></p>
   <div class="st-tabs__list" role="tablist" aria-label="Overview" id="tabs">
     <button type="button" role="tab" class="st-tabs__tab is-on" id="tabQueue" aria-selected="true" aria-controls="viewQueue"><span id="tabListName">Reading list</span></button>
     <button type="button" role="tab" class="st-tabs__tab" id="tabNotes" aria-selected="false" aria-controls="viewNotes" tabindex="-1">Notes <span class="st-tabs__count" id="noteTotal"></span></button>
@@ -452,6 +455,9 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     <section class="adsec" aria-labelledby="adNameL">
       <h3 class="st-field__label" id="adNameL">Name</h3>
       <form class="prow" id="adNameForm"><input type="text" id="adName" class="st-input" maxlength="40" autocomplete="off" aria-labelledby="adNameL"><button type="submit" class="st-btn st-btn--secondary">Save</button></form>
+      <form class="st-field" id="adIntroForm"><label class="st-field__label" for="adIntro">Intro</label>
+        <textarea id="adIntro" class="st-input st-textarea" rows="3" maxlength="600" placeholder="A line or two under Folio for everyone who opens this list"></textarea>
+        <button type="submit" class="st-btn st-btn--secondary" style="align-self:flex-start">Save intro</button></form>
       <p class="adurl">Address <code id="adUrl"></code> <button type="button" class="linkbtn" id="adCopy">Copy link</button></p>
     </section>
 
@@ -756,6 +762,7 @@ function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmi
     <button class="st-icon-btn st-icon-btn--sm qdel" data-rm="${it.id}" aria-label="Remove ${esc(it.title)}" title="Remove">${ic('close')}</button>
     ${thumbOf(it)?`<img class="qthumb" src="${esc(thumbOf(it))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span></span>'}</li>`}).join('');
   $('#tabListName').textContent=listName(AL);
+  {const li=(LS.find(l=>l.id===AL)||{}).intro||'',el=$('#listIntro');el.textContent=li;el.hidden=!li||(typeof AD!=='undefined'&&AD!==null)}
   renderFilters();
   $('#vStack').checked=VIEW==='stack';$('#vList').checked=VIEW==='list';$('#vStack').parentNode.classList.toggle('is-on',VIEW==='stack');$('#vList').parentNode.classList.toggle('is-on',VIEW==='list');
   ul.hidden=VIEW!=='list';$('#stack').hidden=VIEW!=='stack';$('#filters').hidden=VIEW!=='list';
@@ -1069,7 +1076,7 @@ function openAdmin(id,fromRoute){
   if(AL!==id){AL=id;F=null;saveL();saveC()}
   AD=id;if(!fromRoute&&location.hash!==adminHash(id))setHash(adminHash(id),true);
   toggleListSw(false);closeSheets();
-  $('#tabs').hidden=$('#viewQueue').hidden=$('#viewNotes').hidden=true;$('#viewAdmin').hidden=false;
+  $('#tabs').hidden=$('#viewQueue').hidden=$('#viewNotes').hidden=$('#listIntro').hidden=true;$('#viewAdmin').hidden=false;
   renderAdmin();window.scrollTo(0,0);
 }
 function closeAdmin(){if(AD===null)return;AD=null;$('#viewAdmin').hidden=true;$('#tabs').hidden=false;showTab(tab==='notes'?'notes':'queue');renderQ()}
@@ -1086,7 +1093,8 @@ function renderAdmin(){
   if(AD===null)return;const l=Repo.list(AD);if(!l){closeAdmin();return}
   const items=Repo.items(AD),notes=Repo.notes(AD),edit_=can('list.rename',AD);
   $('#adTitle').textContent=l.name;$('#adBackName').textContent=l.name;$('#adBack').href=listHash(AD);
-  if(document.activeElement!==$('#adName'))$('#adName').value=l.name;$('#adName').readOnly=!edit_;
+  if(document.activeElement!==$('#adName'))$('#adName').value=l.name;
+  if(document.activeElement!==$('#adIntro'))$('#adIntro').value=l.intro||'';$('#adIntro').readOnly=!edit_;$('#adName').readOnly=!edit_;
   $('#adUrl').textContent=listHash(AD);
   $('#adItemsN').textContent='· '+items.length;$('#adNotesN').textContent='· '+notes.length;
   $('#adItems').innerHTML=items.length?items.map(it=>{const c=catOf(it);return `<li><input type="checkbox" id="ad_${it.id}" data-ad="${it.id}" aria-label="Select ${esc(it.title)}"><label for="ad_${it.id}"><span class="t">${esc(it.title)}</span><span class="m">${esc([it.site,statusText(it),c&&c.name].filter(Boolean).join(' · '))}</span></label></li>`}).join('')
@@ -1103,6 +1111,8 @@ $('#adBack').onclick=e=>{e.preventDefault();const id=AD;closeAdmin();switchList(
 $('#adNameForm').addEventListener('submit',e=>{e.preventDefault();const r=Repo.renameList(AD,$('#adName').value);
   if(!r.ok){toast(r.error,null,null,'info');return}
   setHash(adminHash(AD),false);renderAdmin();renderLists();toast('Renamed to '+listName(AD))});
+$('#adIntroForm').addEventListener('submit',e=>{e.preventDefault();const r=Repo.setIntro(AD,$('#adIntro').value);
+  if(!r.ok){toast(r.error,null,null,'info');return}document.activeElement&&document.activeElement.blur();renderAdmin();toast('Intro saved')});
 $('#adCopy').onclick=()=>{const url=location.origin+location.pathname+listHash(AD);
   try{navigator.clipboard.writeText(url).then(()=>toast('Link copied'),()=>toast(url))}catch(_){toast(url)}};
 $('#adMove').onclick=()=>{const to=$('#adMoveTo').value,sel=adSel(),ids=sel.length?sel:Repo.items(AD).map(i=>i.id);
@@ -1153,7 +1163,7 @@ async function sbRpc(fn,args){
 /* one list as rows; the same shape is kept as the snapshot of what Supabase last had */
 function sbListRows(l){
   const arts=Q.filter(a=>a.url&&a.list===l.id&&!(a.eg&&a.status==='new')),ids=new Set(arts.map(a=>a.id));
-  return{list:{name:l.name,slug:l.slug||'',alt:l.alt||[]},
+  return{list:{name:l.name,slug:l.slug||'',alt:l.alt||[],intro:l.intro||''},
     articles:arts.map((a,i)=>{const c=catOf(a);return{id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',kind:a.kind==='link'?'link':'story',img:a.img||null,added:a.added||null,position:i,cat_name:c?c.name:null,cat_c:c?(c.c||0):null}}),
     notes:N.filter(n=>ids.has(n.art)).map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',liked:!!n.like,noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))};
 }
@@ -1170,7 +1180,7 @@ function sbCat(name,c){let x=C.find(k=>k.name.toLowerCase()===String(name).toLow
 function sbApplyList(l,d){
   SB_APPLYING=true;
   try{
-    l.name=d.list.name||l.name;if(d.list.slug)l.slug=d.list.slug;if(Array.isArray(d.list.alt)&&d.list.alt.length)l.alt=d.list.alt;else delete l.alt;
+    l.name=d.list.name||l.name;if(d.list.intro)l.intro=d.list.intro;else delete l.intro;if(d.list.slug)l.slug=d.list.slug;if(Array.isArray(d.list.alt)&&d.list.alt.length)l.alt=d.list.alt;else delete l.alt;
     LS.forEach(x=>{if(x!==l&&(x.slug===l.slug||(l.alt||[]).includes(x.slug)))x.slug=uniqueSlug(x.name,x)});
     const mine=new Set(Q.filter(q=>q.list===l.id&&q.url).map(q=>q.id)),all=new Map(Q.map(q=>[q.id,q]));
     const arts=d.articles.map(r=>{const o=all.get(r.id)||{status:'new',pos:-1,pct:0};
@@ -1382,6 +1392,12 @@ const Repo={
   list:id=>LS.find(l=>l.id===id)||null,
   items:id=>Q.filter(q=>q.list===id),
   notes:id=>{const ids=new Set(Q.filter(q=>q.list===id).map(q=>q.id));return N.filter(n=>ids.has(n.art))},
+  setIntro(id,text){
+    if(!can('list.rename',id))return{ok:false,error:'Only the admin can change the intro'};
+    text=String(text||'').replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim().slice(0,600);
+    edit('Intro: '+listName(id),d=>{const x=d.lists.find(z=>z.id===id);if(x){if(text)x.intro=text;else delete x.intro}});
+    return{ok:true};
+  },
   renameList(id,name){
     name=String(name||'').trim().slice(0,40);const l=Repo.list(id);
     if(!can('list.rename',id))return{ok:false,error:'Only the owner can rename this list'};
