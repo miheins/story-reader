@@ -152,6 +152,16 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   padding:calc(env(safe-area-inset-top,0px) + 10px) max(12px,env(safe-area-inset-right,0px)) 22px max(12px,env(safe-area-inset-left,0px))}
 .reader.dark-ui .chrome{color:#fff;background:linear-gradient(rgba(0,0,0,.42),transparent)}
 .reader.cover-ui .chrome{color:var(--cover-fg)}
+.remember{position:absolute;z-index:3;left:max(18px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;
+  border:1px solid color-mix(in srgb,currentColor 35%,transparent);border-radius:var(--radius-sm);background:transparent;color:var(--fg);
+  font:500 12px/16px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.15em;text-transform:uppercase}
+.remember .st-icon{width:16px;height:16px}
+.remember[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.remember[aria-pressed="true"] .st-icon{fill:currentColor}
+.reader.dark-ui .remember{color:#fff}
+.reader.dark-ui .remember[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
+.remember:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.nlike{font:500 12px/16px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin:0}
 .reader.hold .chrome{opacity:0}
 .prog{display:flex;gap:3px;height:2.5px}
 .prog i{flex:1;border-radius:2px;background:rgba(128,128,128,.35);background:color-mix(in srgb,currentColor 24%,transparent);overflow:hidden}
@@ -173,7 +183,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 
 /* ---------- Sheets ---------- */
 .scrim{position:fixed;inset:0;background:var(--scrim);z-index:40}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--surface);border:1px solid var(--border);border-bottom:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:88%;overflow:auto;box-sizing:border-box;
+.sheet{position:fixed;left:0;right:0;bottom:var(--kb,0px);z-index:41;background:var(--surface);border:1px solid var(--border);border-bottom:0;border-radius:var(--radius-lg) var(--radius-lg) 0 0;max-height:min(88%,calc(var(--vvh,100vh) - 8px));overflow:auto;overscroll-behavior:contain;box-sizing:border-box;
   padding:22px max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));box-shadow:var(--shadow-md)}
 .sheet .in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 .sheet p{margin:0;font:500 14px/20px var(--f-sans);color:var(--text-muted)}
@@ -361,6 +371,10 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 .aditems .m{font:500 12px/16px var(--f-sans);color:var(--text-muted)}
 .adhint{margin:0;font:500 13px/18px var(--f-sans);color:var(--text-muted)}
 .addanger{align-self:flex-start;color:var(--error);padding:4px 0}
+.adkey summary{cursor:pointer;font:500 13px/18px var(--f-sans);color:var(--text);text-decoration:underline 1px;text-underline-offset:3px;padding:4px 0}
+.adkey[open] summary{margin-bottom:8px}
+#adOnline code{font:500 13px/18px var(--font-mono);font-variation-settings:"ELSH" 100;color:var(--text)}
+#adOnline .row{align-items:center}
 .linkbtn:disabled{opacity:.4;cursor:default}
 #adNotes{display:flex;flex-direction:column;gap:14px}
 .adnote{display:flex;flex-direction:column;gap:6px}
@@ -435,6 +449,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       <p class="adurl">Address <code id="adUrl"></code> <button type="button" class="linkbtn" id="adCopy">Copy link</button></p>
     </section>
 
+    <section class="adsec" aria-labelledby="adOnL">
+      <h3 class="st-field__label" id="adOnL">Online</h3>
+      <div id="adOnline" class="obox"></div>
+    </section>
+
     <section class="adsec" aria-labelledby="adItemsL">
       <div class="adhead"><h3 class="st-field__label" id="adItemsL">Items <span id="adItemsN"></span></h3>
         <label class="adall"><input type="checkbox" id="adAll"> Select all</label></div>
@@ -476,6 +495,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <button type="button" class="ib" id="close" aria-label="Back to queue" title="Back to queue"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
+    <button type="button" class="remember" id="remBtn" aria-pressed="false" hidden><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg><span id="remT">Remember</span></button>
     <div class="loading" id="loading" hidden><div><span class="st-spinner st-spinner--lg" role="status" aria-label="Loading"></span><p id="loadT">Opening</p><small id="loadS">Fetching</small></div></div>
   </div>
 </div>
@@ -529,6 +549,19 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       <button type="button" class="st-btn st-btn--secondary" id="readNext">Add and read</button>
     </div>
     <div class="note" id="modeNote">Links load through a reader service. Where a page can’t be reached, Folio asks you to paste its text.</div>
+  </div>
+</div>
+
+<div class="sheet" id="unlockSheet" hidden role="dialog" aria-modal="true" aria-labelledby="uTitle">
+  <div class="in">
+    <div class="st-dialog__head"><h2 class="st-dialog__title" id="uTitle">Unlock a list</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="uX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p>Enter the list’s address and the key you were given. The list then stays on this device and keeps in sync.</p>
+    <form class="oform" id="uForm">
+      <div class="st-field"><label class="st-field__label" for="uRef">List address</label><input type="text" id="uRef" class="st-input" placeholder="weekend, or the full link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>
+      <div class="st-field"><label class="st-field__label" for="uKey">List key</label><input type="text" id="uKey" class="st-input" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>
+      <button type="submit" class="st-btn st-btn--primary" id="uGo">Unlock</button>
+      <p class="ohint" id="uMsg" role="status"></p>
+    </form>
   </div>
 </div>
 
@@ -972,12 +1005,14 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    `<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>');
+    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+`<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
   if(tab==='notes')showTab('queue');renderQ();if(changed)toast('Opened '+listName(id))}
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
+  if(v==='__add'){renderListSel();$('#openAdd').click();return}
+  if(v==='__unlock'){renderListSel();openUnlock('');return}
   if(v==='__admin'){renderListSel();openAdmin(AL);return}
   if(v==='__new'||v==='__edit'){renderListSel();openMenu();if(v==='__new')setTimeout(()=>{try{$('#listName').focus()}catch(_){}},80);return}
   switchList(v)});
@@ -1047,11 +1082,11 @@ function renderAdmin(){
   $('#adItemsN').textContent='· '+items.length;$('#adNotesN').textContent='· '+notes.length;
   $('#adItems').innerHTML=items.length?items.map(it=>{const c=catOf(it);return `<li><input type="checkbox" id="ad_${it.id}" data-ad="${it.id}" aria-label="Select ${esc(it.title)}"><label for="ad_${it.id}"><span class="t">${esc(it.title)}</span><span class="m">${esc([it.site,statusText(it),c&&c.name].filter(Boolean).join(' · '))}</span></label></li>`}).join('')
     :`<li class="empty-row" style="display:block;border:0">${emptyState('inbox','No articles in this list','Add links from the list itself, or move articles here from another list.')}</li>`;
-  $('#adNotes').innerHTML=notes.length?notes.sort((a,b)=>b.at-a.at).map(n=>`<div class="adnote"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)} · ${esc(clip(n.title||'',8))}</small><q>${esc(n.excerpt)}</q></button><p class="ntext">${esc(n.text)}</p><span class="nh">${fmtWhen(n.at)}</span></div>`).join('')
+  $('#adNotes').innerHTML=notes.length?notes.sort((a,b)=>b.at-a.at).map(n=>`<div class="adnote"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)} · ${esc(clip(n.title||'',8))}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<span class="nh">${fmtWhen(n.at)}</span></div>`).join('')
     :'<p class="adhint">No notes on articles in this list yet. Notes stay on the device where you wrote them.</p>';
   $('#adMoveTo').innerHTML=LS.filter(x=>x.id!==AD).map(x=>`<option value="${x.id}">${esc(x.name)} · ${Q.filter(q=>q.list===x.id).length}</option>`).join('');
   $('#adDelete').hidden=LS.length<2||!can('list.delete',AD);
-  adSync();
+  adSync();renderAdOnline();
 }
 $('#adItems').addEventListener('change',adSync);
 $('#adAll').onchange=e=>{$('#adItems').querySelectorAll('input[data-ad]').forEach(x=>x.checked=e.target.checked);adSync()};
@@ -1079,145 +1114,198 @@ $('#adNotes').onclick=e=>{const j=e.target.closest('[data-jump]');if(!j)return;
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
   return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
 const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
-/* ---------- Supabase: lists, categories, articles (with reading progress) and notes, private to the signed-in account ----------
-   Set up: run supabase/schema.sql in the project's SQL editor, create a user (Authentication → Users), then connect in the menu.
+/* ---------- Supabase: reading lists unlocked by a key ----------
+   No accounts. A list is put online once by the admin (admin key, set in Supabase) and gets its own list key.
+   Anyone with the list's address and its key can open and edit it on any device. Without the key the browser gets nothing:
+   the tables are closed to the public API, and every read and write goes through database functions that check the key
+   (supabase/schema.sql). Set-up: docs/supabase.md.
    SB_URL / SB_KEY: fill these in to bake the project into the app for every device; left empty, each device asks once (menu → Supabase).
-   The key is the project's publishable (anon) key. It is safe in public code: row-level security in schema.sql is what protects the data.
-   How it syncs: local storage stays the working copy. After every save, the rows that changed since the last sync are upserted or
-   deleted (sbPush). On start, on return to the tab and on "Sync now", pending changes go up first, then everything comes down (sbPull). */
+   The key is the project's publishable (anon) key and is safe in public code. Never put a secret key here.
+   What syncs per list: its name and address, its articles (order, category, "Just link" details) and the notes on them.
+   Reading progress stays on each device. Local storage stays the working copy: after each save the rows that changed since the
+   last sync go up (sbPushList); on start, on return to the tab and on "Sync now", everything also comes down (sbApplyList). */
 const SB_URL='',SB_KEY='';
-const SB_T=['lists','categories','articles','notes'];
 var SBC=(()=>{const c=store.get('folio.sb',null)||{};const url=String(SB_URL||c.url||'').trim().replace(/\/+$/,''),key=String(SB_KEY||c.key||'').trim();return url&&key?{url,key}:null})();
-var SBS=store.get('folio.sb.session',null),SB_SNAP=store.get('folio.sb.snap',null);
+var SBK=store.get('folio.sb.keys',{})||{},SB_SNAP=store.get('folio.sb.snap',{})||{};   /* per online list id: its key on this device, and what Supabase last had */
 var sbTimer=null,sbChain=null,SB_APPLYING=false,SB_STATE='',SB_AT=null,SB_ERR='',SB_LAST=0;
-if(SB_SNAP&&(!SBS||SB_SNAP.uid!==SBS.uid))SB_SNAP=null;
-function sbSetState(st,err){SB_STATE=st;SB_ERR=err||'';if(st==='synced')SB_AT=new Date();if($('#menuSheet')&&!$('#menuSheet').hidden)renderSb()}
-async function sbAuth(grant,body){
-  const r=await fetch(`${SBC.url}/auth/v1/token?grant_type=${grant}`,{method:'POST',headers:{apikey:SBC.key,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.access_token){const e=new Error(j.error_description||j.msg||j.message||('Supabase answered '+r.status));e.status=r.status;throw e}
-  SBS={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:Date.now()+(j.expires_in||3600)*1000,email:(j.user&&j.user.email)||body.email||(SBS&&SBS.email)||'',uid:(j.user&&j.user.id)||(SBS&&SBS.uid)||''};
-  store.set('folio.sb.session',SBS);return SBS;
+const SB_MSG={FOLIO_KEY:'That key doesn’t open this list.',FOLIO_NOLIST:'There’s no online list with that address.',FOLIO_ADMIN:'That isn’t the admin key.',
+  FOLIO_NOADMIN:'No admin key is set in this project yet. Set one in Supabase first (docs/supabase.md).',FOLIO_SLUG:'Another online list already uses this address. Rename the list, then try again.',FOLIO_SHORT:'A key needs at least 8 characters.'};
+const sbOnline=()=>LS.filter(l=>l.rid&&SBK[l.rid]);
+function sbSetState(st,err){SB_STATE=st;SB_ERR=err||'';if(st==='synced')SB_AT=new Date();if($('#menuSheet')&&!$('#menuSheet').hidden)renderSb();if(typeof AD!=='undefined'&&AD!==null)renderAdOnline()}
+async function sbRpc(fn,args){
+  const h={apikey:SBC.key,'Content-Type':'application/json'};if(/^eyJ/.test(SBC.key))h.Authorization='Bearer '+SBC.key;
+  const r=await fetch(`${SBC.url}/rest/v1/rpc/${fn}`,{method:'POST',headers:h,body:JSON.stringify(args||{})});
+  const j=await r.json().catch(()=>null);
+  if(!r.ok){const m=(j&&j.message)||'',code=(m.match(/FOLIO_[A-Z]+/)||[''])[0];
+    const e=new Error(code?(SB_MSG[code]||code):r.status===404||/^PGRST20/.test((j&&j.code)||'')?'Folio isn’t set up in this project yet. Run supabase/schema.sql in the Supabase SQL editor.':(m||('Supabase answered '+r.status)));
+    e.status=r.status;e.code=code;throw e}
+  return j;
 }
-function sbSignOut(msg){SBS=null;SB_SNAP=null;store.del('folio.sb.session');store.del('folio.sb.snap');clearTimeout(sbTimer);sbSetState(msg?'error':'',msg);renderSb()}
-async function sbToken(){
-  if(!SBS)throw new Error('Not signed in');
-  if(SBS.expires_at-Date.now()<60e3){
-    try{await sbAuth('refresh_token',{refresh_token:SBS.refresh_token})}
-    catch(e){if(e.status){sbSignOut('Your sign-in has expired. Sign in again.');e.signedOut=true}throw e}
-  }
-  return SBS.access_token;
+/* one list as rows; the same shape is kept as the snapshot of what Supabase last had */
+function sbListRows(l){
+  const arts=Q.filter(a=>a.url&&a.list===l.id&&!(a.eg&&a.status==='new')),ids=new Set(arts.map(a=>a.id));
+  return{list:{name:l.name,slug:l.slug||'',alt:l.alt||[]},
+    articles:arts.map((a,i)=>{const c=catOf(a);return{id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',kind:a.kind==='link'?'link':'story',img:a.img||null,added:a.added||null,position:i,cat_name:c?c.name:null,cat_c:c?(c.c||0):null}}),
+    notes:N.filter(n=>ids.has(n.art)).map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',liked:!!n.like,noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))};
 }
-async function sbRest(method,path,body,prefer){
-  const tok=await sbToken();
-  const r=await fetch(`${SBC.url}/rest/v1/${path}`,{method,headers:{apikey:SBC.key,Authorization:'Bearer '+tok,...(body?{'Content-Type':'application/json'}:{}),...(prefer?{Prefer:prefer}:{})},body:body?JSON.stringify(body):undefined});
-  if(!r.ok){const j=await r.json().catch(()=>({}));
-    const missing=r.status===404||/^PGRST20|^42P01/.test(j.code||'');
-    const e=new Error(missing?'The Folio tables aren’t in this project yet. Run supabase/schema.sql in the Supabase SQL editor, then sync again.':(j.message||('Supabase answered '+r.status)));e.status=r.status;throw e}
-  return method==='GET'?r.json():null;
+async function sbPushList(l){
+  const cur=sbListRows(l),snap=SB_SNAP[l.rid]||{list:null,articles:[],notes:[]};
+  const diff=(a,b)=>{const old=new Map(b.map(r=>[r.id,JSON.stringify(r)])),ids=new Set(a.map(r=>r.id));return{up:a.filter(r=>old.get(r.id)!==JSON.stringify(r)),del:[...old.keys()].filter(id=>!ids.has(id))}};
+  const A=diff(cur.articles,snap.articles),T=diff(cur.notes,snap.notes),meta=JSON.stringify(cur.list)!==JSON.stringify(snap.list);
+  if(!meta&&!A.up.length&&!A.del.length&&!T.up.length&&!T.del.length)return;
+  await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del});
+  SB_SNAP[l.rid]=cur;store.set('folio.sb.snap',SB_SNAP);
 }
-/* local state as table rows; the same shape is kept as the snapshot of what Supabase last had */
-function sbRows(){return{
-  lists:LS.map((l,i)=>({id:String(l.id),name:l.name,slug:l.slug||'',alt:l.alt||[],position:i})),
-  categories:C.map((c,i)=>({id:String(c.id),name:c.name,c:c.c||0,position:i})),
-  articles:Q.filter(a=>a.url&&!(a.eg&&a.status==='new')).map((a,i)=>({id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',list_id:String(a.list),cat_id:a.cat||null,kind:a.kind==='link'?'link':'story',img:a.img||null,
-    added:a.added||null,position:i,status:a.status==='read'||a.status==='reading'?a.status:'new',pos:Number.isFinite(a.pos)?a.pos:-1,pct:a.pct||0})),
-  notes:N.map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))
-}}
-async function sbPush(){
-  const cur=sbRows(),first=!SB_SNAP,snap=SB_SNAP||{},uid=SBS.uid;
-  for(const t of SB_T){
-    const old=new Map((snap[t]||[]).map(r=>[r.id,JSON.stringify(r)])),ids=new Set(cur[t].map(r=>r.id));
-    const up=cur[t].filter(r=>old.get(r.id)!==JSON.stringify(r)),del=[...old.keys()].filter(id=>!ids.has(id));
-    /* first sync from this device: only add what the account doesn't have yet, never overwrite */
-    if(up.length)await sbRest('POST',`folio_${t}?on_conflict=owner_id,id`,up.map(r=>({owner_id:uid,...r})),`resolution=${first?'ignore':'merge'}-duplicates,return=minimal`);
-    if(del.length)await sbRest('DELETE',`folio_${t}?owner_id=eq.${uid}&id=in.(${del.map(id=>encodeURIComponent('"'+id.replace(/"/g,'')+'"')).join(',')})`);
-  }
-  SB_SNAP={uid,...cur};store.set('folio.sb.snap',SB_SNAP);
-}
-const sbPull=()=>Promise.all(SB_T.map(t=>sbRest('GET',`folio_${t}?select=*&order=${t==='notes'?'noted_at':'position'}`)));
-function sbApply([l,c,a,n]){
+function sbCat(name,c){let x=C.find(k=>k.name.toLowerCase()===String(name).toLowerCase());if(!x){x={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:String(name),c:Number.isFinite(c)?c:0};C.push(x)}return x.id}
+function sbApplyList(l,d){
   SB_APPLYING=true;
   try{
-    if(l.length){LS.length=0;l.forEach(r=>LS.push({id:r.id,name:r.name,...(r.slug?{slug:r.slug}:{}),...(Array.isArray(r.alt)&&r.alt.length?{alt:r.alt}:{})}));LS.forEach(x=>{if(!x.slug)x.slug=uniqueSlug(x.name,x)})}
-    C.length=0;c.forEach(r=>C.push({id:r.id,name:r.name,c:r.c}));
-    const prev=new Map(Q.map(q=>[q.id,q])),local=Q.filter(q=>!q.url),arts=[];
-    a.forEach(r=>{const o=prev.get(r.id)||{};
-      Object.assign(o,{id:r.id,url:r.url,title:r.title||o.title||slugTitle(r.url),site:r.site,list:LS.some(x=>x.id===r.list_id)?r.list_id:LS[0].id,cat:r.cat_id&&C.some(x=>x.id===r.cat_id)?r.cat_id:null,
-        status:o.status==='paste'&&r.status==='new'?'paste':r.status,pos:r.pos,pct:r.pct,added:r.added||o.added});
-      if(r.kind==='link')o.kind='link';else delete o.kind;if(r.img)o.img=r.img;else delete o.img;arts.push(o)});
-    Q.length=0;Q.push(...local,...arts);
-    N.length=0;n.forEach(r=>N.push({id:r.id,art:r.article_id,title:r.title,site:r.site,url:r.url,pos:r.pos,where:r.where_label,excerpt:r.excerpt,text:r.body,at:Number(r.noted_at)}));
-    if(!LS.some(x=>x.id===AL))AL=LS[0].id;if(F&&!C.some(x=>x.id===F))F=null;
+    l.name=d.list.name||l.name;if(d.list.slug)l.slug=d.list.slug;if(Array.isArray(d.list.alt)&&d.list.alt.length)l.alt=d.list.alt;else delete l.alt;
+    LS.forEach(x=>{if(x!==l&&(x.slug===l.slug||(l.alt||[]).includes(x.slug)))x.slug=uniqueSlug(x.name,x)});
+    const mine=new Set(Q.filter(q=>q.list===l.id&&q.url).map(q=>q.id)),all=new Map(Q.map(q=>[q.id,q]));
+    const arts=d.articles.map(r=>{const o=all.get(r.id)||{status:'new',pos:-1,pct:0};
+      Object.assign(o,{id:r.id,url:r.url,title:r.title||o.title||slugTitle(r.url),site:r.site||'',list:l.id,added:r.added||o.added,cat:r.cat_name?sbCat(r.cat_name,r.cat_c):null});
+      if(r.kind==='link')o.kind='link';else delete o.kind;if(r.img)o.img=r.img;else delete o.img;delete o.eg;return o});
+    const ids=new Set(arts.map(a=>a.id)),stays=q=>q.list!==l.id||!q.url||(q.eg&&q.status==='new');
+    const rest=Q.filter(q=>!ids.has(q.id)&&stays(q));Q.length=0;Q.push(...rest,...arts);
+    const swap=new Set([...mine,...ids]),keep=N.filter(n=>!swap.has(n.art));
+    N.length=0;N.push(...keep,...d.notes.map(r=>({id:r.id,art:r.article_id,title:r.title,site:r.site,url:r.url,pos:r.pos,where:r.where_label,excerpt:r.excerpt,text:r.body||'',...(r.liked?{like:true}:{}),at:Number(r.noted_at)})));
+    if(F&&!C.some(x=>x.id===F))F=null;
     saveQ();saveL();saveC();saveN();
   }finally{SB_APPLYING=false}
-  SB_SNAP={uid:SBS.uid,...sbRows()};store.set('folio.sb.snap',SB_SNAP);
-  renderQ();renderNotes();if(!$('#menuSheet').hidden){renderLists();renderCats()}
+  SB_SNAP[l.rid]=sbListRows(l);store.set('folio.sb.snap',SB_SNAP);
 }
-/* one sync at a time. pull=true also fetches everything afterwards; skipped if something changed here meanwhile (the next sync catches up). */
-function sbSync(pull){
-  if(!SBC||!SBS)return Promise.resolve(false);
+/* one sync at a time, list by list. pull=true also fetches each list afterwards; a list that changed here meanwhile is left for the next sync. */
+function sbSync(pull,only){
+  if(!SBC||!sbOnline().length)return Promise.resolve(false);
   clearTimeout(sbTimer);
   const run=async()=>{
-    if(!SBS)return false;
-    sbSetState(pull?'syncing':'saving');
-    try{
-      await sbPush();
-      if(pull){const before=JSON.stringify(sbRows()),rows=await sbPull();
-        if(JSON.stringify(sbRows())===before)sbApply(rows);else sbTouch();
-        SB_LAST=Date.now()}
-      sbSetState('synced');return true;
-    }catch(e){if(!e.signedOut)sbSetState(e.status?'error':'offline',e.status?e.message:'');return false}
+    const lists=sbOnline().filter(l=>!only||l===only);if(!lists.length)return false;
+    sbSetState(pull?'syncing':'saving');let bad=null,changed=false;
+    for(const l of lists){
+      try{
+        await sbPushList(l);
+        if(pull){const before=JSON.stringify(sbListRows(l)),d=await sbRpc('folio_open',{p_ref:l.rid,p_key:SBK[l.rid]});
+          if(JSON.stringify(sbListRows(l))===before){sbApplyList(l,d);changed=true}else sbTouch()}
+      }catch(e){
+        if(e.code==='FOLIO_KEY'){delete SBK[l.rid];store.set('folio.sb.keys',SBK);toast(`“${l.name}” is locked: its key was changed`,null,null,'info')}
+        else if(e.code==='FOLIO_NOLIST'){delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false;toast(`“${l.name}” was taken offline. It stays on this device.`,null,null,'info')}
+        else bad=e;
+      }
+    }
+    if(pull)SB_LAST=Date.now();
+    if(changed){renderQ();renderNotes();if(!$('#menuSheet').hidden){renderLists();renderCats()}}
+    if(bad)sbSetState(bad.status?'error':'offline',bad.status?bad.message:'');else sbSetState('synced');
+    return !bad;
   };
   return sbChain=(sbChain||Promise.resolve()).then(run,run);
 }
-function sbTouch(){if(SB_APPLYING||!SBC||!SBS)return;clearTimeout(sbTimer);sbTimer=setTimeout(()=>sbSync(false),1500)}
-document.addEventListener('visibilitychange',()=>{if(!SBC||!SBS)return;if(document.visibilityState==='hidden')sbSync(false);else if(Date.now()-SB_LAST>30e3)sbSync(true)});
-window.addEventListener('online',()=>{if(SBC&&SBS)sbSync(true)});
+function sbTouch(){if(SB_APPLYING||!SBC||!sbOnline().length)return;clearTimeout(sbTimer);sbTimer=setTimeout(()=>sbSync(false),1500)}
+document.addEventListener('visibilitychange',()=>{if(!SBC||!sbOnline().length)return;if(document.visibilityState==='hidden')sbSync(false);else if(Date.now()-SB_LAST>30e3)sbSync(true)});
+window.addEventListener('online',()=>{if(SBC)sbSync(true)});
+const sbRef=v=>{v=String(v||'').trim();const i=v.lastIndexOf('#');if(i>=0)v=v.slice(i+1);return decodeURIComponent(v.replace(/^(list|admin)-/,'')).trim().toLowerCase().replace(/\s+/g,'-')};
+/* open an online list on this device with its address and key */
+async function sbUnlock(ref,key){
+  const d=await sbRpc('folio_open',{p_ref:ref,p_key:key});
+  let l=LS.find(x=>x.rid===d.list.id);
+  if(!l){l={id:d.list.id,rid:d.list.id,name:d.list.name,slug:d.list.slug};LS.push(l)}
+  SBK[l.rid]=key;store.set('folio.sb.keys',SBK);sbApplyList(l,d);sbSetState('synced');
+  renderQ();renderNotes();renderLists();return l;
+}
+/* admin: put a list from this device online under a new list key */
+async function sbPublish(l,admin,key){
+  if(!l.slug)l.slug=uniqueSlug(l.name,l);
+  const rid=await sbRpc('folio_publish',{p_admin:admin,p_slug:l.slug,p_name:l.name,p_key:key});
+  l.rid=rid;SBK[rid]=key;delete SB_SNAP[rid];store.set('folio.sb.keys',SBK);SB_APPLYING=true;saveL();SB_APPLYING=false;
+  return sbSync(false,l);
+}
+async function sbSetKey(l,admin,key){await sbRpc('folio_set_key',{p_admin:admin,p_list:l.rid,p_key:key});SBK[l.rid]=key;store.set('folio.sb.keys',SBK)}
+async function sbTakeOffline(l,admin){await sbRpc('folio_delete_list',{p_admin:admin,p_list:l.rid});delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false}
 function sbStatusText(){
   return SB_STATE==='syncing'?'Syncing…':SB_STATE==='saving'?'Saving…':SB_STATE==='offline'?'Offline. Changes are kept here and sent when you’re back online.'
     :SB_STATE==='synced'&&SB_AT?'Synced '+SB_AT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
 }
+const sbErrHtml=()=>SB_STATE==='error'&&SB_ERR?`<div class="st-status st-status--error" role="alert">${ic('error','st-status__icon')}<div class="st-status__body"><p class="st-status__text">${esc(SB_ERR)}</p></div></div>`:'';
+const keyInput=(id,label,ph)=>`<div class="st-field"><label class="st-field__label" for="${id}">${label}</label><input type="text" id="${id}" class="st-input" placeholder="${ph||''}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>`;
 function renderSb(){
   const box=$('#sbBox');if(!box||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
-  const err=SB_STATE==='error'&&SB_ERR?`<div class="st-status st-status--error" role="alert">${ic('error','st-status__icon')}<div class="st-status__body"><p class="st-status__text">${esc(SB_ERR)}</p></div></div>`:'';
-  if(SBC&&SBS){box.innerHTML=`<p>Signed in as <b>${esc(SBS.email||'your account')}</b>. Lists, articles, reading progress and notes are stored in your Supabase project and follow you to every device.</p>
-    <p class="osync" id="sbSyncT">${esc(sbStatusText())}</p>${err}
-    <div class="row"><button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Sign out</button></div>`;return}
-  const fixed=!!(SB_URL&&SB_KEY),c=store.get('folio.sb',null)||{};
-  box.innerHTML=`<p>${SBC?'Sign in to load your lists, articles and notes on this device.':'Store your lists, articles and notes in your own Supabase project, private to your account and the same on every device.'}</p>${err}
-    <form class="oform" id="sbForm" autocomplete="on">
-      ${fixed?'':`<div class="st-field"><label class="st-field__label" for="sbUrl">Project URL</label><input type="url" id="sbUrl" class="st-input" placeholder="https://your-project.supabase.co" value="${esc(c.url||'')}" autocapitalize="off" spellcheck="false" required></div>
-      <div class="st-field"><label class="st-field__label" for="sbKey">Publishable key</label><input type="text" id="sbKey" class="st-input" placeholder="sb_publishable_… or the anon key" value="${esc(c.key||'')}" autocapitalize="off" autocomplete="off" spellcheck="false" required></div>`}
-      <div class="st-field"><label class="st-field__label" for="sbEmail">Email</label><input type="email" id="sbEmail" class="st-input" autocomplete="username" autocapitalize="off" required></div>
-      <div class="st-field"><label class="st-field__label" for="sbPass">Password</label><input type="password" id="sbPass" class="st-input" autocomplete="current-password" required></div>
-      <button type="submit" class="st-btn st-btn--primary" id="sbGo">${SBC?'Sign in':'Connect'}</button>
+  if(SBC){const n=sbOnline().length,locked=LS.filter(l=>l.rid&&!SBK[l.rid]).length;
+    box.innerHTML=`<p>Connected to <b>${esc(host(SBC.url))}</b>. ${n?`${n} list${n>1?'s are':' is'} online on this device`:'No list on this device is online yet'}${locked?`, ${locked} locked`:''}. Put a list online from its <b>Manage</b> page.</p>
+      <p class="osync">${esc(sbStatusText())}</p>${sbErrHtml()}
+      <div class="row"><button type="button" class="st-btn st-btn--secondary" id="sbUnlockBtn">Unlock a list…</button>${n?'<button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button>':''}${SB_URL?'':'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Disconnect</button>'}</div>`;return}
+  box.innerHTML=`<p>Keep reading lists in your own Supabase project. Each online list has a key; anyone with the list’s address and key can open it.</p>
+    <form class="oform" id="sbForm">
+      <div class="st-field"><label class="st-field__label" for="sbUrl">Project URL</label><input type="url" id="sbUrl" class="st-input" placeholder="https://your-project.supabase.co" autocapitalize="off" spellcheck="false" required></div>
+      <div class="st-field"><label class="st-field__label" for="sbKey">Publishable key</label><input type="text" id="sbKey" class="st-input" placeholder="sb_publishable_… or the anon key" autocapitalize="off" autocomplete="off" spellcheck="false" required></div>
+      <button type="submit" class="st-btn st-btn--primary" id="sbGo">Connect</button>
       <p class="ohint" id="sbMsg" role="status"></p>
     </form>`;
 }
 $('#sbBox').addEventListener('submit',async e=>{
   if(e.target.id!=='sbForm')return;e.preventDefault();
-  const msg=$('#sbMsg'),go=$('#sbGo'),say=t=>{msg.textContent=t};
-  let fresh=false;
-  if($('#sbUrl')){const url=$('#sbUrl').value.trim().replace(/\/+$/,''),key=$('#sbKey').value.trim();
-    if(!/^https:\/\/[^\s/]+$/.test(url)){say('The project URL looks like https://your-project.supabase.co');return}
-    if(/^sb_secret_|service_role/.test(key)){say('That looks like a secret key. Use the publishable (anon) key; a secret key must never go in a browser.');return}
-    fresh=!SBC||SBC.url!==url||SBC.key!==key;SBC={url,key}}
-  go.disabled=true;say('Signing in…');
-  try{await sbAuth('password',{email:$('#sbEmail').value.trim(),password:$('#sbPass').value})}
-  catch(err){go.disabled=false;say(err.status?(/invalid/i.test(err.message)?'That email and password don’t match a user in this project.':err.message):'Couldn’t reach Supabase. Check the project URL and your connection.');
-    if(fresh&&!store.get('folio.sb',null))SBC=null;return}
-  if($('#sbUrl'))store.set('folio.sb',{url:SBC.url,key:SBC.key});
-  SB_SNAP=null;store.del('folio.sb.snap');SB_STATE='';SB_ERR='';
-  if(fresh&&ONLINE){location.reload();return}   /* the GitHub store steps aside once Supabase is connected */
-  document.activeElement&&document.activeElement.blur();renderSb();
-  const ok=await sbSync(true);if(ok)toast('Connected to Supabase');
+  const say=t=>{$('#sbMsg').textContent=t},url=$('#sbUrl').value.trim().replace(/\/+$/,''),key=$('#sbKey').value.trim();
+  if(!/^https:\/\/[^\s/]+$/.test(url)){say('The project URL looks like https://your-project.supabase.co');return}
+  if(/^sb_secret_|service_role/.test(key)){say('That looks like a secret key. Use the publishable (anon) key; a secret key must never go in a browser.');return}
+  $('#sbGo').disabled=true;say('Connecting…');SBC={url,key};
+  try{await sbRpc('folio_ping')}catch(err){SBC=null;$('#sbGo').disabled=false;say(err.status?err.message:'Couldn’t reach that project. Check the URL and your connection.');return}
+  store.set('folio.sb',{url,key});
+  if(ONLINE){location.reload();return}   /* the GitHub store steps aside once Supabase is connected */
+  document.activeElement&&document.activeElement.blur();renderSb();toast('Connected to Supabase');
 });
 $('#sbBox').addEventListener('click',e=>{
-  if(e.target.closest('#sbNow')){sbSync(true)}
-  else if(e.target.closest('#sbOut')){const tok=SBS&&SBS.access_token;
-    if(tok)fetch(`${SBC.url}/auth/v1/logout`,{method:'POST',headers:{apikey:SBC.key,Authorization:'Bearer '+tok}}).catch(()=>{});
-    sbSignOut();toast('Signed out. Your lists stay on this device.')}
+  if(e.target.closest('#sbNow'))sbSync(true);
+  else if(e.target.closest('#sbUnlockBtn'))openUnlock('');
+  else if(e.target.closest('#sbOut')){store.del('folio.sb');SBC=null;clearTimeout(sbTimer);SB_STATE='';renderSb();toast('Disconnected. Your lists stay on this device.')}
+});
+/* unlock sheet: the list's address and its key */
+function openUnlock(ref){
+  closeSheets();$('#uRef').value=ref||'';$('#uKey').value='';$('#uMsg').textContent='';$('#uGo').disabled=false;
+  openSheet('#unlockSheet');setTimeout(()=>{try{$(ref?'#uKey':'#uRef').focus({preventScroll:true})}catch(e){}},60);
+}
+$('#uX').onclick=closeSheets;
+$('#uForm').addEventListener('submit',async e=>{
+  e.preventDefault();const ref=sbRef($('#uRef').value),key=$('#uKey').value.trim();if(!ref||!key)return;
+  $('#uGo').disabled=true;$('#uMsg').textContent='Opening…';
+  try{const l=await sbUnlock(ref,key);closeSheets();switchList(l.id);toast('Unlocked '+l.name)}
+  catch(err){$('#uGo').disabled=false;$('#uMsg').textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
+});
+/* list admin → Online */
+function renderAdOnline(){
+  const box=$('#adOnline');if(!box||AD===null||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
+  const l=LS.find(x=>x.id===AD);if(!l)return;
+  if(!SBC){box.innerHTML='<p class="adhint">Only on this device. To put it online, connect a Supabase project first: menu → Supabase.</p>';return}
+  if(!l.rid){box.innerHTML=`<p class="adhint">Only on this device. Put it online and anyone with its address and the list key can open and edit it.</p>
+    <form class="oform" id="adPub">${keyInput('adAdminK','Admin key','Set once in Supabase')}${keyInput('adListK','List key','At least 8 characters; you choose it')}
+      <button type="submit" class="st-btn st-btn--primary">Put online</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
+  if(!SBK[l.rid]){box.innerHTML=`<p class="adhint">Online, but locked on this device: its key was changed. Enter the new key to carry on.</p>
+    <form class="oform" id="adRelock">${keyInput('adListK','List key')}<button type="submit" class="st-btn st-btn--primary">Unlock</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
+  box.innerHTML=`<p class="adhint"><b>Online.</b> Anyone with the address <code>${esc(listHash(l.id))}</code> and the list key can open and edit it. ${esc(sbStatusText())}</p>${sbErrHtml()}
+    <div class="row"><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show list key</button></div>
+    <details class="adkey"><summary>Change the key or take offline</summary>
+      <form class="oform" id="adRekey">${keyInput('adAdminK','Admin key')}${keyInput('adListK','New list key','At least 8 characters')}
+        <div class="row"><button type="submit" class="st-btn st-btn--secondary">Change key</button><button type="button" class="linkbtn addanger" id="adOffline">Take offline</button></div>
+        <p class="adhint" id="adOnMsg" role="status"></p></form></details>`;
+}
+$('#adOnline').addEventListener('submit',async e=>{
+  e.preventDefault();const l=LS.find(x=>x.id===AD),say=t=>{const m=$('#adOnMsg');if(m)m.textContent=t},btn=e.target.querySelector('[type=submit]');if(!l)return;
+  const admin=$('#adAdminK')?$('#adAdminK').value.trim():'',key=$('#adListK').value.trim();
+  if(e.target.id!=='adRelock'&&key.length<8){say(SB_MSG.FOLIO_SHORT);return}
+  btn.disabled=true;say('Working…');
+  try{
+    if(e.target.id==='adPub'){await sbPublish(l,admin,key);toast(`“${l.name}” is online`)}
+    else if(e.target.id==='adRekey'){await sbSetKey(l,admin,key);toast('List key changed. Other devices need the new key.')}
+    else{await sbUnlock(l.rid,key);toast('Unlocked '+l.name)}
+    document.activeElement&&document.activeElement.blur();renderAdmin();
+  }catch(err){btn.disabled=false;say(err.status?err.message:'Couldn’t reach Supabase. Check your connection.')}
+});
+$('#adOnline').addEventListener('click',async e=>{
+  const l=LS.find(x=>x.id===AD);if(!l)return;
+  if(e.target.closest('#adSyncNow'))sbSync(true,l);
+  else if(e.target.closest('#adShowKey')){const b=e.target.closest('#adShowKey');b.textContent=b.dataset.on?'Show list key':SBK[l.rid];b.dataset.on=b.dataset.on?'':'1'}
+  else if(e.target.closest('#adOffline')){const b=e.target.closest('#adOffline'),say=t=>{$('#adOnMsg').textContent=t};
+    if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to take offline';setTimeout(()=>{delete b.dataset.arm;b.textContent='Take offline'},4000);return}
+    try{await sbTakeOffline(l,$('#adAdminK').value.trim());document.activeElement&&document.activeElement.blur();renderAdmin();toast(`“${l.name}” is offline. It stays on this device.`)}
+    catch(err){say(err.status?err.message:'Couldn’t reach Supabase.')}}
 });
 
 /* ONLINE: GitHub storage and passphrase-protected editing. It steps aside when a Supabase project is connected. SHOW_LOCK: the Lock button in the menu (hidden for now; set to true to bring it back). */
@@ -1327,7 +1415,7 @@ function mergeInto(d,src){(src.lists||[]).forEach(l=>{if(!d.lists.some(x=>x.id==
   (src.categories||[]).forEach(c=>{if(!d.categories.some(x=>x.id===c.id))d.categories.push({...c})});
   (src.articles||[]).forEach(a=>{if(a.url&&!d.articles.some(x=>x.id===a.id))d.articles.push({...a})})}
 async function syncDown(){
-  if(!ONLINE){if(SBC&&SBS)await sbSync(true);SYNCED=true;if(PENDING_ROUTE){PENDING_ROUTE=false;route()}return}
+  if(!ONLINE){if(SBC)await sbSync(true);SYNCED=true;if(PENDING_ROUTE){PENDING_ROUTE=false;route()}return}
   if(WQ.length||writing)return;
   const r=await ghGet(DATA_F);LAST_SYNC=Date.now();
   if(r.ok&&r.found){try{const doc=JSON.parse(r.text);if(!WQ.length&&!writing)applyRemote(doc,r.sha||SHA);setSync(r.stale?'stale':'synced')}catch(e){setSync('error')}}
@@ -1474,7 +1562,7 @@ function renderNotes(){
     return `<section class="st-card ngroup"><div class="st-card__head nghead"><div><p class="st-card__eyebrow">${esc(h.site||'')} · ${g.length} note${g.length>1?'s':''}</p><h3 class="st-card__title">${esc(h.title)}</h3></div>
       ${h.url?`<a class="st-icon-btn st-icon-btn--sm" href="${esc(h.url)}" target="_blank" rel="noopener" aria-label="Open original">${LINK_ICON}</a>`:''}</div>
       ${g.map(n=>`<article class="note-i"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>
-        <p class="ntext">${esc(n.text)}</p><div class="nmeta"><span>${fmtWhen(n.at)}</span><button data-edit="${n.id}">Edit</button></div></article>`).join('')}</section>`}).join('');
+        ${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<div class="nmeta"><span>${fmtWhen(n.at)}</span><button data-edit="${n.id}">${n.text?'Edit':'Add a note'}</button></div></article>`).join('')}</section>`}).join('');
 }
 $('#notesList').onclick=e=>{
   const j=e.target.closest('[data-jump]'),ed=e.target.closest('[data-edit]');
@@ -1487,7 +1575,7 @@ $('#notesList').onclick=e=>{
 function notesText(){
   const groups=new Map();[...N].sort((a,b)=>a.at-b.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
   return [...groups.values()].map(g=>{const h=g[0];g.sort((a,b)=>a.pos-b.pos);
-    return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text}\n`).join('\n')}).join('\n\n');
+    return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text||'(remembered)'}\n`).join('\n')}).join('\n\n');
 }
 $('#copyNotes').onclick=()=>{const t=notesText();
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(ta);ta.select();
@@ -1511,7 +1599,7 @@ function openNote(note){
   else{const ref=slideRef();NC={ctx:ref};$('#nTitle').textContent='Note';$('#nWhere').textContent=ref.where;$('#nRef').textContent=ref.excerpt;
     $('#nText').value='';$('#nDel').hidden=true;
     const mine=N.filter(n=>n.art===R.item.id).sort((a,b)=>a.pos-b.pos);
-    $('#nOthers').innerHTML=mine.length?`<span class="st-field__label">Your notes on this article</span>`+mine.map(n=>`<article class="note-i"><button class="nref" data-njump="${n.id}"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button><p class="ntext">${esc(n.text)}</p></article>`).join(''):''}
+    $('#nOthers').innerHTML=mine.length?`<span class="st-field__label">Your notes on this article</span>`+mine.map(n=>`<article class="note-i"><button class="nref" data-njump="${n.id}"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}</article>`).join(''):''}
   openSheet('#noteSheet');
   setTimeout(()=>{try{$('#nText').focus({preventScroll:true})}catch(e){}},60);
 }
@@ -1520,13 +1608,23 @@ $('#noteBtn').onclick=()=>{if(R.art)openNote(null)};
 $('#nX').onclick=closeSheets;
 $('#nSave').onclick=()=>{
   const t=$('#nText').value.trim();
-  if(NC&&NC.note){if(!t){N=N.filter(n=>n!==NC.note)}else{NC.note.text=t;NC.note.at=Date.now()}}
+  if(NC&&NC.note){if(!t){if(NC.note.like)NC.note.text='';else N.splice(N.indexOf(NC.note),1)}else{NC.note.text=t;NC.note.at=Date.now()}}
   else if(NC&&NC.ctx){if(!t){$('#nText').focus();return}
     const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,at:Date.now()})}
   saveN();closeSheets();updateNoteBadge();renderNotes();toast('Note saved');
 };
 $('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N.splice(i,1);saveN();closeSheets();renderNotes();updateNoteBadge();
   toast('Note deleted',()=>{N.splice(i,0,n);saveN();renderNotes();updateNoteBadge()})};
+/* Remember: keep a slide's passage without writing a note. Stored as a note with no text (like:true), so it shows in Notes and syncs. */
+const likeAt=pos=>R.item?N.find(n=>n.art===R.item.id&&n.like&&n.pos===pos):null;
+function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
+  if(!cd||!R.art||cd.k==='cover'||cd.k==='end'){b.hidden=true;return}
+  const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));$('#remT').textContent=on?'Remembered':'Remember'}
+$('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
+  if(ex){if(ex.text)delete ex.like;else N.splice(N.indexOf(ex),1)}
+  else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
+    if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,at:Date.now()})}
+  saveN();updateRemember();updateNoteBadge();renderNotes()};
 function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id).length:0;b.hidden=!n;b.textContent=n}
 
 /* ---------- Parsing ---------- */
@@ -1872,6 +1970,7 @@ function go(i,anim=false){
   track.classList.toggle('anim',anim);
   track.style.transform=`translate3d(${-i*stage.clientWidth}px,0,0)`;
   const cd=c[i];
+  updateRemember();
   reader.classList.toggle('dark-ui',cd.k==='img'||(cd.k==='cover'&&!!R.art.hero));
   reader.classList.toggle('cover-ui',cd.k==='cover'&&!R.art.hero);
   const m=Math.ceil((cd.left||0)/230);
@@ -1934,7 +2033,7 @@ function route(){
   if(AD!==null)closeAdmin();
   if(h.startsWith(LIST)){
     const l=listBySlug(decodeURIComponent(h.slice(LIST.length)));
-    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
+    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);if(SBC){openUnlock(decodeURIComponent(h.slice(LIST.length)));return}toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
     if(l.slug!==h.slice(LIST.length))setHash(listHash(l.id),false);   // an old address after a rename
     switchList(l.id,true);return;
   }
@@ -2034,7 +2133,7 @@ document.addEventListener('keydown',e=>{
   if((e.key==='l'||e.key==='L')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&reader.hidden&&$('#scrim').hidden&&!(e.target.closest&&e.target.closest('input,textarea,[contenteditable="true"]'))){
     e.preventDefault();toggleListSw();return}
   if(e.key==='Escape'&&!$('#listSw').hidden&&reader.hidden&&$('#scrim').hidden){toggleListSw(false);return}
-  if(!$('#addSheet').hidden||!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
+  if(!$('#unlockSheet').hidden||!$('#addSheet').hidden||!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
   if(reader.hidden)return;
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();next()}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();prev()}
@@ -2044,8 +2143,16 @@ $('#close').onclick=()=>closeReader();
 let rz;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(relayout,150)});
 
 /* sheets */
+/* On phones the keyboard covers the bottom of the page without resizing it. Lift the open sheet by the keyboard's height
+   (visual viewport), cap its height to what's left, and keep the field being typed in on screen. */
+if(window.visualViewport){const vv=window.visualViewport,de=document.documentElement;let raf=0;
+  const kb=()=>{cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const k=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+    de.style.setProperty('--kb',(k>60?k:0)+'px');de.style.setProperty('--vvh',Math.round(vv.height)+'px');
+    const el=document.activeElement;if(k>60&&el&&el.closest&&el.closest('.sheet'))try{el.scrollIntoView({block:'nearest'})}catch(e){}})};
+  vv.addEventListener('resize',kb);vv.addEventListener('scroll',kb);kb()}
+document.addEventListener('focusin',e=>{const el=e.target;if(el&&el.closest&&el.closest('.sheet')&&/INPUT|TEXTAREA|SELECT/.test(el.tagName))setTimeout(()=>{try{el.scrollIntoView({block:'nearest'})}catch(_){}},350)});
 function openSheet(id){$('#scrim').hidden=false;$(id).hidden=false}
-function closeSheets(){$('#scrim').hidden=true;$('#addSheet').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true;$('#noteSheet').hidden=true;$('#menuSheet').hidden=true}
+function closeSheets(){$('#scrim').hidden=true;$('#unlockSheet').hidden=true;$('#addSheet').hidden=true;$('#setSheet').hidden=true;$('#pasteSheet').hidden=true;$('#noteSheet').hidden=true;$('#menuSheet').hidden=true}
 $('#scrim').onclick=closeSheets;$('#setX').onclick=closeSheets;$('#setDone').onclick=closeSheets;
 $('#libAa').onclick=$('#rdAa').onclick=()=>openSheet('#setSheet');
 

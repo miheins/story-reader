@@ -46,7 +46,7 @@ Everything is in `index.html`. Search for these section markers:
 | `Reading lists UI` | List switcher (L, with *Manage …*), menu list management. |
 | `Data layer` | `Repo` (named commands for lists and articles) and `can()` (the one permission check). The seam for Supabase; see [docs/supabase.md](docs/supabase.md). |
 | `List admin` | `#admin-<slug>`: name, items, notes, move to, remove, delete list. |
-| `Supabase` | Sign-in (email and password), `sbPush` / `sbPull` / `sbApply`, the menu section. Syncs lists, categories, articles with progress, and notes. Set-up and design: [docs/supabase.md](docs/supabase.md); tables and security: `supabase/schema.sql`. |
+| `Supabase` | Lists unlocked by a key, no accounts: `sbRpc`, `sbPushList` / `sbApplyList`, `sbUnlock`, `sbPublish`, the menu section, the unlock sheet, the admin page's *Online* section. Set-up, protection and limits: [docs/supabase.md](docs/supabase.md); tables and functions: `supabase/schema.sql`. |
 | `Lists online` | GitHub storage, encryption, owner set-up and unlock, read-only mode. Flags `ONLINE` and `SHOW_LOCK` are near the top. |
 | `Notes` | Notes model, Notes tab, note sheet. |
 | `Parsing` | Jina fetch, HTML and markdown to blocks, `clean()` (keeps only the main reading text). |
@@ -66,6 +66,8 @@ Everything is in `index.html`. Search for these section markers:
 - List rows: vertical-dot drag handle, mono site, serif title, category as a mono chip (tap to change), status with reading time, a thumbnail when the article has an image, and remove. Opening the original moved to the reader only.
 - **Undo** after remove, clear finished and category delete: the notice sits at the bottom on every screen size, names the article, has a filled *Undo* button, and stays 8 seconds (paused while hovered or focused).
 - **Just link** (Add panel): an article with `kind:'link'`; `fetchLinkMeta()` reads `og:title`, `og:image` and `og:site_name` through the reader service and stores them on the article (`title`, `img`, `site`), so they sync with Lists online. Opening goes to the original page and marks it opened; *Read next* and the reader's next-article offer skip links. The last choice is remembered (`folio.addKind`).
+- **Remember** (reader, bottom left of text and image slides): keeps the passage as a note with no text (`like:true`); shown as *Remembered* in Notes; syncs with online lists.
+- The L switcher also offers *Add an article to …* and, with Supabase connected, *Unlock a list…*.
 - Quoted passages (note sheet, Notes tab) sit on soft green; text fields have an ink outline; note-sheet buttons are equal width.
 - Decisions that depart from Paper: list status text is 11px, not 8px, and the site label 10px, not 9px, for legibility; the tab shows the open list's name ("Reading list" by default), so switching lists is visible on phones.
 
@@ -126,13 +128,15 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
   - `lists`: list addresses, the L key, opening a list link directly, unknown lists.
   - `link`: Just link saves title, image and site from Open Graph, shows *Link* and a thumbnail, opens the original page.
   - `admin`: `#admin-<slug>`, rename (address follows), move and remove with Undo, notes, the L switcher's *Manage*, Back.
-  - `supabase`: a stand-in for Supabase with two devices: sign-in, wrong password, first upload, second device joins without overwriting, delete and rename travel, token refresh, deep link on a new device, missing tables, sign-out.
+  - `supabase`: a stand-in for the database functions, two devices: put online, wrong admin key, unlock by address and key, private lists stay private, removal and rename travel, key change locks the other device, missing set-up.
+  - `remember`: Remember on a slide, the Notes tab, *Add an article* in the L switcher.
   - `online`: a stand-in for GitHub across four devices: set-up, publish, visitor read-only, unlock and merge, wrong passphrase, simultaneous adds, opening a list link on a fresh device.
 - **Design round trip:** edit in Paper, preferably by changing tokens, then ask Claude to "pull the Paper changes". It reads exact values from the file, not screenshots.
 
 ## Open items
 
-0. **First real Supabase run.** Built and tested against a stand-in only. Needs a project, `supabase/schema.sql` run, a user, then Connect in the menu. Storage keys: `folio.sb` (URL, key), `folio.sb.session` (tokens), `folio.sb.snap` (what the account last had).
+0. **First real Supabase run.** The SQL passed on a local Postgres and the app passed against a stand-in, but nothing has touched a real project. Needs: a project, `supabase/schema.sql` run, an admin key set, then Connect and *Put online*.
+0. **Keyboard and sheets on a real phone.** Sheets now lift above the on-screen keyboard (visual viewport, `--kb`); untested on a device.
 
 1. **First real set-up of Lists online.** Only tested against a stand-in for GitHub. Watch for: the token check, the first publish, and unlocking on a second device. If something fails, note the exact error text.
 2. **Article extraction for itsnicethat.** Reworked to read `<article>` from Jina's HTML. Not yet confirmed on the live page. It also depends on Jina accepting the `X-Return-Format` header from a browser; if not, it silently falls back to markdown.
