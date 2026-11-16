@@ -187,7 +187,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   padding:22px max(20px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 22px) max(20px,env(safe-area-inset-left,0px));box-shadow:var(--shadow-md)}
 .sheet .in{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 .sheet p{margin:0;font:500 14px/20px var(--f-sans);color:var(--text-muted)}
-.set{display:flex;flex-direction:column;gap:9px}
+.set{display:flex;flex-direction:column;gap:6px}
+#menuSheet .in{gap:36px}
+#menuSheet .set + .set{border-top:1px solid var(--border);padding-top:20px}
+.set .subset{display:flex;flex-direction:column;gap:6px;margin-top:18px}
+.subset > h3{margin:0}
 .sz{display:flex;align-items:center;gap:12px}
 .sz .meter{flex:1;display:flex;gap:6px;align-items:flex-end;justify-content:center;height:28px}
 .sz .meter i{width:8px;border-radius:2px;background:var(--rule)}
@@ -593,16 +597,17 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       <ul class="cats" id="catList"></ul>
       <form class="st-field catadd" id="catForm"><label class="st-field__label" for="catName">New category</label><div class="prow"><input type="text" id="catName" class="st-input" placeholder="For example, Branding" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add category</button></div></form>
     </div>
-    <div class="set"><span class="st-field__label">Reading lists</span>
-      <p>Each article lives in one list.</p>
-      <ul class="cats lists" id="listList"></ul>
-      <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
-    </div>
     <div class="set" id="installSet"><span class="st-field__label">Home screen</span>
       <p id="installHow"></p>
       <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Folio to home screen</button>
     </div>
-    <div class="set" id="sbSet"><span class="st-field__label">Admin</span><div id="sbBox" class="obox"></div></div>
+    <div class="set" id="sbSet"><span class="st-field__label">Admin</span><div id="sbBox" class="obox"></div>
+      <div class="subset"><h3 class="st-field__label">Reading lists</h3>
+        <p>Each article lives in one list.</p>
+        <ul class="cats lists" id="listList"></ul>
+        <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
+      </div>
+    </div>
     <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
   </div>
 </div>
