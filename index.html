@@ -1294,7 +1294,7 @@ const ADM_K='folio.admin';
 function admKey(){const a=store.get(ADM_K,null);if(a&&a.key&&a.exp>Date.now())return a.key;if(a)store.del(ADM_K);return null}
 const isAdmin=()=>!!admKey();
 function admClass(){document.documentElement.classList.toggle('noadmin',!!SBC&&!isAdmin())}
-function admLock(msg){store.del(ADM_K);admClass();if(typeof AD!=='undefined'&&AD!==null)closeAdmin();renderSb();renderLists();renderListSel&&renderListSel();if(msg)toast(msg,null,null,'info')}
+function admLock(msg){store.del(ADM_K);admClass();toggleListSw(false);if(typeof AD!=='undefined'&&AD!==null)closeAdmin();renderSb();renderLists();renderListSel&&renderListSel();if(msg)toast(msg,null,null,'info')}
 async function admUnlock(key){await sbRpc('folio_check_admin',{p_admin:key});store.set(ADM_K,{key,exp:Date.now()+30*864e5});admClass()}
 /* an admin call refused because the stored key is out of date: forget it */
 function admRefused(e){if(e&&e.code==='FOLIO_ADMIN'&&isAdmin())admLock('The admin key changed. Enter the new one in the menu.');}
@@ -2172,7 +2172,7 @@ stage.addEventListener('pointerup',endG);stage.addEventListener('pointercancel',
 stage.addEventListener('contextmenu',e=>e.preventDefault());
 track.addEventListener('click',e=>{const a=e.target.closest('[data-act]');if(!a)return;
   if(a.dataset.act==='next')openItem(nextUnread(R.item));else closeReader()});
-function toggleListSw(show){
+function toggleListSw(show){if(show!==false&&!can('list.switch'))show=false;
   const sw=$('#listSw');show=show??sw.hidden;sw.hidden=!show;
   if(show){if(tab==='notes')showTab('queue');sw.classList.remove('pop');void sw.offsetWidth;sw.classList.add('pop');
     const sel=$('#listSel');try{sel.focus({preventScroll:false})}catch(_){}try{sel.showPicker&&sel.showPicker()}catch(_){}}
@@ -2181,7 +2181,7 @@ $('#listSel').addEventListener('change',()=>setTimeout(()=>toggleListSw(false),0
 $('#listSel').addEventListener('keydown',e=>{if(e.key==='Escape'){e.stopPropagation();toggleListSw(false)}});
 document.addEventListener('keydown',e=>{
   if((e.key==='l'||e.key==='L')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&reader.hidden&&$('#scrim').hidden&&!(e.target.closest&&e.target.closest('input,textarea,[contenteditable="true"]'))){
-    e.preventDefault();toggleListSw();return}
+    if(!can('list.switch'))return;e.preventDefault();toggleListSw();return}
   if(e.key==='Escape'&&!$('#listSw').hidden&&reader.hidden&&$('#scrim').hidden){toggleListSw(false);return}
   if(!$('#unlockSheet').hidden||!$('#addSheet').hidden||!$('#setSheet').hidden||!$('#pasteSheet').hidden||!$('#noteSheet').hidden||!$('#menuSheet').hidden){if(e.key==='Escape')closeSheets();return}
   if(reader.hidden)return;
