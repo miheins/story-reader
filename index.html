@@ -97,7 +97,8 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .frame.vdrag{transition:none}
 .frame.enter{animation:enter .32s cubic-bezier(.2,.7,.2,1)}
 @keyframes enter{from{opacity:0;transform:translateX(-50%) scale(.965)}to{opacity:1;transform:translateX(-50%)}}
-@media (min-width:720px){.reader{background:var(--bg)}.frame{width:min(100%,52vh)}}
+/* desktop: the page around the article is 15% toward the text colour, so the article reads as a sheet (darker in light, lighter in dark) */
+@media (min-width:720px){.reader{background:color-mix(in srgb,var(--bg) 85%,var(--text))}.frame{width:min(100%,52vh)}}
 .stage{position:absolute;inset:0;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 .track{display:flex;height:100%;will-change:transform}
 .track.anim{transition:transform .3s cubic-bezier(.2,.7,.2,1)}
