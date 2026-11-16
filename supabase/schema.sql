@@ -106,6 +106,14 @@ end $$;
 
 create or replace function public.folio_ping() returns boolean language sql stable as $$ select true $$;
 
+-- Admin: check the admin key (the app's "Unlock admin").
+create or replace function public.folio_check_admin(p_admin text) returns boolean
+language plpgsql security definer set search_path = public, extensions as $$
+begin
+  perform folio__admin(p_admin);
+  return true;
+end $$;
+
 -- Admin: put a list online under a list key. Returns the list's id.
 create or replace function public.folio_publish(p_admin text, p_slug text, p_name text, p_key text) returns uuid
 language plpgsql security definer set search_path = public, extensions as $$
@@ -152,13 +160,16 @@ begin
     'notes', coalesce((select jsonb_agg(to_jsonb(n) - 'list_id' order by n.noted_at, n.id) from folio_notes n where n.list_id = l.id), '[]'::jsonb));
 end $$;
 
--- List key: save changes to a list: rows to add or update, ids to delete, and optionally its name and address.
-create or replace function public.folio_push(p_list uuid, p_key text, p_meta jsonb, p_articles jsonb, p_del_articles jsonb, p_notes jsonb, p_del_notes jsonb) returns void
+-- List key: save changes to a list: rows to add or update and ids to delete.
+-- Renaming the list (p_meta) also needs the admin key.
+drop function if exists public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb);
+create or replace function public.folio_push(p_list uuid, p_key text, p_meta jsonb, p_articles jsonb, p_del_articles jsonb, p_notes jsonb, p_del_notes jsonb, p_admin text default null) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare l public.folio_lists;
 begin
   l := folio__list(p_list::text, p_key);
   if p_meta is not null then
+    perform folio__admin(p_admin);
     begin
       update folio_lists set
         name = left(coalesce(nullif(trim(p_meta->>'name'), ''), name), 80),
@@ -193,9 +204,9 @@ end $$;
 -- Who may call what: the browser gets only the key-checked functions.
 revoke execute on function public.folio__admin(text), public.folio__list(text, text), public.folio_set_admin_key(text) from public, anon, authenticated;
 revoke execute on function public.folio_ping(), public.folio_publish(text, text, text, text), public.folio_set_key(text, uuid, text),
-  public.folio_delete_list(text, uuid), public.folio_open(text, text), public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb) from public;
+  public.folio_delete_list(text, uuid), public.folio_open(text, text), public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb, text), public.folio_check_admin(text) from public;
 grant execute on function public.folio_ping(), public.folio_publish(text, text, text, text), public.folio_set_key(text, uuid, text),
-  public.folio_delete_list(text, uuid), public.folio_open(text, text), public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb) to anon, authenticated;
+  public.folio_delete_list(text, uuid), public.folio_open(text, text), public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb, text), public.folio_check_admin(text) to anon, authenticated;
 
 -- Last step, once, with your own key (then delete the line from the editor):
 -- select public.folio_set_admin_key('choose-a-long-admin-key');

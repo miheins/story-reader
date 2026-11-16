@@ -217,6 +217,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
+.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin]{display:none!important}
 .ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
@@ -1005,7 +1006,7 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+`<option value="__admin">Manage ${esc(listName(AL))}…</option>`+(isRO()?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
+    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+(can('list.manage',AL)?`<option value="__admin">Manage ${esc(listName(AL))}…</option>`:'')+(isRO()||!can('list.create')?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
@@ -1028,16 +1029,16 @@ $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-move
   edit(`Move to ${listName(to)}`,mv(to));renderQ();
   toast(`Moved to ${listName(to)}`,()=>{edit(`Move back to ${listName(from)}`,mv(from));renderQ()})});
 function renderLists(){const ro=isRO();
-  $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name"${ro?' readonly':''}>
+  $('#listList').innerHTML=LS.map(l=>`<li><input type="text" data-lrename="${l.id}" value="${esc(l.name)}" maxlength="40" aria-label="List name"${ro||!can('list.rename',l.id)?' readonly':''}>
     <div style="display:flex;align-items:center;gap:2px">${l.id===AL?'<span class="cur">Open</span>':`<button class="st-btn st-btn--ghost st-btn--sm" data-lopen="${l.id}" style="margin-right:6px">Open</button>`}
     <button class="st-btn st-btn--ghost st-btn--sm" data-ladmin="${l.id}" style="margin-right:6px">Manage</button><span class="ct">${Q.filter(q=>q.list===l.id).length}</span>${LS.length>1&&!ro?`<button class="st-icon-btn st-icon-btn--sm" data-ldel="${l.id}" aria-label="Delete ${esc(l.name)}">${ic('close')}</button>`:'<span style="width:32px"></span>'}</div></li>`).join('');
 }
-$('#listForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#listName').value.trim();if(!n)return;
+$('#listForm').addEventListener('submit',e=>{e.preventDefault();if(!can('list.create')){toast('Only the admin can create lists',null,null,'info');return}const n=$('#listName').value.trim();if(!n)return;
   if(LS.some(l=>l.name.toLowerCase()===n.toLowerCase())){toast('That list already exists');return}
   const l={id:'l'+Date.now().toString(36),name:n};l.slug=uniqueSlug(n,l);edit('Add list '+n,d=>{if(!d.lists.some(x=>x.id===l.id))d.lists.push({...l})});$('#listName').value='';renderLists();renderQ();
   toast(`Created ${n}`,null)});
 $('#listList').addEventListener('click',e=>{
-  const o=e.target.closest('[data-lopen]'),d=e.target.closest('[data-ldel]');
+  const o=e.target.closest('[data-lopen]'),d=can('list.delete')?e.target.closest('[data-ldel]'):null;
   if(o){switchList(o.dataset.lopen);renderLists();closeSheets()}
   const ad=e.target.closest('[data-ladmin]');if(ad){openAdmin(ad.dataset.ladmin);return}
   const cp=e.target.closest('[data-lcopy]');if(cp){const url=location.origin+location.pathname+listHash(cp.dataset.lcopy);
@@ -1047,7 +1048,7 @@ $('#listList').addEventListener('click',e=>{
     if(AL===id){AL=to;saveL();setHash(listHash(),false)}renderLists();renderQ();
     toast(`Deleted ${l.name}; ${had.length} article${had.length===1?'':'s'} moved to ${listName(to)}`,()=>{edit('Restore list '+l.name,dd=>{if(!dd.lists.some(x=>x.id===id))dd.lists.splice(Math.min(i,dd.lists.length),0,{...l});dd.articles.forEach(a=>{if(had.includes(a.id))a.list=id})});renderLists();renderQ()})}
 });
-$('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lrename]');if(!r)return;const l=LS.find(x=>x.id===r.dataset.lrename);
+$('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lrename]');if(!r||!can('list.rename',r.dataset.lrename))return;const l=LS.find(x=>x.id===r.dataset.lrename);
   const n=r.value.trim();if(!n){r.value=l.name;return}
   const ns=uniqueSlug(n,l),alt=ns!==l.slug?[...new Set([...(l.alt||[]),l.slug])]:(l.alt||[]),id=l.id;
   edit('Rename list '+n,dd=>{const x=dd.lists.find(z=>z.id===id);if(x){x.name=n;x.slug=ns;if(alt.length)x.alt=alt}});
@@ -1058,6 +1059,7 @@ const ADMIN='#admin-';var AD=null;
 const adminHash=(id=AL)=>ADMIN+(LS.find(l=>l.id===id)||LS[0]).slug;
 function openAdmin(id,fromRoute){
   if(!LS.some(l=>l.id===id))return;
+  if(!can('list.manage',id)){if(fromRoute)setHash(listHash(id),false);openMenu();setTimeout(()=>{const k=$('#admKey');if(k){try{k.scrollIntoView({block:'center'});k.focus({preventScroll:true})}catch(e){}}},120);toast('Managing lists needs the admin key',null,null,'info');return}
   if(AL!==id){AL=id;F=null;saveL();saveC()}
   AD=id;if(!fromRoute&&location.hash!==adminHash(id))setHash(adminHash(id),true);
   toggleListSw(false);closeSheets();
@@ -1152,9 +1154,10 @@ function sbListRows(l){
 async function sbPushList(l){
   const cur=sbListRows(l),snap=SB_SNAP[l.rid]||{list:null,articles:[],notes:[]};
   const diff=(a,b)=>{const old=new Map(b.map(r=>[r.id,JSON.stringify(r)])),ids=new Set(a.map(r=>r.id));return{up:a.filter(r=>old.get(r.id)!==JSON.stringify(r)),del:[...old.keys()].filter(id=>!ids.has(id))}};
-  const A=diff(cur.articles,snap.articles),T=diff(cur.notes,snap.notes),meta=JSON.stringify(cur.list)!==JSON.stringify(snap.list);
+  const A=diff(cur.articles,snap.articles),T=diff(cur.notes,snap.notes),meta=JSON.stringify(cur.list)!==JSON.stringify(snap.list)&&isAdmin();
   if(!meta&&!A.up.length&&!A.del.length&&!T.up.length&&!T.del.length)return;
-  await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del});
+  try{await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_admin:meta?admKey():null,p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del})}catch(e){admRefused(e);throw e}
+  if(!meta&&snap.list)cur.list=snap.list;   /* keep an unsent name change pending */
   SB_SNAP[l.rid]=cur;store.set('folio.sb.snap',SB_SNAP);
 }
 function sbCat(name,c){let x=C.find(k=>k.name.toLowerCase()===String(name).toLowerCase());if(!x){x={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:String(name),c:Number.isFinite(c)?c:0};C.push(x)}return x.id}
@@ -1231,9 +1234,11 @@ const keyInput=(id,label,ph)=>`<div class="st-field"><label class="st-field__lab
 function renderSb(){
   const box=$('#sbBox');if(!box||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
   if(SBC){const n=sbOnline().length,locked=LS.filter(l=>l.rid&&!SBK[l.rid]).length;
-    box.innerHTML=`<p>Connected to <b>${esc(host(SBC.url))}</b>. ${n?`${n} list${n>1?'s are':' is'} online on this device`:'No list on this device is online yet'}${locked?`, ${locked} locked`:''}. Put a list online from its <b>Manage</b> page.</p>
+    box.innerHTML=`<p>Connected to <b>${esc(host(SBC.url))}</b>. ${n?`${n} list${n>1?'s are':' is'} online on this device`:'No list on this device is online yet'}${locked?`, ${locked} locked`:''}.${isAdmin()?' Put a list online from its <b>Manage</b> page.':''}</p>
       <p class="osync">${esc(sbStatusText())}</p>${sbErrHtml()}
-      <div class="row"><button type="button" class="st-btn st-btn--secondary" id="sbUnlockBtn">Unlock a list…</button>${n?'<button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button>':''}${SB_URL?'':'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Disconnect</button>'}</div>`;return}
+      ${isAdmin()?`<p class="adhint"><b>Admin</b> on this device until ${new Date(store.get(ADM_K,{}).exp).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}: you can create, rename and manage lists.</p>`
+        :`<form class="oform" id="admForm"><div class="st-field"><label class="st-field__label" for="admKey">Admin key</label><div class="prow"><input type="password" id="admKey" class="st-input" autocomplete="current-password" required><button type="submit" class="st-btn st-btn--secondary" id="admGo">Unlock admin</button></div></div><p class="ohint" id="admMsg" role="status"></p></form>`}
+      <div class="row">${isAdmin()?'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="admLockBtn">Lock admin</button>':''}<button type="button" class="st-btn st-btn--secondary" id="sbUnlockBtn">Unlock a list…</button>${n?'<button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button>':''}${SB_URL?'':'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Disconnect</button>'}</div>`;return}
   box.innerHTML=`<p>Keep reading lists in your own Supabase project. Each online list has a key; anyone with the list’s address and key can open it.</p>
     <form class="oform" id="sbForm">
       <div class="st-field"><label class="st-field__label" for="sbUrl">Project URL</label><input type="url" id="sbUrl" class="st-input" placeholder="https://your-project.supabase.co" autocapitalize="off" spellcheck="false" required></div>
@@ -1243,6 +1248,10 @@ function renderSb(){
     </form>`;
 }
 $('#sbBox').addEventListener('submit',async e=>{
+  if(e.target.id==='admForm'){e.preventDefault();const k=$('#admKey').value,m=$('#admMsg');$('#admGo').disabled=true;m.textContent='Checking…';
+    try{await admUnlock(k);document.activeElement&&document.activeElement.blur();renderSb();renderLists();renderListSel();toast('Admin unlocked on this device')}
+    catch(err){$('#admGo').disabled=false;m.textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
+    return}
   if(e.target.id!=='sbForm')return;e.preventDefault();
   const say=t=>{$('#sbMsg').textContent=t},url=$('#sbUrl').value.trim().replace(/\/+$/,''),key=$('#sbKey').value.trim();
   if(!/^https:\/\/[^\s/]+$/.test(url)){say('The project URL looks like https://your-project.supabase.co');return}
@@ -1254,6 +1263,7 @@ $('#sbBox').addEventListener('submit',async e=>{
   document.activeElement&&document.activeElement.blur();renderSb();toast('Connected to Supabase');
 });
 $('#sbBox').addEventListener('click',e=>{
+  if(e.target.closest('#admLockBtn')){admLock();toast('Admin locked on this device');return}
   if(e.target.closest('#sbNow'))sbSync(true);
   else if(e.target.closest('#sbUnlockBtn'))openUnlock('');
   else if(e.target.closest('#sbOut')){store.del('folio.sb');SBC=null;clearTimeout(sbTimer);SB_STATE='';renderSb();toast('Disconnected. Your lists stay on this device.')}
@@ -1272,6 +1282,18 @@ $('#uForm').addEventListener('submit',async e=>{
   try{const l=await sbUnlock(ref,key);closeSheets();switchList(l.id);toast('Unlocked '+l.name)}
   catch(err){$('#uGo').disabled=false;$('#uMsg').textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
 });
+/* ---------- Admin mode ----------
+   Creating, renaming, deleting and managing lists (and putting them online) need the admin key.
+   It is checked by Supabase (folio_check_admin) and then kept on this device for 30 days, or until Lock. */
+const ADM_K='folio.admin';
+function admKey(){const a=store.get(ADM_K,null);if(a&&a.key&&a.exp>Date.now())return a.key;if(a)store.del(ADM_K);return null}
+const isAdmin=()=>!!admKey();
+function admClass(){document.documentElement.classList.toggle('noadmin',!!SBC&&!isAdmin())}
+function admLock(msg){store.del(ADM_K);admClass();if(typeof AD!=='undefined'&&AD!==null)closeAdmin();renderSb();renderLists();renderListSel&&renderListSel();if(msg)toast(msg,null,null,'info')}
+async function admUnlock(key){await sbRpc('folio_check_admin',{p_admin:key});store.set(ADM_K,{key,exp:Date.now()+30*864e5});admClass()}
+/* an admin call refused because the stored key is out of date: forget it */
+function admRefused(e){if(e&&e.code==='FOLIO_ADMIN'&&isAdmin())admLock('The admin key changed. Enter the new one in the menu.');}
+
 /* private links: the list's address with its key, so the person opening it doesn't type the key */
 const privateLink=l=>location.origin+location.pathname+LIST+encodeURIComponent(l.slug)+'&key='+encodeURIComponent(SBK[l.rid]);
 async function linkUnlock(slug,key){
@@ -1288,7 +1310,7 @@ function renderAdOnline(){
   const l=LS.find(x=>x.id===AD);if(!l)return;
   if(!SBC){box.innerHTML='<p class="adhint">Only on this device. To put it online, connect a Supabase project first: menu → Supabase.</p>';return}
   if(!l.rid){box.innerHTML=`<p class="adhint">Only on this device. Put it online and anyone with its address and the list key can open and edit it.</p>
-    <form class="oform" id="adPub">${keyInput('adAdminK','Admin key','Set once in Supabase')}${keyInput('adListK','List key','At least 8 characters; you choose it')}
+    <form class="oform" id="adPub">${keyInput('adListK','List key','At least 8 characters; you choose it')}
       <button type="submit" class="st-btn st-btn--primary">Put online</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
   if(!SBK[l.rid]){box.innerHTML=`<p class="adhint">Online, but locked on this device: its key was changed. Enter the new key to carry on.</p>
     <form class="oform" id="adRelock">${keyInput('adListK','List key')}<button type="submit" class="st-btn st-btn--primary">Unlock</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
@@ -1296,13 +1318,13 @@ function renderAdOnline(){
     <div class="row"><button type="button" class="st-btn st-btn--primary" id="adPrivLink">Copy private link</button><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show list key</button></div>
     <p class="adhint">The private link includes the key: whoever has it can open and edit the list. To cut off old links, change the key.</p>
     <details class="adkey"><summary>Change the key or take offline</summary>
-      <form class="oform" id="adRekey">${keyInput('adAdminK','Admin key')}${keyInput('adListK','New list key','At least 8 characters')}
+      <form class="oform" id="adRekey">${keyInput('adListK','New list key','At least 8 characters')}
         <div class="row"><button type="submit" class="st-btn st-btn--secondary">Change key</button><button type="button" class="linkbtn addanger" id="adOffline">Take offline</button></div>
         <p class="adhint" id="adOnMsg" role="status"></p></form></details>`;
 }
 $('#adOnline').addEventListener('submit',async e=>{
   e.preventDefault();const l=LS.find(x=>x.id===AD),say=t=>{const m=$('#adOnMsg');if(m)m.textContent=t},btn=e.target.querySelector('[type=submit]');if(!l)return;
-  const admin=$('#adAdminK')?$('#adAdminK').value.trim():'',key=$('#adListK').value.trim();
+  const admin=admKey()||'',key=$('#adListK').value.trim();
   if(e.target.id!=='adRelock'&&key.length<8){say(SB_MSG.FOLIO_SHORT);return}
   btn.disabled=true;say('Working…');
   try{
@@ -1310,7 +1332,7 @@ $('#adOnline').addEventListener('submit',async e=>{
     else if(e.target.id==='adRekey'){await sbSetKey(l,admin,key);toast('List key changed. Other devices need the new key.')}
     else{await sbUnlock(l.rid,key);toast('Unlocked '+l.name)}
     document.activeElement&&document.activeElement.blur();renderAdmin();
-  }catch(err){btn.disabled=false;say(err.status?err.message:'Couldn’t reach Supabase. Check your connection.')}
+  }catch(err){btn.disabled=false;say(err.status?err.message:'Couldn’t reach Supabase. Check your connection.');admRefused(err)}
 });
 $('#adOnline').addEventListener('click',async e=>{
   const l=LS.find(x=>x.id===AD);if(!l)return;
@@ -1320,8 +1342,8 @@ $('#adOnline').addEventListener('click',async e=>{
   else if(e.target.closest('#adShowKey')){const b=e.target.closest('#adShowKey');b.textContent=b.dataset.on?'Show list key':SBK[l.rid];b.dataset.on=b.dataset.on?'':'1'}
   else if(e.target.closest('#adOffline')){const b=e.target.closest('#adOffline'),say=t=>{$('#adOnMsg').textContent=t};
     if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to take offline';setTimeout(()=>{delete b.dataset.arm;b.textContent='Take offline'},4000);return}
-    try{await sbTakeOffline(l,$('#adAdminK').value.trim());document.activeElement&&document.activeElement.blur();renderAdmin();toast(`“${l.name}” is offline. It stays on this device.`)}
-    catch(err){say(err.status?err.message:'Couldn’t reach Supabase.')}}
+    try{await sbTakeOffline(l,admKey()||'');document.activeElement&&document.activeElement.blur();renderAdmin();toast(`“${l.name}” is offline. It stays on this device.`)}
+    catch(err){say(err.status?err.message:'Couldn’t reach Supabase.');admRefused(err)}}
 });
 
 /* ONLINE: GitHub storage and passphrase-protected editing. It steps aside when a Supabase project is connected. SHOW_LOCK: the Lock button in the menu (hidden for now; set to true to bring it back). */
@@ -1343,9 +1365,11 @@ function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();sav
    update or RPC with the same name and arguments; docs/supabase.md maps them.
    can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
    Later: the signed-in user's role on that list, enforced again by row-level security. */
+const ADMIN_ACTS=['list.create','list.rename','list.delete','list.manage','items.move'];
 function can(action,listId){
   if(action==='read')return true;
-  return !isRO();   /* 'list.rename' | 'list.delete' | 'items.move' | 'items.remove' */
+  if(ADMIN_ACTS.includes(action)&&typeof SBC!=='undefined'&&SBC)return isAdmin();
+  return !isRO();   /* 'items.remove' and article edits: anyone who has the list */
 }
 const Repo={
   lists:()=>LS.map(l=>({id:l.id,name:l.name,slug:l.slug,count:Q.filter(q=>q.list===l.id).length})),
@@ -2227,7 +2251,7 @@ const fontsReady=(document.fonts?Promise.race([
 applySettings();
 if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
 if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length).split('&key=')[0]));if(l){AL=l.id;saveL()}}
-renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
+admClass();renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
   .finally(()=>{if(canFetch!==null)store.set('folio.canFetch',canFetch);renderQ()})}
 })();

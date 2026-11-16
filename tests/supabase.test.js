@@ -7,6 +7,7 @@ function server(){const lists=[];const log=[];let n=0,up=true;
   const json=(status,body)=>({ok:status<300,status,json:async()=>body});const err=m=>json(400,{code:'P0001',message:m});
   const find=(ref,key)=>{const l=lists.find(x=>x.id===ref||x.slug===ref||x.alt.includes(ref));if(!l)return'FOLIO_NOLIST';return l.key===key?l:'FOLIO_KEY'};
   const fns={folio_ping:()=>true,
+    folio_check_admin:a=>a.p_admin===ADMIN?true:'FOLIO_ADMIN',
     folio_publish:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';if((a.p_key||'').length<8)return'FOLIO_SHORT';if(lists.some(l=>l.slug===a.p_slug))return'FOLIO_SLUG';
       const l={id:'00000000-0000-4000-8000-00000000000'+(++n),slug:a.p_slug,name:a.p_name,alt:[],key:a.p_key,articles:[],notes:[]};lists.push(l);return l.id},
     folio_set_key:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOLIST';l.key=a.p_key;return null},
@@ -14,6 +15,7 @@ function server(){const lists=[];const log=[];let n=0,up=true;
     folio_open:a=>{const l=find(a.p_ref,a.p_key);if(typeof l==='string')return l;
       return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt},articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
     folio_push:a=>{const l=find(a.p_list,a.p_key);if(typeof l==='string')return l;
+      if(a.p_meta&&a.p_admin!==ADMIN)return'FOLIO_ADMIN';
       if(a.p_meta){l.name=a.p_meta.name;l.slug=a.p_meta.slug;l.alt=a.p_meta.alt||[]}
       for(const [k,rows,del] of [['articles',a.p_articles,a.p_del_articles],['notes',a.p_notes,a.p_del_notes]]){
         l[k]=l[k].filter(r=>!del.includes(r.id));rows.forEach(r=>{const i=l[k].findIndex(x=>x.id===r.id);if(i<0)l[k].push(r);else l[k][i]=r})}
@@ -42,10 +44,15 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
                    {id:'n2',art:'p1',pos:1,where:'Paragraph 1',excerpt:'Private passage',text:'Private note',at:1700000000001,title:'Private',site:'p.com',url:'https://p.com/x'}]},'#admin-weekend').window;
   const errs=[];A.addEventListener('error',e=>errs.push(e.message));await wait(300);
   const $A=s=>A.document.querySelector(s);
-  ok('admin page offers Put online',!!$A('#adPub'));
-  $A('#adAdminK').value='wrong';$A('#adListK').value='weekend-key-1';submit(A,'#adPub');await wait(150);
-  ok('wrong admin key refused',/admin key/.test($A('#adOnMsg').textContent)&&!srv.lists.length,$A('#adOnMsg').textContent);
-  $A('#adAdminK').value=ADMIN;$A('#adListK').value='short';submit(A,'#adPub');await wait(50);
+  ok('manage page needs admin',$A('#viewAdmin').hidden&&!$A('#menuSheet').hidden&&!!$A('#admForm'));
+  ok('new-list form hidden without admin',A.document.documentElement.classList.contains('noadmin'));
+  $A('#admKey').value='wrong';submit(A,'#admForm');await wait(150);
+  ok('wrong admin key refused',/admin key/.test($A('#admMsg').textContent),$A('#admMsg').textContent);
+  $A('#admKey').value=ADMIN;submit(A,'#admForm');await wait(150);
+  ok('admin unlocked',!A.document.documentElement.classList.contains('noadmin')&&/Admin/.test($A('#sbBox').textContent));
+  $A('#mX').click();A.location.hash='#admin-weekend';await wait(200);
+  ok('admin page offers Put online, no admin field',!!$A('#adPub')&&!$A('#adAdminK'));
+  $A('#adListK').value='short';submit(A,'#adPub');await wait(50);
   ok('short list key refused in the app',/8 characters/.test($A('#adOnMsg').textContent)&&!srv.lists.length);
   $A('#adListK').value='weekend-key-1';submit(A,'#adPub');await wait(300);
   const L=srv.lists[0];
@@ -68,23 +75,31 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('progress starts fresh on B',qb[0].status==='new');
   ok('B’s own lists and starter links stayed local',L.articles.length===2&&srv.lists.length===1);
 
-  // B edits: remove one, rename the list
+  // B (not admin): can't manage or create lists, can remove an article from the list
   B.location.hash='#admin-weekend';await wait(200);
-  $B('#ad_a2').checked=true;$B('#adItems').dispatchEvent(new B.Event('change',{bubbles:true}));$B('#adRemove').click();
-  $B('#adName').value='Sunday';submit(B,'#adNameForm');await wait(2200);
-  ok('removal and rename reach Supabase',L.articles.length===1&&L.name==='Sunday'&&L.slug==='sunday'&&L.alt.includes('weekend'));
+  ok('B can’t open the manage page',$B('#viewAdmin').hidden&&B.location.hash==='#list-weekend',B.location.hash);
+  ok('B has no New list or Manage',B.document.documentElement.classList.contains('noadmin')&&![...$B('#listSel').options].some(o=>o.value==='__new'||o.value==='__admin'));
+  $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
+  $B('[data-rm="a2"]').click();await wait(2200);
+  ok('removal reaches Supabase',L.articles.length===1);
+  // A (admin) renames
+  $A('#adName').value='Sunday';submit(A,'#adNameForm');await wait(2200);
+  ok('admin rename reaches Supabase',L.name==='Sunday'&&L.slug==='sunday'&&L.alt.includes('weekend'));
+  $B('[data-dk],#vStack')&&0;B.dispatchEvent(new B.Event('focus'));
   const before=srv.log.length;await wait(1800);ok('nothing sent when nothing changed',srv.log.length===before);
+  $B('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);$B('#mX').click();
+  ok('B sees the rename',ls(B,'folio.lists').find(l=>l.rid===L.id).name==='Sunday');
   $A('#adSyncNow').click();await wait(300);
   ok('A sees both, keeps its progress',!ls(A,'folio.queue').some(q=>q.id==='a2')&&ls(A,'folio.lists').find(l=>l.id==='w').name==='Sunday'&&ls(A,'folio.queue').find(q=>q.id==='a1').pct===40);
   ok('A’s private list untouched',ls(A,'folio.queue').some(q=>q.id==='p1')&&ls(A,'folio.notes').some(n=>n.id==='n2'));
 
   // admin changes the key: B is locked out until it has the new one
-  A.document.querySelector('.adkey').open=true;$A('#adAdminK').value=ADMIN;$A('#adListK').value='brand-new-key-9';submit(A,'#adRekey');await wait(200);
+  A.document.querySelector('.adkey').open=true;$A('#adListK').value='brand-new-key-9';submit(A,'#adRekey');await wait(200);
   ok('key changed',L.key==='brand-new-key-9');
-  B.document.querySelector('#adSyncNow').click();await wait(300);
-  ok('B is locked, keeps its copy',!!$B('#adRelock')&&ls(B,'folio.queue').some(q=>q.id==='a1'),$B('#adOnline').textContent.slice(0,40));
-  $B('#adListK').value='brand-new-key-9';submit(B,'#adRelock');await wait(300);
-  ok('B unlocks with the new key',!!$B('#adSyncNow'));
+  $B('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);
+  ok('B is locked, keeps its copy',/1 locked/.test($B('#sbBox').textContent)&&ls(B,'folio.queue').some(q=>q.id==='a1'),$B('#sbBox').textContent.slice(0,120));
+  $B('#sbUnlockBtn').click();await wait(50);$B('#uRef').value='sunday';$B('#uKey').value='brand-new-key-9';submit(B,'#uForm');await wait(300);
+  ok('B unlocks with the new key',ls(B,'folio.sb.keys')[L.id]==='brand-new-key-9');
 
   // private link: the key travels in the link, then leaves the address bar
   let link='';Object.defineProperty(A.navigator,'clipboard',{value:{writeText:t=>{link=t;return Promise.resolve()}},configurable:true});
