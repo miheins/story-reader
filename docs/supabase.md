@@ -13,7 +13,7 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 
 ## Using it
 
-- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Admin → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open lists they have a key or private link for, add and remove articles, and take notes, but sees no *New list*, *Manage*, delete or list switching (the L key does nothing and the Reading lists group is hidden). Renaming an online list is also enforced in the database: `folio_push` refuses a name or address change without the admin key.
+- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Admin → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open lists they have a key or private link for, remove articles and take notes, but sees no *Add new item*, *New list*, *Manage*, delete or list switching (the L key does nothing and the Reading lists group is hidden). Renaming an online list is also enforced in the database: `folio_push` refuses a name or address change without the admin key.
 
 - **Put a list online:** the list's **Manage** page (L → *Manage …*) → *Online* → enter the admin key and choose a list key → **Put online**.
 - **Open it elsewhere:** open the list's address (`…/#list-weekend`) and Folio asks for the key; or ☰ → Admin → **Unlock a list…**, or L → *Unlock a list…*.

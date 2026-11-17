@@ -221,7 +221,7 @@ a.who:not([href]){cursor:default}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
-.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
+.noadmin #openAdd,.noadmin #addSheet,.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
 .ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
@@ -755,7 +755,7 @@ function renderMode(){
 function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmin();
   const ul=$('#queue');const nx=nextUnread(null);
   const VQ=Q.filter(inList);renderListSel();
-  if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet','Paste a link above and it lands here.')}</li>`;}
+  if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet',(can('items.add')?'Tap Add new item below and it lands here.':'Articles appear here once they’re added.'))}</li>`;}
   else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span></button>
@@ -813,6 +813,7 @@ ul.addEventListener('keydown',e=>{const gp=e.target.closest('[data-grip]');if(!g
   commitOrder(gp.dataset.grip)});
 function addKind(){const r=document.querySelector('input[name="kind"]:checked');return r?r.value:'story'}
 function addLinks(){
+  if(!can('items.add')){toast('Only the admin can add articles',null,null,'info');return}
   const kind=addKind();
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
   let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u,kind))}else if(ex.list!==AL)elsewhere=ex.list}
@@ -834,7 +835,7 @@ $('#segKind').addEventListener('change',syncKind);
 if(store.get('folio.addKind','story')==='link')$('#kLink').checked=true;syncKind();
 $('#readNext').onclick=()=>{const first=($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/)||[''])[0].replace(/[),.;]+$/,'');
   if(first)addLinks();const it=(first&&Q.find(q=>q.url===first))||nextUnread(null);if(it)openItem(it)};
-$('#openAdd').onclick=()=>{renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
+$('#openAdd').onclick=()=>{if(!can('items.add'))return;renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
 $('#aX').onclick=closeSheets;
 $('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
   edit(`Clear ${gone.length} finished`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));renderQ();
@@ -971,7 +972,7 @@ function slide(d){
 try{WIDE&&WIDE.addEventListener&&WIDE.addEventListener('change',()=>{if(VIEW==='stack'&&$('#lib')&&!$('#viewQueue').hidden)renderStack()})}catch(e){}
 function renderStack(){
   const box=$('#stack'),items=stackItems(),nx=nextUnread(null);
-  if(!items.length){box.innerHTML=F?emptyState('inbox','Nothing in this category','Choose All to see every article in this list.'):emptyState('inbox','Nothing in '+esc(listName(AL))+' yet','Paste a link above and it lands on top.');return}
+  if(!items.length){box.innerHTML=F?emptyState('inbox','Nothing in this category','Choose All to see every article in this list.'):emptyState('inbox','Nothing in '+esc(listName(AL))+' yet',(can('items.add')?'Tap Add new item below and it lands on top.':'Articles appear here once they’re added.'));return}
   let i=items.findIndex(q=>q.id===SI);
   if(i<0)i=Math.max(0,nx?items.findIndex(q=>q.id===nx.id):0);
   SI=items[i].id;
@@ -1026,7 +1027,7 @@ function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
   if(tab==='notes')showTab('queue');renderQ();if(changed)toast('Opened '+listName(id))}
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
-  if(v==='__add'){renderListSel();$('#openAdd').click();return}
+  if(v==='__add'&&can('items.add')){renderListSel();$('#openAdd').click();return}
   if(v==='__unlock'){renderListSel();openUnlock('');return}
   if(v==='__plink'){renderListSel();const l=LS.find(x=>x.id===AL),url=privateLink(l);try{navigator.clipboard.writeText(url).then(()=>toast('Private link copied'),()=>toast(url))}catch(_){toast(url)}return}
   if(v==='__admin'){renderListSel();openAdmin(AL);return}
@@ -1382,7 +1383,7 @@ function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();sav
    update or RPC with the same name and arguments; docs/supabase.md maps them.
    can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
    Later: the signed-in user's role on that list, enforced again by row-level security. */
-const ADMIN_ACTS=['list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
+const ADMIN_ACTS=['items.add','list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
 function can(action,listId){
   if(action==='read')return true;
   if(ADMIN_ACTS.includes(action)&&typeof SBC!=='undefined'&&SBC)return isAdmin();

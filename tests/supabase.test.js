@@ -81,6 +81,8 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('B has no New list or Manage',B.document.documentElement.classList.contains('noadmin')&&![...$B('#listSel').options].some(o=>o.value==='__new'||o.value==='__admin'));
   B.document.dispatchEvent(new B.KeyboardEvent('keydown',{key:'l',bubbles:true}));
   ok('L does nothing without admin',$B('#listSw').hidden);
+  $B('#openAdd').click();await wait(50);
+  ok('B can’t add articles (button hidden by .noadmin; checked in Chromium)',$B('#addSheet').hidden&&B.document.documentElement.classList.contains('noadmin'));
   ok('B can’t switch lists',[...$B('#listSel').options].filter(o=>!o.value.startsWith('__')).length===1&&B.getComputedStyle($B('#sbSet .subset')).display==='none');
   $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
   $B('[data-rm="a2"]').click();await wait(2200);
