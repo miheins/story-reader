@@ -521,6 +521,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       </div></div>
     <div class="set"><span class="st-field__label">Size</span>
       <div class="sz"><button type="button" class="st-icon-btn st-icon-btn--secondary" id="szDn" aria-label="Smaller" title="Smaller"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><div class="meter" id="meter"></div><button type="button" class="st-icon-btn st-icon-btn--secondary" id="szUp" aria-label="Larger" title="Larger"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+    <div class="set"><span class="st-field__label" id="lFit">Slide text</span>
+      <div class="st-seg" role="radiogroup" aria-labelledby="lFit" id="segFit">
+        <label class="st-seg__opt"><input type="radio" name="fit" value="same" class="st-seg__input">Same size</label>
+        <label class="st-seg__opt"><input type="radio" name="fit" value="fit" class="st-seg__input">Larger when short</label>
+      </div></div>
     <div class="set"><span class="st-field__label" id="lLh">Line spacing</span>
       <div class="st-seg" role="radiogroup" aria-labelledby="lLh" id="segLh">
         <label class="st-seg__opt"><input type="radio" name="lh" value="0" class="st-seg__input">Snug</label>
@@ -652,7 +657,7 @@ function slugTitle(u){try{const p=new URL(u);const seg=p.pathname.split('/').fil
 /* ---------- Settings ---------- */
 const SIZES=[16,17.5,19,20.5,22.5,24.5];
 const LH={serif:[1.42,1.55,1.7],sans:[1.38,1.5,1.66]};
-const S=Object.assign({face:'serif',size:2,lh:1,theme:'auto',auto:false},store.get('folio.settings',{}));
+const S=Object.assign({face:'serif',size:2,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
 const hostTheme=document.documentElement.getAttribute('data-theme');
 const MQ_DARK=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
 try{MQ_DARK&&MQ_DARK.addEventListener&&MQ_DARK.addEventListener('change',()=>{if(S.theme==='auto')applySettings()})}catch(e){}
@@ -662,7 +667,7 @@ function applySettings(){
   r.style.setProperty('--rs',SIZES[S.size]+'px');
   r.style.setProperty('--rl',LH[S.face][S.lh]);
   r.setAttribute('data-theme',S.theme==='auto'?(hostTheme||(MQ_DARK&&MQ_DARK.matches?'dark':'light')):S.theme);
-  for(const[id,v]of[['segFace',S.face],['segLh',String(S.lh)],['segTheme',S.theme]])
+  for(const[id,v]of[['segFace',S.face],['segFit',S.fit],['segLh',String(S.lh)],['segTheme',S.theme]])
     document.querySelectorAll('#'+id+' input').forEach(b=>{b.checked=b.value===v;b.parentNode.classList.toggle('is-on',b.checked)});
   $('#autoSw').setAttribute('aria-checked',String(!!S.auto));
   $('#meter').innerHTML=SIZES.map((_,i)=>`<i class="${i<=S.size?'on':''}" style="height:${8+i*4}px"></i>`).join('');
@@ -671,6 +676,7 @@ function applySettings(){
 function setS(k,v){S[k]=v;applySettings();if(R.art)relayout()}
 document.querySelectorAll('#segFace input').forEach(b=>b.onchange=()=>setS('face',b.value));
 document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b.value));
+document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
 document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
 $('#szDn').onclick=()=>S.size>0&&setS('size',S.size-1);
@@ -679,13 +685,13 @@ $('#szUp').onclick=()=>S.size<SIZES.length-1&&setS('size',S.size+1);
 /* ---------- Sample (original text) ---------- */
 const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:null,hero:null,blocks:[
  {t:'p',html:'Folio plays a long article as a story. Every paragraph gets a slide of its own.'},
- {t:'p',html:'Short paragraphs are set large. Longer ones step down towards your reading size, so a one-line thought lands with weight and a dense passage still reads comfortably. Sizes move on a fixed scale, which keeps the rhythm steady from slide to slide.'},
+ {t:'p',html:'Every slide is set at your reading size. If you prefer, <em>Aa</em> → <em>Slide text</em> → <em>Larger when short</em> sets short paragraphs large and steps longer ones down on a fixed scale.'},
  {t:'h',html:'Moving through'},
  {t:'p',html:'Tap the right side to go on and the left side to go back, or swipe. Hold anywhere to pause. Swipe down to close.'},
  {t:'p',html:'The bars at the top show where you are in the piece, and the header counts the minutes left at an ordinary reading pace.'},
  {t:'q',html:'A paragraph is already a unit of thought. Giving each one the whole screen lets it finish before the next begins.'},
  {t:'h',html:'Setting the type'},
- {t:'p',html:'Open <em>Aa</em> to switch between a book serif and a plain grotesk, change the reading size, and loosen or tighten the line spacing. You can also let slides advance on their own, timed to how long each one takes to read.'},
+ {t:'p',html:'Open <em>Aa</em> to switch between a book serif and a plain grotesk, change the reading size, choose one size for every slide or larger type for short ones, and loosen or tighten the line spacing. You can also let slides advance on their own, timed to how long each one takes to read.'},
  {t:'p',html:'A paragraph too long for one screen at reading size continues on the next slide, breaking between sentences.'},
  {t:'h',html:'Working through a list'},
  {t:'li',html:'Paste several links on the queue screen.'},
@@ -1910,7 +1916,8 @@ function build(art){
   let body,txt;
   const setup=k=>{mf.innerHTML='';const el=shell(k);mf.append(el);body=el.querySelector('.slide-body');txt=el.querySelector('.txt')};
   const fits=()=>txt.offsetHeight<=body.clientHeight+1;
-  const fit=(items,k,maxI)=>{setup(k);items.forEach(it=>txt.append(nodeFor(it)));
+  const same=S.fit!=='fit';
+  const fit=(items,k,maxI)=>{if(same)maxI=0;setup(k);items.forEach(it=>txt.append(nodeFor(it)));
     for(let s=maxI;s>=0;s--){txt.style.setProperty('--sc',SC[s]);if(fits())return s}return -1};
   const push=(k,items,bi,maxI)=>{const s=Math.max(0,fit(items,k,maxI));cards.push({k,items,sc:s,first:bi,w:words(items.map(i=>i.html).join(' '))})};
   const B=art.blocks;

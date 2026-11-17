@@ -12,7 +12,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 - **Just link:** in the Add panel, switch to **Just link** to save a page as a link instead of a story. Folio fetches its title and share image (Open Graph); tapping it opens the original page. *Read next* skips links.
 - **Stack or list:** the overview opens as a stack of cards (swipe or use ← → to flip, tap a card to read). On desktop the cards sit side by side in a slider: drag, scroll sideways or use ← →, and click a card to read. Switch to the list with the toggle above the queue; reordering, moving, categorising and removing are done in the list.
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
-- **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.
+- **Aa** sets the reading typeface (Newsreader or Inter), size, *Slide text* (the same size on every slide, the default, or larger type for short paragraphs), line spacing, theme (Auto, Light, Dark), and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
 - **Remember:** tap the **bookmark** in the top bar of a slide to keep that passage without writing a note. It appears in the Notes tab as *Remembered*; tap again to forget it.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.

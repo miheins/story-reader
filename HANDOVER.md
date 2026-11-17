@@ -18,7 +18,7 @@ Everything you need to pick this project up again. The user guide is in [README.
 ## Where things stand
 
 **Working**
-- Paste links; each plays as a story with one paragraph per slide. Text size steps up for short paragraphs (1×–1.85×), and long paragraphs split between sentences.
+- Paste links; each plays as a story with one paragraph per slide. By default every slide uses the reading size (*Aa* → *Slide text* → *Same size*); *Larger when short* steps short paragraphs up (1×–1.85×). Long paragraphs split between sentences.
 - Overview as a **card stack** (default) or a **list**, with a toggle. On desktop (720px and wider) the stack becomes a **horizontal slider** of wider cards.
 - **Reading lists**, each with its own address (`#list-<slug>`). The switcher is hidden; on desktop **L** shows it.
 - **Categories** with six colours, a filter to highlight one, and **Read next** that respects it.
