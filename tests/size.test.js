@@ -14,6 +14,10 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   ok('default is Same size',$('#segFit input[value="same"]').checked);
   ok('every slide at reading size',steps().length>3&&steps().every(s=>s===1),JSON.stringify(steps()));
   ok('setting shown and selected',$('#segFit input[value="same"]').checked);
+  ok('four size buttons, Medium (19px) by default',d.querySelectorAll('#segSize input').length===4&&$('#segSize input[value="1"]').checked&&d.documentElement.style.getPropertyValue('--rs')==='19px');
+  ok('each button shows Aa at its size',[...d.querySelectorAll('#segSize .szaa')].map(x=>x.style.fontSize).join()==='16px,19px,22px,25px');
+  const big=$('#segSize input[value="3"]');big.checked=true;big.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(100);
+  ok('Extra large sets slides to 25px',d.documentElement.style.getPropertyValue('--rs')==='25px'&&JSON.parse(w.localStorage.getItem('folio.settings')).size===3);
   const f=$('#segFit input[value="fit"]');f.checked=true;f.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(200);
   ok('Larger when short scales short slides up',steps().some(s=>s>1),JSON.stringify(steps()));
   ok('choice saved',JSON.parse(w.localStorage.getItem('folio.settings')).fit==='fit');

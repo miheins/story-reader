@@ -193,9 +193,9 @@ a.who:not([href]){cursor:default}
 .set .subset{display:flex;flex-direction:column;gap:6px;margin-top:18px}
 .subset > h3{margin:0}
 .sz{display:flex;align-items:center;gap:12px}
-.sz .meter{flex:1;display:flex;gap:6px;align-items:flex-end;justify-content:center;height:28px}
-.sz .meter i{width:8px;border-radius:2px;background:var(--rule)}
-.sz .meter i.on{background:var(--fg)}
+/* size: four buttons, each showing Aa at the size slides will use, in the chosen reading face */
+.sizeseg{display:flex}.sizeseg .st-seg__opt{flex:1;justify-content:center;height:48px;padding:0}
+.szaa{font-family:var(--rf);line-height:1;font-weight:400}
 .sample{font-family:var(--rf);font-size:var(--rs);line-height:var(--rl);color:var(--ink);border-top:1px solid var(--rule);padding-top:14px;margin:0;hyphens:auto;text-wrap:pretty}
 .phead{display:flex;justify-content:space-between;align-items:center}
 .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:st}
@@ -519,8 +519,13 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <label class="st-seg__opt"><input type="radio" name="face" value="serif" class="st-seg__input"><span style="font-family:var(--f-serif)">Newsreader</span></label>
         <label class="st-seg__opt"><input type="radio" name="face" value="sans" class="st-seg__input"><span style="font-family:var(--f-sans)">Inter</span></label>
       </div></div>
-    <div class="set"><span class="st-field__label">Size</span>
-      <div class="sz"><button type="button" class="st-icon-btn st-icon-btn--secondary" id="szDn" aria-label="Smaller" title="Smaller"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/></svg></button><div class="meter" id="meter"></div><button type="button" class="st-icon-btn st-icon-btn--secondary" id="szUp" aria-label="Larger" title="Larger"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></div></div>
+    <div class="set"><span class="st-field__label" id="lSize">Size</span>
+      <div class="st-seg sizeseg" role="radiogroup" aria-labelledby="lSize" id="segSize">
+        <label class="st-seg__opt" title="Small, 16 px"><input type="radio" name="size" value="0" class="st-seg__input" aria-label="Small"><span class="szaa" style="font-size:16px">Aa</span></label>
+        <label class="st-seg__opt" title="Medium, 19 px"><input type="radio" name="size" value="1" class="st-seg__input" aria-label="Medium"><span class="szaa" style="font-size:19px">Aa</span></label>
+        <label class="st-seg__opt" title="Large, 22 px"><input type="radio" name="size" value="2" class="st-seg__input" aria-label="Large"><span class="szaa" style="font-size:22px">Aa</span></label>
+        <label class="st-seg__opt" title="Extra large, 25 px"><input type="radio" name="size" value="3" class="st-seg__input" aria-label="Extra large"><span class="szaa" style="font-size:25px">Aa</span></label>
+      </div></div>
     <div class="set"><span class="st-field__label" id="lFit">Slide text</span>
       <div class="st-seg" role="radiogroup" aria-labelledby="lFit" id="segFit">
         <label class="st-seg__opt"><input type="radio" name="fit" value="same" class="st-seg__input">Same size</label>
@@ -655,9 +660,12 @@ function slugTitle(u){try{const p=new URL(u);const seg=p.pathname.split('/').fil
   return s.charAt(0).toUpperCase()+s.slice(1)}catch(e){return u}}
 
 /* ---------- Settings ---------- */
-const SIZES=[16,17.5,19,20.5,22.5,24.5];
+const SIZES=[16,19,22,25],SIZES_V1=[16,17.5,19,20.5,22.5,24.5];
 const LH={serif:[1.42,1.55,1.7],sans:[1.38,1.5,1.66]};
-const S=Object.assign({face:'serif',size:2,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
+const S=Object.assign({face:'serif',size:1,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
+/* settings saved with the old six-step scale: move to the nearest of the four sizes */
+if(S.sv!==2){if(store.get('folio.settings',null)){const px=SIZES_V1[S.size]??19;S.size=SIZES.reduce((b,v,i)=>Math.abs(v-px)<Math.abs(SIZES[b]-px)?i:b,0)}else S.size=1;S.sv=2}
+S.size=Math.max(0,Math.min(SIZES.length-1,S.size|0));
 const hostTheme=document.documentElement.getAttribute('data-theme');
 const MQ_DARK=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
 try{MQ_DARK&&MQ_DARK.addEventListener&&MQ_DARK.addEventListener('change',()=>{if(S.theme==='auto')applySettings()})}catch(e){}
@@ -667,10 +675,9 @@ function applySettings(){
   r.style.setProperty('--rs',SIZES[S.size]+'px');
   r.style.setProperty('--rl',LH[S.face][S.lh]);
   r.setAttribute('data-theme',S.theme==='auto'?(hostTheme||(MQ_DARK&&MQ_DARK.matches?'dark':'light')):S.theme);
-  for(const[id,v]of[['segFace',S.face],['segFit',S.fit],['segLh',String(S.lh)],['segTheme',S.theme]])
+  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segLh',String(S.lh)],['segTheme',S.theme]])
     document.querySelectorAll('#'+id+' input').forEach(b=>{b.checked=b.value===v;b.parentNode.classList.toggle('is-on',b.checked)});
   $('#autoSw').setAttribute('aria-checked',String(!!S.auto));
-  $('#meter').innerHTML=SIZES.map((_,i)=>`<i class="${i<=S.size?'on':''}" style="height:${8+i*4}px"></i>`).join('');
   store.set('folio.settings',S);
 }
 function setS(k,v){S[k]=v;applySettings();if(R.art)relayout()}
@@ -679,8 +686,7 @@ document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b
 document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
 document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
-$('#szDn').onclick=()=>S.size>0&&setS('size',S.size-1);
-$('#szUp').onclick=()=>S.size<SIZES.length-1&&setS('size',S.size+1);
+document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>setS('size',+b.value));
 
 /* ---------- Sample (original text) ---------- */
 const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:null,hero:null,blocks:[
