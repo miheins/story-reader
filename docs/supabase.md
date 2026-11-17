@@ -13,7 +13,7 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 
 ## Using it
 
-- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Admin → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open and read lists they have a key or private link for, take notes and remember slides, but sees no *Add new item*, remove buttons, *Clear finished*, *New list*, *Manage*, delete or list switching (the L key does nothing and the Reading lists group is hidden). Renaming an online list is also enforced in the database: `folio_push` refuses a name or address change without the admin key.
+- **Admin mode:** creating, renaming, deleting and managing lists, and putting them online, need the admin key. ☰ → Admin → *Admin key* → **Unlock admin**; Supabase checks it (`folio_check_admin`) and the device keeps it for 30 days, or until **Lock admin**. Everyone else can open and read lists they have a key or private link for, take notes and remember slides, but sees no *Add new item*, remove buttons, *Clear finished*, *New list*, *Manage*, delete or list switching (the L key does nothing and the Reading lists group is hidden). The database enforces it too: `folio_push` refuses a name or address change, and any added, changed or removed article, without the admin key. Notes and remembered slides need only the list key. A non-admin's local article changes (order, category, a better title) stay on their device and are replaced at the next sync.
 
 - **Put a list online:** the list's **Manage** page (L → *Manage …*) → *Online* → enter the admin key and choose a list key → **Put online**.
 - **Open it elsewhere:** open the list's address (`…/#list-weekend`) and Folio asks for the key; or ☰ → Admin → **Unlock a list…**, or L → *Unlock a list…*.
@@ -23,6 +23,8 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 - You can also change a key in Supabase alone: `select public.folio_set_key('admin key', '<list id>', 'new list key');`
 
 ## What syncs
+
+**When:** a note, remembered slide or (for the admin) any list change is sent about 1.5 seconds after it's made, automatically. Other devices pick changes up when Folio starts, when you come back to it after 30 seconds away, when the device comes back online, or with **Sync now**. There's no live push between devices.
 
 Per online list: its name and address, its articles (order, category, Just-link title and image) and the notes and remembered slides on them. **Reading progress stays on each device**, and so does cached article text. Lists that aren't online stay on the device.
 

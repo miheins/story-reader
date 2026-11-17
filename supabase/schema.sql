@@ -164,15 +164,19 @@ begin
 end $$;
 
 -- List key: save changes to a list: rows to add or update and ids to delete.
--- Renaming the list (p_meta) also needs the admin key.
+-- Notes need only the list key. Renaming the list (p_meta) and adding, changing or removing articles also need the admin key.
 drop function if exists public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb);
 create or replace function public.folio_push(p_list uuid, p_key text, p_meta jsonb, p_articles jsonb, p_del_articles jsonb, p_notes jsonb, p_del_notes jsonb, p_admin text default null) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 declare l public.folio_lists;
 begin
   l := folio__list(p_list::text, p_key);
-  if p_meta is not null then
+  if p_meta is not null
+     or jsonb_array_length(coalesce(p_articles, '[]'::jsonb)) > 0
+     or jsonb_array_length(coalesce(p_del_articles, '[]'::jsonb)) > 0 then
     perform folio__admin(p_admin);
+  end if;
+  if p_meta is not null then
     begin
       update folio_lists set
         name = left(coalesce(nullif(trim(p_meta->>'name'), ''), name), 80),

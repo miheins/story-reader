@@ -15,7 +15,7 @@ function server(){const lists=[];const log=[];let n=0,up=true;
     folio_open:a=>{const l=find(a.p_ref,a.p_key);if(typeof l==='string')return l;
       return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt,intro:l.intro||''},articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
     folio_push:a=>{const l=find(a.p_list,a.p_key);if(typeof l==='string')return l;
-      if(a.p_meta&&a.p_admin!==ADMIN)return'FOLIO_ADMIN';
+      if((a.p_meta||a.p_articles.length||a.p_del_articles.length)&&a.p_admin!==ADMIN)return'FOLIO_ADMIN';
       if(a.p_meta){l.intro=a.p_meta.intro||'';l.name=a.p_meta.name;l.slug=a.p_meta.slug;l.alt=a.p_meta.alt||[]}
       for(const [k,rows,del] of [['articles',a.p_articles,a.p_del_articles],['notes',a.p_notes,a.p_del_notes]]){
         l[k]=l[k].filter(r=>!del.includes(r.id));rows.forEach(r=>{const i=l[k].findIndex(x=>x.id===r.id);if(i<0)l[k].push(r);else l[k][i]=r})}
@@ -86,10 +86,20 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('B can’t switch lists',[...$B('#listSel').options].filter(o=>!o.value.startsWith('__')).length===1&&B.getComputedStyle($B('#sbSet .subset')).display==='none');
   $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
   $B('[data-rm="a2"]').click();await wait(300);
+  // B (not admin): a category change stays local without an error
+  const sel=$B('[data-cat="a1"]');sel.value='';sel.dispatchEvent(new B.Event('change',{bubbles:true}));await wait(2200);
+  ok('B’s category change is not sent, no error',L.articles.find(r=>r.id==='a1').cat_name==='Branding'&&!/error/i.test($B('#sbBox')?$B('#sbBox').className:'')&&ls(B,'folio.queue').find(q=>q.id==='a1').cat==null);
   ok('B can’t remove articles',ls(B,'folio.queue').some(q=>q.id==='a2')&&L.articles.length===2);
   // A (admin) removes it
   $A('#ad_a2').checked=true;$A('#adItems').dispatchEvent(new A.Event('change',{bubbles:true}));$A('#adRemove').click();await wait(2200);
   ok('admin removal reaches Supabase',L.articles.length===1);
+  // a reader's note syncs without admin (fresh device holding the list key and one new note)
+  const R2=device(srv,{'folio.lists':[{id:L.id,rid:L.id,name:'Sunday',slug:'sunday'}],'folio.alist':L.id,'folio.sb.keys':{[L.id]:'weekend-key-1'},
+    'folio.queue':[{id:'a1',url:'https://a.com/1',title:'First',site:'a.com',status:'new',pos:-1,pct:0,list:L.id}],
+    'folio.notes':[{id:'nr',art:'a1',pos:1,where:'Paragraph 1',excerpt:'x',text:'',like:true,at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'}]}).window;await wait(500);
+  ok('a reader’s remembered slide reaches Supabase',L.notes.some(n=>n.id==='nr'&&n.liked),JSON.stringify(L.notes.map(n=>n.id)));
+  B.document.querySelector('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);$B('#mX').click();
+  ok('after sync B has the account’s category back',ls(B,'folio.queue').find(q=>q.id==='a1').cat!=null);
   // A (admin) renames
   $A('#adName').value='Sunday';submit(A,'#adNameForm');await wait(2200);
   ok('admin rename reaches Supabase',L.name==='Sunday'&&L.slug==='sunday'&&L.alt.includes('weekend'));

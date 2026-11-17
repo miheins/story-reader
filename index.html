@@ -1172,10 +1172,13 @@ function sbListRows(l){
 async function sbPushList(l){
   const cur=sbListRows(l),snap=SB_SNAP[l.rid]||{list:null,articles:[],notes:[]};
   const diff=(a,b)=>{const old=new Map(b.map(r=>[r.id,JSON.stringify(r)])),ids=new Set(a.map(r=>r.id));return{up:a.filter(r=>old.get(r.id)!==JSON.stringify(r)),del:[...old.keys()].filter(id=>!ids.has(id))}};
-  const A=diff(cur.articles,snap.articles),T=diff(cur.notes,snap.notes),meta=JSON.stringify(cur.list)!==JSON.stringify(snap.list)&&isAdmin();
+  /* The database only accepts list and article changes with the admin key (folio_push). Without it, only notes go up;
+     local article changes stay on this device until the next sync replaces them. */
+  const adm=isAdmin(),A0=diff(cur.articles,snap.articles),A=adm?A0:{up:[],del:[]},T=diff(cur.notes,snap.notes),meta=adm&&JSON.stringify(cur.list)!==JSON.stringify(snap.list);
   if(!meta&&!A.up.length&&!A.del.length&&!T.up.length&&!T.del.length)return;
-  try{await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_admin:meta?admKey():null,p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del})}catch(e){admRefused(e);throw e}
+  try{await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_admin:meta||A.up.length||A.del.length?admKey():null,p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del})}catch(e){admRefused(e);throw e}
   if(!meta&&snap.list)cur.list=snap.list;   /* keep an unsent name change pending */
+  if(!adm)cur.articles=snap.articles;     /* and unsent article changes */
   SB_SNAP[l.rid]=cur;store.set('folio.sb.snap',SB_SNAP);
 }
 function sbCat(name,c){let x=C.find(k=>k.name.toLowerCase()===String(name).toLowerCase());if(!x){x={id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),name:String(name),c:Number.isFinite(c)?c:0};C.push(x)}return x.id}
