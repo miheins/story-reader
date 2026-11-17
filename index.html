@@ -221,7 +221,7 @@ a.who:not([href]){cursor:default}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
-.noadmin #openAdd,.noadmin #addSheet,.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
+.noadmin [data-rm],.noadmin #clearRead,.noadmin #adRemove,.noadmin #openAdd,.noadmin #addSheet,.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
 .ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
@@ -782,7 +782,7 @@ function nextUnread(after){
 }
 $('#queue').onclick=e=>{
   if(e.target.closest('[data-grip],[data-cat],.qcat'))return;
-  const o=e.target.closest('[data-open]'),r=e.target.closest('[data-rm]');
+  const o=e.target.closest('[data-open]'),r=can('items.remove')?e.target.closest('[data-rm]'):null;
   if(o)openItem(Q.find(q=>q.id===o.dataset.open));
   if(r){const id=r.dataset.rm,i=Q.findIndex(q=>q.id===id),it=Q[i];
     edit('Remove: '+it.title,d=>rmWhere(d.articles,a=>a.id===id));renderQ();
@@ -837,7 +837,7 @@ $('#readNext').onclick=()=>{const first=($('#links').value.match(/https?:\/\/[^\
   if(first)addLinks();const it=(first&&Q.find(q=>q.url===first))||nextUnread(null);if(it)openItem(it)};
 $('#openAdd').onclick=()=>{if(!can('items.add'))return;renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
 $('#aX').onclick=closeSheets;
-$('#clearRead').onclick=()=>{const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
+$('#clearRead').onclick=()=>{if(!can('items.remove'))return;const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
   edit(`Clear ${gone.length} finished`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));renderQ();
   toast(`Cleared ${gone.length}`,()=>{edit('Restore finished',d=>gone.forEach(g=>{if(!d.articles.some(a=>a.id===g.id))d.articles.push({...g})}));renderQ()},()=>gone.forEach(g=>store.del('folio.c.'+g.id)))};
 
@@ -1383,7 +1383,7 @@ function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();sav
    update or RPC with the same name and arguments; docs/supabase.md maps them.
    can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
    Later: the signed-in user's role on that list, enforced again by row-level security. */
-const ADMIN_ACTS=['items.add','list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
+const ADMIN_ACTS=['items.add','items.remove','list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
 function can(action,listId){
   if(action==='read')return true;
   if(ADMIN_ACTS.includes(action)&&typeof SBC!=='undefined'&&SBC)return isAdmin();
@@ -1418,7 +1418,7 @@ const Repo={
     return{ok:true,n,undo:()=>edit('Undo move',d=>d.articles.forEach(a=>{if(from[a.id])a.list=from[a.id]}))};
   },
   removeItems(ids){
-    if(!can('items.remove'))return{ok:false,error:'Only the owner can remove articles'};
+    if(!can('items.remove'))return{ok:false,error:'Only the admin can remove articles'};
     const gone=Q.map((it,i)=>({it:{...it},i})).filter(x=>ids.includes(x.it.id));if(!gone.length)return{ok:false,error:'Select at least one article'};
     edit(`Remove ${gone.length}`,d=>rmWhere(d.articles,a=>ids.includes(a.id)));
     return{ok:true,n:gone.length,undo:()=>edit('Restore '+gone.length,d=>gone.forEach(({it,i})=>{if(!d.articles.some(a=>a.id===it.id))d.articles.splice(Math.min(i,d.articles.length),0,{...it})})),

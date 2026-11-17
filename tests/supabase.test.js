@@ -85,8 +85,11 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('B can’t add articles (button hidden by .noadmin; checked in Chromium)',$B('#addSheet').hidden&&B.document.documentElement.classList.contains('noadmin'));
   ok('B can’t switch lists',[...$B('#listSel').options].filter(o=>!o.value.startsWith('__')).length===1&&B.getComputedStyle($B('#sbSet .subset')).display==='none');
   $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
-  $B('[data-rm="a2"]').click();await wait(2200);
-  ok('removal reaches Supabase',L.articles.length===1);
+  $B('[data-rm="a2"]').click();await wait(300);
+  ok('B can’t remove articles',ls(B,'folio.queue').some(q=>q.id==='a2')&&L.articles.length===2);
+  // A (admin) removes it
+  $A('#ad_a2').checked=true;$A('#adItems').dispatchEvent(new A.Event('change',{bubbles:true}));$A('#adRemove').click();await wait(2200);
+  ok('admin removal reaches Supabase',L.articles.length===1);
   // A (admin) renames
   $A('#adName').value='Sunday';submit(A,'#adNameForm');await wait(2200);
   ok('admin rename reaches Supabase',L.name==='Sunday'&&L.slug==='sunday'&&L.alt.includes('weekend'));
