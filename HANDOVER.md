@@ -39,7 +39,7 @@ Everything is in `index.html`. Search for these section markers:
 | Marker | What's there |
 |---|---|
 | `Library` / `Reader (story)` / `Sheets` (CSS) | Folio's styles on top of Product Starter. Folio's token aliases and accent are at the top of `<style>`; component placement is under *Product Starter components in Folio's layout*. The desktop layout (the same narrow column, centred, no frame) is the `@media (min-width:720px)` block. |
-| `Settings` | Typeface, size (four Aa buttons: 16, 19, 22, 25 px; old six-step settings move to the nearest), slide text, line spacing, theme, auto-advance. |
+| `Settings` | Typeface, size (six Aa buttons: 16, 19, 22, 25, 28, 31 px; default 22 px unless the reader picked one, `sizeSet`), slide text, line spacing, theme, auto-advance. |
 | `Queue` | Queue model, list view rendering, drag-to-reorder, adding links, clear finished. |
 | `Categories` | Category model, filter chips, row dropdown, menu editing, home-screen install. |
 | `Card stack view` | Stack rendering, swipe and keys, the `VIEW` toggle. On desktop, `renderSlider()` replaces the stack (see *Desktop slider*). |

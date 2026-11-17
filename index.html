@@ -194,7 +194,7 @@ a.who:not([href]){cursor:default}
 .subset > h3{margin:0}
 .sz{display:flex;align-items:center;gap:12px}
 /* size: four buttons, each showing Aa at the size slides will use, in the chosen reading face */
-.sizeseg{display:flex}.sizeseg .st-seg__opt{flex:1;justify-content:center;height:48px;padding:0}
+.sizeseg{display:flex}.sizeseg .st-seg__opt{flex:1;min-width:0;justify-content:center;height:52px;padding:0}
 .szaa{font-family:var(--rf);line-height:1;font-weight:400}
 .sample{font-family:var(--rf);font-size:var(--rs);line-height:var(--rl);color:var(--ink);border-top:1px solid var(--rule);padding-top:14px;margin:0;hyphens:auto;text-wrap:pretty}
 .phead{display:flex;justify-content:space-between;align-items:center}
@@ -524,7 +524,9 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <label class="st-seg__opt" title="Small, 16 px"><input type="radio" name="size" value="0" class="st-seg__input" aria-label="Small"><span class="szaa" style="font-size:16px">Aa</span></label>
         <label class="st-seg__opt" title="Medium, 19 px"><input type="radio" name="size" value="1" class="st-seg__input" aria-label="Medium"><span class="szaa" style="font-size:19px">Aa</span></label>
         <label class="st-seg__opt" title="Large, 22 px"><input type="radio" name="size" value="2" class="st-seg__input" aria-label="Large"><span class="szaa" style="font-size:22px">Aa</span></label>
-        <label class="st-seg__opt" title="Extra large, 25 px"><input type="radio" name="size" value="3" class="st-seg__input" aria-label="Extra large"><span class="szaa" style="font-size:25px">Aa</span></label>
+        <label class="st-seg__opt" title="Larger, 25 px"><input type="radio" name="size" value="3" class="st-seg__input" aria-label="Larger"><span class="szaa" style="font-size:25px">Aa</span></label>
+        <label class="st-seg__opt" title="Extra large, 28 px"><input type="radio" name="size" value="4" class="st-seg__input" aria-label="Extra large"><span class="szaa" style="font-size:28px">Aa</span></label>
+        <label class="st-seg__opt" title="Largest, 31 px"><input type="radio" name="size" value="5" class="st-seg__input" aria-label="Largest"><span class="szaa" style="font-size:31px">Aa</span></label>
       </div></div>
     <div class="set"><span class="st-field__label" id="lFit">Slide text</span>
       <div class="st-seg" role="radiogroup" aria-labelledby="lFit" id="segFit">
@@ -660,11 +662,11 @@ function slugTitle(u){try{const p=new URL(u);const seg=p.pathname.split('/').fil
   return s.charAt(0).toUpperCase()+s.slice(1)}catch(e){return u}}
 
 /* ---------- Settings ---------- */
-const SIZES=[16,19,22,25],SIZES_V1=[16,17.5,19,20.5,22.5,24.5];
+const SIZES=[16,19,22,25,28,31],SIZE_DEFAULT=2;
 const LH={serif:[1.42,1.55,1.7],sans:[1.38,1.5,1.66]};
-const S=Object.assign({face:'serif',size:1,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
-/* settings saved with the old six-step scale: move to the nearest of the four sizes */
-if(S.sv!==2){if(store.get('folio.settings',null)){const px=SIZES_V1[S.size]??19;S.size=SIZES.reduce((b,v,i)=>Math.abs(v-px)<Math.abs(SIZES[b]-px)?i:b,0)}else S.size=1;S.sv=2}
+const S=Object.assign({face:'serif',size:SIZE_DEFAULT,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
+/* the size scale changed (now six sizes, default the middle, 22 px): anyone who hasn't picked a size on it gets the default */
+if(S.sv!==3){if(!S.sizeSet)S.size=SIZE_DEFAULT;S.sv=3}
 S.size=Math.max(0,Math.min(SIZES.length-1,S.size|0));
 const hostTheme=document.documentElement.getAttribute('data-theme');
 const MQ_DARK=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
@@ -686,7 +688,7 @@ document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b
 document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
 document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
-document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>setS('size',+b.value));
+document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>{S.sizeSet=true;setS('size',+b.value)});
 
 /* ---------- Sample (original text) ---------- */
 const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:null,hero:null,blocks:[
