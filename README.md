@@ -14,7 +14,7 @@ Picking this up? Read [HANDOVER.md](HANDOVER.md) for how it's built, where thing
 - Tap the right side to go forward and the left side to go back, or swipe. Hold to pause. Swipe down to close.
 - **Aa** sets the reading typeface (Newsreader or Inter), size, line spacing, theme (Auto, Light, Dark), and optional auto-advance.
 - When an article ends, the next one in the queue is offered on the last slide.
-- **Remember:** tap **Remember** at the bottom of a slide to keep that passage without writing a note. It appears in the Notes tab as *Remembered*; tap again to forget it.
+- **Remember:** tap the **bookmark** in the top bar of a slide to keep that passage without writing a note. It appears in the Notes tab as *Remembered*; tap again to forget it.
 - **Notes:** while reading, tap the pencil to note something on the current slide. The **Notes** tab collects every note with the passage it belongs to; tap a passage to jump back. **Copy all as text** exports them.
 - **Reading lists:** keep separate queues (e.g. Work, Weekend). Each list has its own address (`#list-weekend`), so you can bookmark it or add it to your home screen. Switch from the menu (☰ → Reading lists → Open, or Copy link), or on desktop press **L** for the list switcher. New links go into the list you have open, and **Read next** stays inside it.
 - **Manage a list:** press **L** (desktop) and pick *Manage …*, or ☰ → Reading lists → **Manage**. Each list's admin page has its own address (`#admin-weekend`): rename it, see its items and notes, move selected (or all) articles to another list, remove articles, or delete the list.

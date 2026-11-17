@@ -18,9 +18,11 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   ok('reader open',!$('#reader').hidden);
   ok('no Remember on the cover',$('#remBtn').hidden);
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait(100);
-  ok('Remember shows on a text slide',!$('#remBtn').hidden&&$('#remT').textContent==='Remember');
+  ok('Remember sits in the top bar',!!$('.bar #remBtn'));
+  ok('site name is a link to the original',$('#srcLink').tagName==='A'&&$('#srcLink').contains($('#av'))&&$('#srcLink').getAttribute('href')===null,'sample has no url');
+  ok('Remember shows on a text slide',!$('#remBtn').hidden&&$('#remBtn').getAttribute('aria-pressed')==='false');
   $('#remBtn').click();
-  ok('slide remembered without a note',notes().length===1&&notes()[0].like===true&&notes()[0].text===''&&notes()[0].excerpt.length>10&&$('#remBtn').getAttribute('aria-pressed')==='true'&&$('#remT').textContent==='Remembered');
+  ok('slide remembered without a note',notes().length===1&&notes()[0].like===true&&notes()[0].text===''&&notes()[0].excerpt.length>10&&$('#remBtn').getAttribute('aria-pressed')==='true');
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait(100);
   ok('next slide is not remembered',$('#remBtn').getAttribute('aria-pressed')==='false');
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait(100);

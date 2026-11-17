@@ -155,15 +155,9 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
   padding:calc(env(safe-area-inset-top,0px) + 10px) max(12px,env(safe-area-inset-right,0px)) 22px max(12px,env(safe-area-inset-left,0px))}
 .reader.dark-ui .chrome{color:#fff;background:linear-gradient(rgba(0,0,0,.42),transparent)}
 .reader.cover-ui .chrome{color:var(--cover-fg)}
-.remember{position:absolute;z-index:3;left:max(18px,env(safe-area-inset-left,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 8px;
-  border:1px solid color-mix(in srgb,currentColor 35%,transparent);border-radius:var(--radius-sm);background:transparent;color:var(--fg);
-  font:500 12px/16px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.15em;text-transform:uppercase}
-.remember .st-icon{width:16px;height:16px}
-.remember[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
-.remember[aria-pressed="true"] .st-icon{fill:currentColor}
-.reader.dark-ui .remember{color:#fff}
-.reader.dark-ui .remember[aria-pressed="true"]{background:#fff;color:#111;border-color:#fff}
-.remember:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+/* Remember sits in the top bar: outline bookmark, filled once remembered */
+.rb[aria-pressed="true"] .st-icon{fill:currentColor}
+#remBtn .st-icon,#noteBtn .st-icon{width:16px;height:16px}
 .nlike{font:500 12px/16px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin:0}
 .reader.hold .chrome{opacity:0}
 .prog{display:flex;gap:3px;height:2.5px}
@@ -171,8 +165,11 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .prog i b{display:block;height:100%;width:0;background:currentColor}
 .bar{display:flex;align-items:center;gap:9px;margin-top:11px;pointer-events:auto}
 .av{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font:600 13px/1 var(--f-sans);background:var(--accent);color:var(--on-accent);box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--accent);text-transform:uppercase}
-.who{flex:1;min-width:0;display:flex;align-items:baseline;gap:7px;font:600 13.5px/1.2 var(--f-sans);white-space:nowrap;overflow:hidden}
-.who #src{overflow:hidden;text-overflow:ellipsis}
+.who{flex:1;min-width:0;display:flex;align-items:center;gap:9px;font:600 13px/16px var(--f-sans);white-space:nowrap;color:inherit;text-decoration:none;border-radius:999px;padding:3px 8px 3px 3px;margin-left:-3px}
+a.who[href]:hover #src{text-decoration:underline;text-underline-offset:3px}
+a.who:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+a.who:not([href]){cursor:default}
+.who #src{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .who .tm{font-weight:500;opacity:.68;flex:none}
 .ib{width:40px;height:40px;border:0;border-radius:50%;background:transparent;color:inherit;display:grid;place-items:center;font:600 16px/1 var(--f-serif)}
 .ib:hover{background:var(--chip)}
@@ -499,15 +496,13 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     <div class="chrome">
       <div class="prog" id="prog"></div>
       <div class="bar">
-        <div class="av" id="av" aria-hidden="true"></div>
-        <div class="who"><span id="src"></span><span class="tm" id="tm"></span></div>
-        <a class="ib" id="srcLink" href="#" target="_blank" rel="noopener" aria-label="Open original" title="Open original" hidden><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
-        <button type="button" class="ib nb" id="noteBtn" aria-label="Add a note to this slide" title="Add a note"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg><span class="badge" id="noteCount" hidden></span></button>
+        <a class="who" id="srcLink" href="#" target="_blank" rel="noopener"><span class="av" id="av" aria-hidden="true"></span><span id="src"></span><span class="tm" id="tm" hidden></span></a>
+        <button type="button" class="ib rb" id="remBtn" aria-pressed="false" aria-label="Remember this slide" title="Remember this slide" hidden><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg></button>
+        <button type="button" class="ib nb" id="noteBtn" aria-label="Add a note to this slide" title="Add a note"><svg class="st-icon" viewBox="64 64 128 128" fill="currentColor" aria-hidden="true"><path d="M178.83 93.17l-16-16a4 4 0 0 0-5.66 0l-48 48A4 4 0 0 0 108 128v16a4 4 0 0 0 4 4h16a4 4 0 0 0 2.830-1.17l48-48A4 4 0 0 0 178.83 93.17ZM126.345 140H116V129.655l32-32L158.345 108ZM164 102.345L153.655 92 160 85.655 170.345 96ZM176 128v40a8 8 0 0 1-8 8H88a8 8 0 0 1-8-8V88A8 8 0 0 1 88 80h40a4 4 0 0 1 0 8H88V168H168V128a4 4 0 0 1 8 0Z"/></svg><span class="badge" id="noteCount" hidden></span></button>
         <button type="button" class="ib aa" id="rdAa" aria-label="Reading settings" title="Reading settings">A<span>a</span></button>
         <button type="button" class="ib" id="close" aria-label="Back to queue" title="Back to queue"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
-    <button type="button" class="remember" id="remBtn" aria-pressed="false" hidden><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-4-6 4V5a1 1 0 0 1 1-1z"/></svg><span id="remT">Remember</span></button>
     <div class="loading" id="loading" hidden><div><span class="st-spinner st-spinner--lg" role="status" aria-label="Loading"></span><p id="loadT">Opening</p><small id="loadS">Fetching</small></div></div>
   </div>
 </div>
@@ -1681,13 +1676,13 @@ $('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N
 const likeAt=pos=>R.item?N.find(n=>n.art===R.item.id&&n.like&&n.pos===pos):null;
 function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
   if(!cd||!R.art||cd.k==='cover'||cd.k==='end'){b.hidden=true;return}
-  const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));$('#remT').textContent=on?'Remembered':'Remember'}
+  const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));const t=on?'Remembered: tap to forget':'Remember this slide';b.setAttribute('aria-label',t);b.title=t}
 $('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
   if(ex){if(ex.text)delete ex.like;else N.splice(N.indexOf(ex),1)}
   else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
     if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,at:Date.now()})}
   saveN();updateRemember();updateNoteBadge();renderNotes()};
-function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id).length:0;b.hidden=!n;b.textContent=n}
+function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id&&x.text).length:0;b.hidden=!n;b.textContent=n}   /* written notes only; remembered slides show on the bookmark */
 
 /* ---------- Parsing ---------- */
 const IMG_RE=/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
@@ -2004,7 +1999,8 @@ function renderCards(){
   p.innerHTML=c.length<=60?c.map(()=>'<i><b></b></i>').join(''):'<i><b></b></i>';
   p.classList.toggle('cont',c.length>60);
   $('#src').textContent=a.site||'Folio';
-  const sl=$('#srcLink');sl.hidden=!a.url;if(a.url)sl.href=a.url;
+  const sl=$('#srcLink');if(a.url){sl.href=a.url;sl.setAttribute('aria-label','Open the original on '+(a.site||'its site'));sl.title='Open the original'}
+  else{sl.removeAttribute('href');sl.removeAttribute('aria-label');sl.removeAttribute('title')}
   $('#av').textContent=(a.site||'F').replace(/^www\./,'').charAt(0);
 }
 const T={raf:0,elapsed:0,dur:0,last:0,paused:false};

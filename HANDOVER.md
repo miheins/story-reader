@@ -66,7 +66,7 @@ Everything is in `index.html`. Search for these section markers:
 - List rows: vertical-dot drag handle, mono site, serif title, category as a mono chip (tap to change), status with reading time, a thumbnail when the article has an image, and remove. Opening the original moved to the reader only.
 - **Undo** after remove, clear finished and category delete: the notice sits at the bottom on every screen size, names the article, has a filled *Undo* button, and stays 8 seconds (paused while hovered or focused).
 - **Just link** (Add panel): an article with `kind:'link'`; `fetchLinkMeta()` reads `og:title`, `og:image` and `og:site_name` through the reader service and stores them on the article (`title`, `img`, `site`), so they sync with Lists online. Opening goes to the original page and marks it opened; *Read next* and the reader's next-article offer skip links. The last choice is remembered (`folio.addKind`).
-- **Remember** (reader, bottom left of text and image slides): keeps the passage as a note with no text (`like:true`); shown as *Remembered* in Notes; syncs with online lists.
+- **Remember** (reader, bookmark in the top bar on text and image slides): keeps the passage as a note with no text (`like:true`); shown as *Remembered* in Notes; syncs with online lists.
 - The L switcher also offers *Add an article to …* and, with Supabase connected, *Unlock a list…*.
 - Quoted passages (note sheet, Notes tab) sit on soft green; text fields have an ink outline; note-sheet buttons are equal width.
 - Decisions that depart from Paper: list status text is 11px, not 8px, and the site label 10px, not 9px, for legibility; the tab shows the open list's name ("Reading list" by default), so switching lists is visible on phones.
