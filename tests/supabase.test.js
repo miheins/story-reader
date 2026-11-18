@@ -83,12 +83,13 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('L does nothing without admin',$B('#listSw').hidden);
   $B('#openAdd').click();await wait(50);
   ok('B can’t add articles (button hidden by .noadmin; checked in Chromium)',$B('#addSheet').hidden&&B.document.documentElement.classList.contains('noadmin'));
+  ok('B has no category editing',B.getComputedStyle($B('#catSet')).display==='none'&&B.document.documentElement.classList.contains('noadmin'));
   ok('B can’t switch lists',[...$B('#listSel').options].filter(o=>!o.value.startsWith('__')).length===1&&B.getComputedStyle($B('#sbSet .subset')).display==='none');
   $B('#mX').click();B.localStorage.setItem('folio.view','"list"');$B('#vList').click();await wait(50);
   $B('[data-rm="a2"]').click();await wait(300);
   // B (not admin): a category change stays local without an error
   const sel=$B('[data-cat="a1"]');sel.value='';sel.dispatchEvent(new B.Event('change',{bubbles:true}));await wait(2200);
-  ok('B’s category change is not sent, no error',L.articles.find(r=>r.id==='a1').cat_name==='Branding'&&!/error/i.test($B('#sbBox')?$B('#sbBox').className:'')&&ls(B,'folio.queue').find(q=>q.id==='a1').cat==null);
+  ok('B can’t change a category',L.articles.find(r=>r.id==='a1').cat_name==='Branding'&&ls(B,'folio.queue').find(q=>q.id==='a1').cat!=null);
   ok('B can’t remove articles',ls(B,'folio.queue').some(q=>q.id==='a2')&&L.articles.length===2);
   // A (admin) removes it
   $A('#ad_a2').checked=true;$A('#adItems').dispatchEvent(new A.Event('change',{bubbles:true}));$A('#adRemove').click();await wait(2200);

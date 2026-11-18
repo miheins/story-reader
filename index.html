@@ -221,7 +221,7 @@ a.who:not([href]){cursor:default}
 .catsel.mv select{padding-left:12px;color:var(--muted)}
 .cats.lists li{grid-template-columns:1fr auto}
 .cats .cur{font:600 10.5px/1 var(--f-sans);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-text);margin-right:6px}
-.noadmin [data-rm],.noadmin #clearRead,.noadmin #adRemove,.noadmin #openAdd,.noadmin #addSheet,.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
+.noadmin [data-rm],.noadmin .catsel select,.noadmin .catsel b.none,.noadmin #clearRead,.noadmin #adRemove,.noadmin #openAdd,.noadmin #addSheet,.noadmin #listForm,.noadmin [data-ldel],.noadmin [data-ladmin],.noadmin .subset{display:none!important}
 .ro .owneronly,.ro #openAdd,.ro #links,.ro #addBtn,.ro #catForm,.ro .grip,.ro [data-rm],.ro .qcat,.ro #clearRead,.ro #listForm,.ro .fchip.manage{display:none!important}
 .obox{display:flex;flex-direction:column;gap:12px}
 .obox p{margin:0}
@@ -606,11 +606,6 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="mTitle">Menu</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="mX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="set"><span class="st-field__label">Reading</span><button type="button" class="st-btn st-btn--secondary" id="mReading" style="align-self:flex-start">Typeface, size and theme</button></div>
-    <div class="set owneronly" id="catSet"><span class="st-field__label">Categories</span>
-      <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
-      <ul class="cats" id="catList"></ul>
-      <form class="st-field catadd" id="catForm"><label class="st-field__label" for="catName">New category</label><div class="prow"><input type="text" id="catName" class="st-input" placeholder="For example, Branding" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add category</button></div></form>
-    </div>
     <div class="set" id="installSet"><span class="st-field__label">Home screen</span>
       <p id="installHow"></p>
       <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Folio to home screen</button>
@@ -620,6 +615,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <p>Each article lives in one list.</p>
         <ul class="cats lists" id="listList"></ul>
         <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
+      </div>
+      <div class="subset owneronly" id="catSet"><h3 class="st-field__label">Categories</h3>
+        <p>Assign one to each article from the dropdown on its row. Tap a colour to change it.</p>
+        <ul class="cats" id="catList"></ul>
+        <form class="st-field catadd" id="catForm"><label class="st-field__label" for="catName">New category</label><div class="prow"><input type="text" id="catName" class="st-input" placeholder="For example, Branding" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add category</button></div></form>
       </div>
     </div>
     <div class="set" id="ownerSet" hidden><span class="st-field__label">Your lists online</span><div id="ownerBox" class="obox"></div></div>
@@ -887,7 +887,7 @@ function catSelect(it,extra=''){
       ${C.length?'<option value="__manage">Edit categories…</option>':''}
     </select></label>${extra}</div>`;
 }
-$('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]');if(!sel)return;
+$('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]');if(!sel||!can('cats.edit'))return;
   const it=Q.find(q=>q.id===sel.dataset.cat);if(!it)return;
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
   const v=sel.value||null,id=it.id;edit('Set category',d=>{const a=d.articles.find(x=>x.id===id);if(a)a.cat=v});renderQ()});
@@ -913,11 +913,11 @@ function renderCats(){
     <input type="text" data-rename="${c.id}" value="${esc(c.name)}" maxlength="40" aria-label="Category name">
     <div style="display:flex;align-items:center;gap:2px"><span class="ct">${Q.filter(q=>q.cat===c.id).length}</span><button class="st-icon-btn st-icon-btn--sm" data-delcat="${c.id}" aria-label="Delete ${esc(c.name)}">${ic('close')}</button></div></li>`).join('');
 }
-$('#catForm').addEventListener('submit',e=>{e.preventDefault();const n=$('#catName').value.trim();if(!n)return;
+$('#catForm').addEventListener('submit',e=>{e.preventDefault();if(!can('cats.edit'))return;const n=$('#catName').value.trim();if(!n)return;
   if(C.some(c=>c.name.toLowerCase()===n.toLowerCase())){toast('That category already exists');return}
   const used=C.map(c=>c.c);let col=C.length%CC;for(let k=0;k<CC;k++){if(!used.includes(k)){col=k;break}}
   const nc={id:'c'+Date.now().toString(36),name:n,c:col};edit('Add category '+n,d=>{if(!d.categories.some(c=>c.id===nc.id))d.categories.push({...nc})});$('#catName').value='';renderCats();renderQ();$('#catName').focus()});
-$('#catList').addEventListener('click',e=>{
+$('#catList').addEventListener('click',e=>{if(!can('cats.edit'))return;
   const d=e.target.closest('[data-color]'),x=e.target.closest('[data-delcat]');
   if(d){const id=d.dataset.color,nv=(C.find(k=>k.id===id).c+1)%CC;edit('Recolour category',dd=>{const c=dd.categories.find(k=>k.id===id);if(c)c.c=nv});renderCats();renderQ()}
   if(x){const id=x.dataset.delcat,i=C.findIndex(k=>k.id===id),c={...C[i]},had=Q.filter(q=>q.cat===id).map(q=>q.id);
@@ -925,7 +925,7 @@ $('#catList').addEventListener('click',e=>{
     if(F===id)F=null;saveC();renderCats();renderQ();
     toast(`Deleted ${c.name}`,()=>{edit('Restore category '+c.name,dd=>{if(!dd.categories.some(k=>k.id===id))dd.categories.splice(Math.min(i,dd.categories.length),0,{...c});dd.articles.forEach(a=>{if(had.includes(a.id))a.cat=id})});renderCats();renderQ()})}
 });
-$('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rename]');if(!r)return;const c=C.find(k=>k.id===r.dataset.rename);
+$('#catList').addEventListener('change',e=>{const r=e.target.closest('[data-rename]');if(!r||!can('cats.edit'))return;const c=C.find(k=>k.id===r.dataset.rename);
   const n=r.value.trim();if(!n){r.value=c.name;return}const id=c.id;edit('Rename category',dd=>{const k=dd.categories.find(z=>z.id===id);if(k)k.name=n});renderQ()});
 $('#menuBtn').onclick=openMenu;$('#mX').onclick=closeSheets;
 $('#mReading').onclick=()=>{closeSheets();openSheet('#setSheet')};
@@ -1394,7 +1394,7 @@ function edit(msg,fn){fn({lists:LS,categories:C,articles:Q});saveQ();saveL();sav
    update or RPC with the same name and arguments; docs/supabase.md maps them.
    can() is the one permission check. Today: owner (unlocked) or device-only = may edit.
    Later: the signed-in user's role on that list, enforced again by row-level security. */
-const ADMIN_ACTS=['items.add','items.remove','list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
+const ADMIN_ACTS=['cats.edit','items.add','items.remove','list.switch','list.create','list.rename','list.delete','list.manage','items.move'];
 function can(action,listId){
   if(action==='read')return true;
   if(ADMIN_ACTS.includes(action)&&typeof SBC!=='undefined'&&SBC)return isAdmin();
