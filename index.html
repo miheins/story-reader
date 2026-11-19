@@ -343,7 +343,15 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 .nref:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .nref small{font:500 12px/16px var(--font-mono);letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted)}
 .nref q{font:italic 400 15px/1.45 var(--f-serif);color:var(--muted);quotes:"“" "”"}
-.ntext{margin:0;font:400 16px/1.5 var(--f-sans);color:var(--fg);white-space:pre-wrap;overflow-wrap:anywhere}
+.ntext{margin:0;font:400 19px/1.45 var(--f-sans);color:var(--fg);white-space:pre-wrap;overflow-wrap:anywhere}
+.ngroup .note-i + .note-i{margin-top:18px;padding-top:22px;border-top:1px solid var(--rule)}
+.nwho{font-weight:600;color:var(--text)}
+.nby{margin:0;font:600 12.5px/1 var(--f-sans);color:var(--text)}
+.st-field__label .opt{letter-spacing:.08em;color:var(--text-subtle)}
+#nOthers .note-i + .note-i{margin-top:10px}
+/* slide has a note: 3px bright green line along the top */
+:root{--note-mark:#2BD964}
+.frame.noted::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--note-mark);z-index:5;pointer-events:none}
 .nmeta{display:flex;gap:12px;align-items:center;font:500 12.5px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums}
 .nmeta button{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font:inherit}
 .ref{margin:0;display:flex;flex-direction:column;gap:2px;padding:8px;background:var(--note-bg)}
@@ -632,6 +640,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="nTitle">Note</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="nX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <figure class="ref"><figcaption id="nWhere"></figcaption><blockquote id="nRef"></blockquote></figure>
     <div class="st-field"><label class="st-field__label" for="nText">Your note</label><textarea id="nText" class="st-input st-textarea" rows="5" placeholder="What do you want to remember about this?"></textarea></div>
+    <div class="st-field"><label class="st-field__label" for="nName">Your name <span class="opt">(optional)</span></label><input type="text" id="nName" class="st-input" maxlength="40" autocomplete="name" placeholder="Shown with your note"></div>
     <div class="row eq"><button type="button" class="st-btn st-btn--primary" id="nSave">Save note</button><button type="button" class="st-btn st-btn--secondary" id="nDel" hidden>Delete note</button></div>
     <div id="nOthers"></div>
   </div>
@@ -1110,7 +1119,7 @@ function renderAdmin(){
   $('#adItemsN').textContent='· '+items.length;$('#adNotesN').textContent='· '+notes.length;
   $('#adItems').innerHTML=items.length?items.map(it=>{const c=catOf(it);return `<li><input type="checkbox" id="ad_${it.id}" data-ad="${it.id}" aria-label="Select ${esc(it.title)}"><label for="ad_${it.id}"><span class="t">${esc(it.title)}</span><span class="m">${esc([it.site,statusText(it),c&&c.name].filter(Boolean).join(' · '))}</span></label></li>`}).join('')
     :`<li class="empty-row" style="display:block;border:0">${emptyState('inbox','No articles in this list','Add links from the list itself, or move articles here from another list.')}</li>`;
-  $('#adNotes').innerHTML=notes.length?notes.sort((a,b)=>b.at-a.at).map(n=>`<div class="adnote"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)} · ${esc(clip(n.title||'',8))}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<span class="nh">${fmtWhen(n.at)}</span></div>`).join('')
+  $('#adNotes').innerHTML=notes.length?notes.sort((a,b)=>b.at-a.at).map(n=>`<div class="adnote"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)} · ${esc(clip(n.title||'',8))}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<span class="nh">${n.by?esc(n.by)+' · ':''}${fmtWhen(n.at)}</span></div>`).join('')
     :'<p class="adhint">No notes on articles in this list yet. Notes stay on the device where you wrote them.</p>';
   $('#adMoveTo').innerHTML=LS.filter(x=>x.id!==AD).map(x=>`<option value="${x.id}">${esc(x.name)} · ${Q.filter(q=>q.list===x.id).length}</option>`).join('');
   $('#adDelete').hidden=LS.length<2||!can('list.delete',AD);
@@ -1176,7 +1185,7 @@ function sbListRows(l){
   const arts=Q.filter(a=>a.url&&a.list===l.id&&!(a.eg&&a.status==='new')),ids=new Set(arts.map(a=>a.id));
   return{list:{name:l.name,slug:l.slug||'',alt:l.alt||[],intro:l.intro||''},
     articles:arts.map((a,i)=>{const c=catOf(a);return{id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',kind:a.kind==='link'?'link':'story',img:a.img||null,added:a.added||null,position:i,cat_name:c?c.name:null,cat_c:c?(c.c||0):null}}),
-    notes:N.filter(n=>ids.has(n.art)).map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',liked:!!n.like,noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))};
+    notes:N.filter(n=>ids.has(n.art)).map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',author:n.by||'',liked:!!n.like,noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))};
 }
 async function sbPushList(l){
   const cur=sbListRows(l),snap=SB_SNAP[l.rid]||{list:null,articles:[],notes:[]};
@@ -1203,7 +1212,7 @@ function sbApplyList(l,d){
     const ids=new Set(arts.map(a=>a.id)),stays=q=>q.list!==l.id||!q.url||(q.eg&&q.status==='new');
     const rest=Q.filter(q=>!ids.has(q.id)&&stays(q));Q.length=0;Q.push(...rest,...arts);
     const swap=new Set([...mine,...ids]),keep=N.filter(n=>!swap.has(n.art));
-    N.length=0;N.push(...keep,...d.notes.map(r=>({id:r.id,art:r.article_id,title:r.title,site:r.site,url:r.url,pos:r.pos,where:r.where_label,excerpt:r.excerpt,text:r.body||'',...(r.liked?{like:true}:{}),at:Number(r.noted_at)})));
+    N.length=0;N.push(...keep,...d.notes.map(r=>({id:r.id,art:r.article_id,title:r.title,site:r.site,url:r.url,pos:r.pos,where:r.where_label,excerpt:r.excerpt,text:r.body||'',...(r.author?{by:r.author}:{}),...(r.liked?{like:true}:{}),at:Number(r.noted_at)})));
     if(F&&!C.some(x=>x.id===F))F=null;
     saveQ();saveL();saveC();saveN();
   }finally{SB_APPLYING=false}
@@ -1638,7 +1647,7 @@ function renderNotes(){
     return `<section class="st-card ngroup"><div class="st-card__head nghead"><div><p class="st-card__eyebrow">${esc(h.site||'')} · ${g.length} note${g.length>1?'s':''}</p><h3 class="st-card__title">${esc(h.title)}</h3></div>
       ${h.url?`<a class="st-icon-btn st-icon-btn--sm" href="${esc(h.url)}" target="_blank" rel="noopener" aria-label="Open original">${LINK_ICON}</a>`:''}</div>
       ${g.map(n=>`<article class="note-i"><button class="nref" data-jump="${n.id}" aria-label="Open the article at this passage"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>
-        ${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<div class="nmeta"><span>${fmtWhen(n.at)}</span><button data-edit="${n.id}">${n.text?'Edit':'Add a note'}</button></div></article>`).join('')}</section>`}).join('');
+        ${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}<div class="nmeta">${n.by?`<b class="nwho">${esc(n.by)}</b>`:''}<span>${fmtWhen(n.at)}</span><button data-edit="${n.id}">${n.text?'Edit':'Add a note'}</button></div></article>`).join('')}</section>`}).join('');
 }
 $('#notesList').onclick=e=>{
   const j=e.target.closest('[data-jump]'),ed=e.target.closest('[data-edit]');
@@ -1651,7 +1660,7 @@ $('#notesList').onclick=e=>{
 function notesText(){
   const groups=new Map();[...N].sort((a,b)=>a.at-b.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
   return [...groups.values()].map(g=>{const h=g[0];g.sort((a,b)=>a.pos-b.pos);
-    return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text||'(remembered)'}\n`).join('\n')}).join('\n\n');
+    return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text||'(remembered)'}${n.by?`\n(${n.by})`:''}\n`).join('\n')}).join('\n\n');
 }
 $('#copyNotes').onclick=()=>{const t=notesText();
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(ta);ta.select();
@@ -1671,11 +1680,11 @@ function slideRef(){
 }
 function openNote(note){
   if(note){NC={note};$('#nTitle').textContent='Edit note';$('#nWhere').textContent=note.where+' · '+note.title;$('#nRef').textContent=note.excerpt;
-    $('#nText').value=note.text;$('#nDel').hidden=false;$('#nOthers').innerHTML=''}
+    $('#nText').value=note.text;$('#nName').value=note.by||'';$('#nDel').hidden=false;$('#nOthers').innerHTML=''}
   else{const ref=slideRef();NC={ctx:ref};$('#nTitle').textContent='Note';$('#nWhere').textContent=ref.where;$('#nRef').textContent=ref.excerpt;
-    $('#nText').value='';$('#nDel').hidden=true;
+    $('#nText').value='';$('#nName').value=store.get('folio.noteName','');$('#nDel').hidden=true;
     const mine=N.filter(n=>n.art===R.item.id).sort((a,b)=>a.pos-b.pos);
-    $('#nOthers').innerHTML=mine.length?`<span class="st-field__label">Your notes on this article</span>`+mine.map(n=>`<article class="note-i"><button class="nref" data-njump="${n.id}"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}</article>`).join(''):''}
+    $('#nOthers').innerHTML=mine.length?`<span class="st-field__label">Notes on this article</span>`+mine.map(n=>`<article class="note-i"><button class="nref" data-njump="${n.id}"><small>${esc(n.where)}</small><q>${esc(n.excerpt)}</q></button>${n.text?`<p class="ntext">${esc(n.text)}</p>`:'<p class="nlike">Remembered</p>'}${n.by?`<p class="nby">${esc(n.by)}</p>`:''}</article>`).join(''):''}
   openSheet('#noteSheet');
   setTimeout(()=>{try{$('#nText').focus({preventScroll:true})}catch(e){}},60);
 }
@@ -1683,23 +1692,26 @@ $('#nOthers').onclick=e=>{const j=e.target.closest('[data-njump]');if(!j)return;
 $('#noteBtn').onclick=()=>{if(R.art)openNote(null)};
 $('#nX').onclick=closeSheets;
 $('#nSave').onclick=()=>{
-  const t=$('#nText').value.trim();
-  if(NC&&NC.note){if(!t){if(NC.note.like)NC.note.text='';else N.splice(N.indexOf(NC.note),1)}else{NC.note.text=t;NC.note.at=Date.now()}}
+  const t=$('#nText').value.trim(),by=$('#nName').value.trim().slice(0,40);store.set('folio.noteName',by);
+  const sign=n=>{if(by)n.by=by;else delete n.by};
+  if(NC&&NC.note){if(!t){if(NC.note.like)NC.note.text='';else N.splice(N.indexOf(NC.note),1)}else{NC.note.text=t;NC.note.at=Date.now();sign(NC.note)}}
   else if(NC&&NC.ctx){if(!t){$('#nText').focus();return}
-    const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,at:Date.now()})}
-  saveN();closeSheets();updateNoteBadge();renderNotes();toast('Note saved');
+    const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,...(by?{by}:{}),at:Date.now()})}
+  saveN();closeSheets();updateNoteBadge();updateRemember();renderNotes();toast('Note saved');
 };
-$('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N.splice(i,1);saveN();closeSheets();renderNotes();updateNoteBadge();
-  toast('Note deleted',()=>{N.splice(i,0,n);saveN();renderNotes();updateNoteBadge()})};
+$('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N.splice(i,1);saveN();closeSheets();renderNotes();updateNoteBadge();updateRemember();
+  toast('Note deleted',()=>{N.splice(i,0,n);saveN();renderNotes();updateNoteBadge();updateRemember()})};
 /* Remember: keep a slide's passage without writing a note. Stored as a note with no text (like:true), so it shows in Notes and syncs. */
 const likeAt=pos=>R.item?N.find(n=>n.art===R.item.id&&n.like&&n.pos===pos):null;
 function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
+  /* a slide with a written note gets a green line along the top of the frame */
+  $('#frame').classList.toggle('noted',!!(cd&&R.art&&R.item&&(()=>{const p=slideRef().pos;return N.some(n=>n.art===R.item.id&&n.pos===p&&n.text)})()));
   if(!cd||!R.art||cd.k==='cover'||cd.k==='end'){b.hidden=true;return}
   const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));const t=on?'Remembered: tap to forget':'Remember this slide';b.setAttribute('aria-label',t);b.title=t}
 $('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
   if(ex){if(ex.text)delete ex.like;else N.splice(N.indexOf(ex),1)}
   else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
-    if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,at:Date.now()})}
+    if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,...(store.get('folio.noteName','')?{by:store.get('folio.noteName','')}:{}),at:Date.now()})}
   saveN();updateRemember();updateNoteBadge();renderNotes()};
 function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id&&x.text).length:0;b.hidden=!n;b.textContent=n}   /* written notes only; remembered slides show on the bookmark */
 

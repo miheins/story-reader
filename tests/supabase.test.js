@@ -97,7 +97,8 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   // a reader's note syncs without admin (fresh device holding the list key and one new note)
   const R2=device(srv,{'folio.lists':[{id:L.id,rid:L.id,name:'Sunday',slug:'sunday'}],'folio.alist':L.id,'folio.sb.keys':{[L.id]:'weekend-key-1'},
     'folio.queue':[{id:'a1',url:'https://a.com/1',title:'First',site:'a.com',status:'new',pos:-1,pct:0,list:L.id}],
-    'folio.notes':[{id:'nr',art:'a1',pos:1,where:'Paragraph 1',excerpt:'x',text:'',like:true,at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'}]}).window;await wait(500);
+    'folio.notes':[{id:'nr',art:'a1',pos:1,where:'Paragraph 1',excerpt:'x',text:'',like:true,at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'},{id:'ns',art:'a1',pos:2,where:'Paragraph 2',excerpt:'y',text:'Signed',by:'Sam',at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'}]}).window;await wait(500);
+  ok('the note’s name reaches Supabase',L.notes.some(n=>n.id==='ns'&&n.author==='Sam'));
   ok('a reader’s remembered slide reaches Supabase',L.notes.some(n=>n.id==='nr'&&n.liked),JSON.stringify(L.notes.map(n=>n.id)));
   B.document.querySelector('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);$B('#mX').click();
   ok('after sync B has the account’s category back',ls(B,'folio.queue').find(q=>q.id==='a1').cat!=null);

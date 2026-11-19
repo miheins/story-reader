@@ -28,8 +28,22 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait(100);
   ok('going back shows it remembered',$('#remBtn').getAttribute('aria-pressed')==='true');
   $('#remBtn').click();ok('tapping again forgets it',notes().length===0);
+  // note with a name; green line on the slide; name remembered for next time
+  ok('no green line before a note',!$('#frame').classList.contains('noted'));
+  $('#noteBtn').click();await wait(80);
+  ok('name field is there and optional',!!$('#nName')&&!$('#nName').required);
+  $('#nText').value='A good line';$('#nName').value='Sam';$('#nSave').click();await wait(50);
+  ok('note saved with the name',notes().some(n=>n.text==='A good line'&&n.by==='Sam'));
+  ok('green line on the slide with a note',$('#frame').classList.contains('noted'));
+  d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait(100);
+  ok('no line on the next slide',!$('#frame').classList.contains('noted'));
+  $('#noteBtn').click();await wait(80);ok('name prefilled next time',$('#nName').value==='Sam');
+  $('#nName').value='';$('#nText').value='Unsigned';$('#nSave').click();await wait(50);
+  ok('a note without a name is fine',notes().some(n=>n.text==='Unsigned'&&!n.by));
+  d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait(100);
   $('#remBtn').click();$('#close').click();await wait(200);
   $('#tabNotes').click();await wait(50);
-  ok('Notes tab lists it as Remembered',/Remembered/.test($('#notesList').textContent)&&/Add a note/.test($('#notesList').textContent));
+  ok('Notes tab shows the name',[...d.querySelectorAll('#notesList .nwho')].some(x=>x.textContent==='Sam'));
+  ok('remembered slide kept (merged with the written note on that slide)',notes().some(n=>n.like&&n.text==='A good line'));
   ok('no errors',!errs.length,JSON.stringify(errs));
   console.log(fails?fails+' failed':'all passed');process.exit(fails?1:0)})();

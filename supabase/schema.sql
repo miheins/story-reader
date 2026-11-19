@@ -70,6 +70,9 @@ create table if not exists public.folio_notes (
 );
 
 alter table public.folio_admin    enable row level security;
+-- added later: the name a reader gives with a note (optional)
+alter table public.folio_notes add column if not exists author text not null default '';
+
 alter table public.folio_lists    enable row level security;
 alter table public.folio_articles enable row level security;
 alter table public.folio_notes    enable row level security;
@@ -198,13 +201,13 @@ begin
     added = excluded.added, position = excluded.position, cat_name = excluded.cat_name, cat_c = excluded.cat_c;
 
   delete from folio_notes where list_id = l.id and id in (select jsonb_array_elements_text(coalesce(p_del_notes, '[]'::jsonb)));
-  insert into folio_notes (list_id, id, article_id, pos, where_label, excerpt, body, liked, noted_at, title, site, url)
-  select l.id, r.id, r.article_id, coalesce(r.pos, 0), coalesce(r.where_label, ''), coalesce(r.excerpt, ''), coalesce(r.body, ''), coalesce(r.liked, false), coalesce(r.noted_at, 0),
+  insert into folio_notes (list_id, id, article_id, pos, where_label, excerpt, body, author, liked, noted_at, title, site, url)
+  select l.id, r.id, r.article_id, coalesce(r.pos, 0), coalesce(r.where_label, ''), coalesce(r.excerpt, ''), coalesce(r.body, ''), left(coalesce(r.author, ''), 40), coalesce(r.liked, false), coalesce(r.noted_at, 0),
     coalesce(r.title, ''), coalesce(r.site, ''), coalesce(r.url, '')
-  from jsonb_to_recordset(coalesce(p_notes, '[]'::jsonb)) as r (id text, article_id text, pos integer, where_label text, excerpt text, body text, liked boolean, noted_at bigint, title text, site text, url text)
+  from jsonb_to_recordset(coalesce(p_notes, '[]'::jsonb)) as r (id text, article_id text, pos integer, where_label text, excerpt text, body text, author text, liked boolean, noted_at bigint, title text, site text, url text)
   where r.id is not null and r.article_id is not null
   on conflict (list_id, id) do update set article_id = excluded.article_id, pos = excluded.pos, where_label = excluded.where_label, excerpt = excluded.excerpt,
-    body = excluded.body, liked = excluded.liked, noted_at = excluded.noted_at, title = excluded.title, site = excluded.site, url = excluded.url;
+    body = excluded.body, author = excluded.author, liked = excluded.liked, noted_at = excluded.noted_at, title = excluded.title, site = excluded.site, url = excluded.url;
 
   update folio_lists set updated_at = now() where id = l.id;
 end $$;

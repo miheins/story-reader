@@ -24,7 +24,7 @@ No accounts, no email, no password sign-in. A reading list is put online once by
 
 ## What syncs
 
-**When:** a note, remembered slide or (for the admin) any list change is sent about 1.5 seconds after it's made, automatically. Other devices pick changes up when Folio starts, when you come back to it after 30 seconds away, when the device comes back online, or with **Sync now**. There's no live push between devices.
+**Names:** a note can carry the writer's name (optional, `folio_notes.author`). **When:** a note, remembered slide or (for the admin) any list change is sent about 1.5 seconds after it's made, automatically. Other devices pick changes up when Folio starts, when you come back to it after 30 seconds away, when the device comes back online, or with **Sync now**. There's no live push between devices.
 
 Per online list: its name and address, its articles (order, category, Just-link title and image) and the notes and remembered slides on them. **Reading progress stays on each device**, and so does cached article text. Lists that aren't online stay on the device.
 
