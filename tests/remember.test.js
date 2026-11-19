@@ -23,6 +23,7 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   ok('Remember shows on a text slide',!$('#remBtn').hidden&&$('#remBtn').getAttribute('aria-pressed')==='false');
   $('#remBtn').click();
   ok('slide remembered without a note',notes().length===1&&notes()[0].like===true&&notes()[0].text===''&&notes()[0].excerpt.length>10&&$('#remBtn').getAttribute('aria-pressed')==='true');
+  ok('remembered slide gets the green line',$('#frame').classList.contains('noted'));
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait(100);
   ok('next slide is not remembered',$('#remBtn').getAttribute('aria-pressed')==='false');
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait(100);
@@ -37,7 +38,7 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   ok('green line on the slide with a note',$('#frame').classList.contains('noted'));
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));await wait(100);
   ok('no line on the next slide',!$('#frame').classList.contains('noted'));
-  $('#noteBtn').click();await wait(80);ok('name prefilled next time',$('#nName').value==='Sam');
+  $('#noteFab').click();await wait(80);ok('bottom button opens the same sheet',!$('#noteSheet').hidden&&$('#noteCount2').textContent===$('#noteCount').textContent);ok('name prefilled next time',$('#nName').value==='Sam');
   $('#nName').value='';$('#nText').value='Unsigned';$('#nSave').click();await wait(50);
   ok('a note without a name is fine',notes().some(n=>n.text==='Unsigned'&&!n.by));
   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowLeft',bubbles:true}));await wait(100);
@@ -45,5 +46,10 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   $('#tabNotes').click();await wait(50);
   ok('Notes tab shows the name',[...d.querySelectorAll('#notesList .nwho')].some(x=>x.textContent==='Sam'));
   ok('remembered slide kept (merged with the written note on that slide)',notes().some(n=>n.like&&n.text==='A good line'));
+  // bottom note button + setting
+  ok('default: note button bottom right',d.documentElement.dataset.notepos==='bottom'&&!$('#stage').contains($('#noteFab')));
+  ok('setting offers top/bottom',d.querySelectorAll('#segNotePos input').length===2);
+  const top=d.querySelector('#segNotePos input[value="top"]');top.checked=true;top.onchange();
+  ok('switch to top bar',d.documentElement.dataset.notepos==='top');
   ok('no errors',!errs.length,JSON.stringify(errs));
   console.log(fails?fails+' failed':'all passed');process.exit(fails?1:0)})();

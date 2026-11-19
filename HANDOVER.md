@@ -161,3 +161,7 @@ Article ids are a hash of the URL, so the same link has the same id on every dev
 ## Resuming with Claude
 
 Start a conversation, attach or link this repository, and say: *"Read HANDOVER.md in miheins/story-reader and continue with Article Folio."* For design work, also share the Paper link above.
+
+## Note button position
+- `S.notePos`: `'bottom'` (default, green round `#noteFab` in `.frame`, outside `#stage` so it never triggers tap/swipe) or `'top'` (`#noteBtn` in the reader bar). Set via `#segNotePos`; applied as `html[data-notepos]`, CSS hides the other button. Both call `openNote(null)`; badge mirrored in `#noteCount2`.
+- Green line (`.frame.noted`) shows for written notes and remembered slides (`n.text||n.like`).

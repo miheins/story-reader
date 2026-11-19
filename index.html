@@ -351,6 +351,14 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 #nOthers .note-i + .note-i{margin-top:10px}
 /* slide has a note: 3px bright green line along the top */
 :root{--note-mark:#2BD964}
+.notefab{position:absolute;z-index:4;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:52px;height:52px;border:0;border-radius:50%;
+  display:grid;place-items:center;background:var(--note-mark);color:#0B1F10;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer}
+.notefab .st-icon{width:22px;height:22px}
+.notefab .badge{top:-2px;right:-2px;background:var(--text);color:var(--bg)}
+.notefab:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
+.notefab:active{transform:scale(.96)}
+:root[data-notepos="bottom"] #noteBtn{display:none}
+:root[data-notepos="top"] .notefab{display:none!important}
 .frame.noted::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--note-mark);z-index:5;pointer-events:none}
 .nmeta{display:flex;gap:12px;align-items:center;font:500 12.5px/1 var(--f-sans);color:var(--muted);font-variant-numeric:tabular-nums}
 .nmeta button{border:0;background:none;padding:4px 0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;font:inherit}
@@ -512,6 +520,7 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <button type="button" class="ib" id="close" aria-label="Back to queue" title="Back to queue"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       </div>
     </div>
+    <button type="button" class="notefab" id="noteFab" aria-label="Add a note to this slide" title="Add a note" hidden><svg class="st-icon" viewBox="64 64 128 128" fill="currentColor" aria-hidden="true"><path d="M178.83 93.17l-16-16a4 4 0 0 0-5.66 0l-48 48A4 4 0 0 0 108 128v16a4 4 0 0 0 4 4h16a4 4 0 0 0 2.830-1.17l48-48A4 4 0 0 0 178.83 93.17ZM126.345 140H116V129.655l32-32L158.345 108ZM164 102.345L153.655 92 160 85.655 170.345 96ZM176 128v40a8 8 0 0 1-8 8H88a8 8 0 0 1-8-8V88A8 8 0 0 1 88 80h40a4 4 0 0 1 0 8H88V168H168V128a4 4 0 0 1 8 0Z"/></svg><span class="badge" id="noteCount2" hidden></span></button>
     <div class="loading" id="loading" hidden><div><span class="st-spinner st-spinner--lg" role="status" aria-label="Loading"></span><p id="loadT">Opening</p><small id="loadS">Fetching</small></div></div>
   </div>
 </div>
@@ -536,6 +545,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <label class="st-seg__opt" title="Larger, 25 px"><input type="radio" name="size" value="3" class="st-seg__input" aria-label="Larger"><span class="szaa" style="font-size:25px">Aa</span></label>
         <label class="st-seg__opt" title="Extra large, 28 px"><input type="radio" name="size" value="4" class="st-seg__input" aria-label="Extra large"><span class="szaa" style="font-size:28px">Aa</span></label>
         <label class="st-seg__opt" title="Largest, 31 px"><input type="radio" name="size" value="5" class="st-seg__input" aria-label="Largest"><span class="szaa" style="font-size:31px">Aa</span></label>
+      </div></div>
+    <div class="set"><span class="st-field__label" id="lNotePos">Note button</span>
+      <div class="st-seg" role="radiogroup" aria-labelledby="lNotePos" id="segNotePos">
+        <label class="st-seg__opt"><input type="radio" name="notepos" value="bottom" class="st-seg__input">Bottom right</label>
+        <label class="st-seg__opt"><input type="radio" name="notepos" value="top" class="st-seg__input">Top bar</label>
       </div></div>
     <div class="set"><span class="st-field__label" id="lFit">Slide text</span>
       <div class="st-seg" role="radiogroup" aria-labelledby="lFit" id="segFit">
@@ -674,7 +688,7 @@ function slugTitle(u){try{const p=new URL(u);const seg=p.pathname.split('/').fil
 /* ---------- Settings ---------- */
 const SIZES=[16,19,22,25,28,31],SIZE_DEFAULT=2;
 const LH={serif:[1.42,1.55,1.7],sans:[1.38,1.5,1.66]};
-const S=Object.assign({face:'serif',size:SIZE_DEFAULT,lh:1,theme:'auto',auto:false,fit:'same'},store.get('folio.settings',{}));
+const S=Object.assign({face:'serif',size:SIZE_DEFAULT,lh:1,theme:'auto',auto:false,fit:'same',notePos:'bottom'},store.get('folio.settings',{}));
 /* the size scale changed (now six sizes, default the middle, 22 px): anyone who hasn't picked a size on it gets the default */
 if(S.sv!==3){if(!S.sizeSet)S.size=SIZE_DEFAULT;S.sv=3}
 S.size=Math.max(0,Math.min(SIZES.length-1,S.size|0));
@@ -687,7 +701,8 @@ function applySettings(){
   r.style.setProperty('--rs',SIZES[S.size]+'px');
   r.style.setProperty('--rl',LH[S.face][S.lh]);
   r.setAttribute('data-theme',S.theme==='auto'?(hostTheme||(MQ_DARK&&MQ_DARK.matches?'dark':'light')):S.theme);
-  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segLh',String(S.lh)],['segTheme',S.theme]])
+  document.documentElement.dataset.notepos=S.notePos==='top'?'top':'bottom';
+  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segNotePos',S.notePos],['segLh',String(S.lh)],['segTheme',S.theme]])
     document.querySelectorAll('#'+id+' input').forEach(b=>{b.checked=b.value===v;b.parentNode.classList.toggle('is-on',b.checked)});
   $('#autoSw').setAttribute('aria-checked',String(!!S.auto));
   store.set('folio.settings',S);
@@ -696,6 +711,7 @@ function setS(k,v){S[k]=v;applySettings();if(R.art)relayout()}
 document.querySelectorAll('#segFace input').forEach(b=>b.onchange=()=>setS('face',b.value));
 document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b.value));
 document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
+document.querySelectorAll('#segNotePos input').forEach(b=>b.onchange=()=>setS('notePos',b.value));
 document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
 document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>{S.sizeSet=true;setS('size',+b.value)});
@@ -1689,7 +1705,7 @@ function openNote(note){
   setTimeout(()=>{try{$('#nText').focus({preventScroll:true})}catch(e){}},60);
 }
 $('#nOthers').onclick=e=>{const j=e.target.closest('[data-njump]');if(!j)return;const n=N.find(x=>x.id===j.dataset.njump);if(!n)return;closeSheets();go(idxFor(n.pos))};
-$('#noteBtn').onclick=()=>{if(R.art)openNote(null)};
+$('#noteBtn').onclick=$('#noteFab').onclick=()=>{if(R.art)openNote(null)};
 $('#nX').onclick=closeSheets;
 $('#nSave').onclick=()=>{
   const t=$('#nText').value.trim(),by=$('#nName').value.trim().slice(0,40);store.set('folio.noteName',by);
@@ -1705,7 +1721,8 @@ $('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N
 const likeAt=pos=>R.item?N.find(n=>n.art===R.item.id&&n.like&&n.pos===pos):null;
 function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
   /* a slide with a written note gets a green line along the top of the frame */
-  $('#frame').classList.toggle('noted',!!(cd&&R.art&&R.item&&(()=>{const p=slideRef().pos;return N.some(n=>n.art===R.item.id&&n.pos===p&&n.text)})()));
+  $('#frame').classList.toggle('noted',!!(cd&&R.art&&R.item&&(()=>{const p=slideRef().pos;return N.some(n=>n.art===R.item.id&&n.pos===p&&(n.text||n.like))})()));
+  $('#noteFab').hidden=!(cd&&R.art);
   if(!cd||!R.art||cd.k==='cover'||cd.k==='end'){b.hidden=true;return}
   const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));const t=on?'Remembered: tap to forget':'Remember this slide';b.setAttribute('aria-label',t);b.title=t}
 $('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
@@ -1713,7 +1730,7 @@ $('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.po
   else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
     if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,...(store.get('folio.noteName','')?{by:store.get('folio.noteName','')}:{}),at:Date.now()})}
   saveN();updateRemember();updateNoteBadge();renderNotes()};
-function updateNoteBadge(){const b=$('#noteCount');const n=R.item?N.filter(x=>x.art===R.item.id&&x.text).length:0;b.hidden=!n;b.textContent=n}   /* written notes only; remembered slides show on the bookmark */
+function updateNoteBadge(){const n=R.item?N.filter(x=>x.art===R.item.id&&x.text).length:0;for(const b of [$('#noteCount'),$('#noteCount2')]){b.hidden=!n;b.textContent=n}}   /* written notes only; remembered slides show on the bookmark */
 
 /* ---------- Parsing ---------- */
 const IMG_RE=/!\[([^\]]*)\]\(\s*<?([^)\s>]+)>?(?:\s+"[^"]*")?\s*\)/g;
