@@ -67,7 +67,8 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
   --stagebg:#1D1C1A; --note-bg:#3A302E; --note-mark:#7E9F6E; --accent-text:#A6BE82;
 }
 .tdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
-#segScheme{margin-top:6px}
+.tseg{display:grid;grid-template-columns:repeat(3,1fr)}
+.tseg .st-seg__opt{display:flex;align-items:center;justify-content:center}
 @font-face{font-family:"Bitcount Single";src:url(styles/fonts/BitcountSingle-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
 /* every mono label: medium weight, round pixels (Paper: "Bitcount Mono Single Regular Circle") */
 .st-field__label,.lbl,.kick,.ckick,.qdom,.fchip,.catsel select,.st-badge,.ref figcaption,.nref small,.st-tabs__count,.wm-mono{font-variation-settings:"ELSH" 100}
@@ -582,15 +583,13 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <label class="st-seg__opt"><input type="radio" name="lh" value="2" class="st-seg__input">Open</label>
       </div></div>
     <div class="set"><span class="st-field__label" id="lTheme">Theme</span>
-      <div class="st-seg" role="radiogroup" aria-labelledby="lTheme" id="segTheme">
-        <label class="st-seg__opt"><input type="radio" name="theme" value="auto" class="st-seg__input">Auto</label>
-        <label class="st-seg__opt"><input type="radio" name="theme" value="light" class="st-seg__input">Light</label>
-        <label class="st-seg__opt"><input type="radio" name="theme" value="dark" class="st-seg__input">Dark</label>
-      </div>
-      <div class="st-seg" role="radiogroup" aria-label="Calmer colours" id="segScheme">
+      <div class="st-seg tseg" role="radiogroup" aria-labelledby="lTheme" id="segTheme">
+        <label class="st-seg__opt"><input type="radio" name="theme" value="auto" class="st-seg__input"><span class="tdot" style="background:linear-gradient(90deg,#FFFFFF 50%,#190E10 50%)"></span>Auto</label>
+        <label class="st-seg__opt"><input type="radio" name="theme" value="light" class="st-seg__input"><span class="tdot" style="background:#FFFFFF"></span>Light</label>
         <label class="st-seg__opt"><input type="radio" name="theme" value="sage" class="st-seg__input"><span class="tdot" style="background:#B9C1B8"></span>Sage</label>
         <label class="st-seg__opt"><input type="radio" name="theme" value="stone" class="st-seg__input"><span class="tdot" style="background:#5E5E5E"></span>Stone</label>
         <label class="st-seg__opt"><input type="radio" name="theme" value="dusk" class="st-seg__input"><span class="tdot" style="background:#2B2A27"></span>Dusk</label>
+        <label class="st-seg__opt"><input type="radio" name="theme" value="dark" class="st-seg__input"><span class="tdot" style="background:#190E10"></span>Dark</label>
       </div></div>
     <div class="st-switch-row"><button type="button" role="switch" aria-checked="false" class="st-switch" id="autoSw"><span class="st-switch__thumb"></span></button><label for="autoSw" class="st-check__label">Advance slides automatically<span class="st-check__desc">Each slide moves on after the time it takes to read it.</span></label></div>
     <p class="sample" lang="en">A comfortable page holds about sixty-five characters to the line, with enough space between lines that the eye finds the next one without searching.</p>
@@ -732,7 +731,7 @@ function applySettings(){
   const bg=getComputedStyle(r).getPropertyValue('--bg').trim();
   if(bg&&!bg.startsWith('var('))document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content=bg);
   document.documentElement.dataset.notepos=S.notePos==='top'?'top':'bottom';
-  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segNotePos',S.notePos],['segLh',String(S.lh)],['segTheme',S.theme],['segScheme',S.theme]])
+  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segNotePos',S.notePos],['segLh',String(S.lh)],['segTheme',S.theme]])
     document.querySelectorAll('#'+id+' input').forEach(b=>{b.checked=b.value===v;b.parentNode.classList.toggle('is-on',b.checked)});
   $('#autoSw').setAttribute('aria-checked',String(!!S.auto));
   store.set('folio.settings',S);
@@ -742,7 +741,7 @@ document.querySelectorAll('#segFace input').forEach(b=>b.onchange=()=>setS('face
 document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b.value));
 document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
 document.querySelectorAll('#segNotePos input').forEach(b=>b.onchange=()=>setS('notePos',b.value));
-document.querySelectorAll('#segTheme input,#segScheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
+document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
 document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>{S.sizeSet=true;setS('size',+b.value)});
 
