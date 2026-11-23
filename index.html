@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="styles/product-starter/bundle.css">
 <script>/* set the theme before first paint (Product Starter switches on data-theme) */
 (function(){var t='auto';try{t=(JSON.parse(localStorage.getItem('folio.settings')||'{}').theme)||'auto'}catch(e){}
+var sc={sage:'light',stone:'dark',dusk:'dark'};if(sc[t]){document.documentElement.setAttribute('data-scheme',t);t=sc[t]}
 if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.setAttribute('data-theme',t)})();</script>
 </head><body>
 <title>Folio</title>
@@ -49,6 +50,24 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
   --stagebg:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 :root[data-face="sans"]{--rf:var(--f-sans)}
+/* calmer schemes: a soft sage paper, a mid stone grey and a warm dusk; each sits on top of light or dark */
+:root[data-scheme="sage"]{
+  --bg:#B9C1B8; --surface:#C7CEC5; --surface-sunken:#ACB4AB; --text:#262A25; --text-muted:#454C44; --text-subtle:#555C54;
+  --border:#A2AAA1; --border-strong:#6E776D; --primary:#262A25; --primary-hover:#3A4039; --on-primary:#C7CEC5;
+  --stagebg:#A3ABA2; --note-bg:#A7BBA3; --note-mark:#4F8A4B; --accent-text:#2C4A0A;
+}
+:root[data-scheme="stone"]{
+  --bg:#5E5E5E; --surface:#6A6A6A; --surface-sunken:#525252; --text:#E4E5E4; --text-muted:#D2D3D2; --text-subtle:#C4C5C4;
+  --border:#767676; --border-strong:#A0A0A0; --primary:#E4E5E4; --primary-hover:#CFCFCF; --on-primary:#3C3C3C;
+  --stagebg:#474747; --note-bg:#6E6464; --note-mark:#8DBE84; --accent-text:#C6DFA0; --oncat:#111214;
+}
+:root[data-scheme="dusk"]{
+  --bg:#2B2A27; --surface:#353330; --surface-sunken:#232220; --text:#C9C2BC; --text-muted:#A9A29C; --text-subtle:#958E88;
+  --border:#413E3A; --border-strong:#716B65; --primary:#C9C2BC; --primary-hover:#B3ACA6; --on-primary:#2B2A27;
+  --stagebg:#1D1C1A; --note-bg:#3A302E; --note-mark:#7E9F6E; --accent-text:#A6BE82;
+}
+.tdot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+#segScheme{margin-top:6px}
 @font-face{font-family:"Bitcount Single";src:url(styles/fonts/BitcountSingle-latin.woff2) format("woff2");font-weight:100 900;font-display:swap}
 /* every mono label: medium weight, round pixels (Paper: "Bitcount Mono Single Regular Circle") */
 .st-field__label,.lbl,.kick,.ckick,.qdom,.fchip,.catsel select,.st-badge,.ref figcaption,.nref small,.st-tabs__count,.wm-mono{font-variation-settings:"ELSH" 100}
@@ -567,6 +586,11 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
         <label class="st-seg__opt"><input type="radio" name="theme" value="auto" class="st-seg__input">Auto</label>
         <label class="st-seg__opt"><input type="radio" name="theme" value="light" class="st-seg__input">Light</label>
         <label class="st-seg__opt"><input type="radio" name="theme" value="dark" class="st-seg__input">Dark</label>
+      </div>
+      <div class="st-seg" role="radiogroup" aria-label="Calmer colours" id="segScheme">
+        <label class="st-seg__opt"><input type="radio" name="theme" value="sage" class="st-seg__input"><span class="tdot" style="background:#B9C1B8"></span>Sage</label>
+        <label class="st-seg__opt"><input type="radio" name="theme" value="stone" class="st-seg__input"><span class="tdot" style="background:#5E5E5E"></span>Stone</label>
+        <label class="st-seg__opt"><input type="radio" name="theme" value="dusk" class="st-seg__input"><span class="tdot" style="background:#2B2A27"></span>Dusk</label>
       </div></div>
     <div class="st-switch-row"><button type="button" role="switch" aria-checked="false" class="st-switch" id="autoSw"><span class="st-switch__thumb"></span></button><label for="autoSw" class="st-check__label">Advance slides automatically<span class="st-check__desc">Each slide moves on after the time it takes to read it.</span></label></div>
     <p class="sample" lang="en">A comfortable page holds about sixty-five characters to the line, with enough space between lines that the eye finds the next one without searching.</p>
@@ -695,14 +719,20 @@ S.size=Math.max(0,Math.min(SIZES.length-1,S.size|0));
 const hostTheme=document.documentElement.getAttribute('data-theme');
 const MQ_DARK=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
 try{MQ_DARK&&MQ_DARK.addEventListener&&MQ_DARK.addEventListener('change',()=>{if(S.theme==='auto')applySettings()})}catch(e){}
+const SCHEMES={sage:'light',stone:'dark',dusk:'dark'};
 function applySettings(){
   const r=document.documentElement;
   r.setAttribute('data-face',S.face);
   r.style.setProperty('--rs',SIZES[S.size]+'px');
   r.style.setProperty('--rl',LH[S.face][S.lh]);
-  r.setAttribute('data-theme',S.theme==='auto'?(hostTheme||(MQ_DARK&&MQ_DARK.matches?'dark':'light')):S.theme);
+  const sc=SCHEMES[S.theme];
+  if(sc)r.setAttribute('data-scheme',S.theme);else r.removeAttribute('data-scheme');
+  r.setAttribute('data-theme',sc||(S.theme==='auto'?(MQ_DARK?(MQ_DARK.matches?'dark':'light'):(hostTheme||'light')):S.theme));
+  /* phone status bar follows the page */
+  const bg=getComputedStyle(r).getPropertyValue('--bg').trim();
+  if(bg&&!bg.startsWith('var('))document.querySelectorAll('meta[name=theme-color]').forEach(m=>m.content=bg);
   document.documentElement.dataset.notepos=S.notePos==='top'?'top':'bottom';
-  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segNotePos',S.notePos],['segLh',String(S.lh)],['segTheme',S.theme]])
+  for(const[id,v]of[['segFace',S.face],['segSize',String(S.size)],['segFit',S.fit],['segNotePos',S.notePos],['segLh',String(S.lh)],['segTheme',S.theme],['segScheme',S.theme]])
     document.querySelectorAll('#'+id+' input').forEach(b=>{b.checked=b.value===v;b.parentNode.classList.toggle('is-on',b.checked)});
   $('#autoSw').setAttribute('aria-checked',String(!!S.auto));
   store.set('folio.settings',S);
@@ -712,7 +742,7 @@ document.querySelectorAll('#segFace input').forEach(b=>b.onchange=()=>setS('face
 document.querySelectorAll('#segLh input').forEach(b=>b.onchange=()=>setS('lh',+b.value));
 document.querySelectorAll('#segFit input').forEach(b=>b.onchange=()=>setS('fit',b.value));
 document.querySelectorAll('#segNotePos input').forEach(b=>b.onchange=()=>setS('notePos',b.value));
-document.querySelectorAll('#segTheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
+document.querySelectorAll('#segTheme input,#segScheme input').forEach(b=>b.onchange=()=>setS('theme',b.value));
 $('#autoSw').onclick=()=>{S.auto=!S.auto;applySettings();if(R.art)restartTimer()};
 document.querySelectorAll('#segSize input').forEach(b=>b.onchange=()=>{S.sizeSet=true;setS('size',+b.value)});
 

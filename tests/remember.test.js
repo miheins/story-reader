@@ -51,5 +51,11 @@ let fails=0;const ok=(name,cond,extra='')=>{if(!cond)fails++;console.log((cond?'
   ok('setting offers top/bottom',d.querySelectorAll('#segNotePos input').length===2);
   const top=d.querySelector('#segNotePos input[value="top"]');top.checked=true;top.onchange();
   ok('switch to top bar',d.documentElement.dataset.notepos==='top');
+  const sage=d.querySelector('#segScheme input[value="sage"]');sage.checked=true;sage.onchange();
+  ok('Sage scheme on light base',d.documentElement.dataset.scheme==='sage'&&d.documentElement.dataset.theme==='light');
+  const dusk=d.querySelector('#segScheme input[value="dusk"]');dusk.checked=true;dusk.onchange();
+  ok('Dusk scheme on dark base',d.documentElement.dataset.scheme==='dusk'&&d.documentElement.dataset.theme==='dark');
+  const lt=d.querySelector('#segTheme input[value="light"]');lt.checked=true;lt.onchange();
+  ok('plain Light clears the scheme',!d.documentElement.dataset.scheme&&d.documentElement.dataset.theme==='light');
   ok('no errors',!errs.length,JSON.stringify(errs));
   console.log(fails?fails+' failed':'all passed');process.exit(fails?1:0)})();
