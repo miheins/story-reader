@@ -34,7 +34,7 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
   --bg:#FFFFFF; --radius-sm:2px;
   --accent:#304F0C; --on-accent:#FFFFFF; --accent-text:#304F0C;
   --card:var(--text); --on-card:var(--bg);
-  --oncat:#FFFFFF; --c1:#2747C4; --c2:#554A48; --c3:#15803D; --c4:#9333EA; --c5:#B45309; --c6:#0E7490;
+  --oncat:#FFFFFF; --c1:#CE3F49; --c2:#B58954; --c3:#7FC496; --c4:#A86E9D; --c5:#F9DA48; --c6:#ABDBDD; --c7:#193371;
   --cover-bg:var(--accent); --cover-fg:var(--on-accent); --tint:color-mix(in srgb,var(--accent) 6%,var(--surface));
   --stagebg:var(--neutral-150); --scrim:rgba(19,9,11,.48);
   --f-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
@@ -47,7 +47,6 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
 }
 :root[data-theme="dark"]{
   --bg:var(--neutral-950); --accent-text:#8FB860; --oncat:#111214; --note-bg:#362a2a;
-  --c1:#98AAFF; --c2:#BEBAB4; --c3:#4ADE80; --c4:#C084FC; --c5:#FBBF24; --c6:#22D3EE;
   --stagebg:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 :root[data-face="sans"]{--rf:var(--f-sans)}
@@ -281,7 +280,7 @@ a.who:not([href]){cursor:default}
 :root[data-face="sans"] .cdek{font-family:var(--f-sans);font-size:15px}
 .cfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 13px/1.3 var(--f-sans);font-variant-numeric:tabular-nums}
 .cfoot > span:first-child{opacity:.85}
-.ccat{flex:none;padding:3px 6px 1px;border-radius:var(--radius-sm);background:var(--cc);color:var(--oncat);font:500 10px/12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;font-variation-settings:"ELSH" 100}
+.ccat{flex:none;padding:3px 6px 1px;border-radius:var(--radius-sm);background:var(--cc);color:var(--cco,var(--oncat));font:500 10px/12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;font-variation-settings:"ELSH" 100}
 .cprog{position:absolute;left:0;bottom:0;height:4px;background:currentColor;opacity:.9;z-index:1}
 .card2.done .ctl,.card2.done .cdek{opacity:.6}
 .deckbar{display:flex;align-items:center;justify-content:space-between;gap:18px}
@@ -305,7 +304,7 @@ a.who:not([href]){cursor:default}
 .queue li .qcat{display:flex}
 .catsel{position:relative;display:inline-flex;align-items:center}
 .catsel i{display:none}
-.catsel b{display:block;border-radius:var(--radius-sm);background:var(--cc,transparent);color:var(--oncat);font:500 10px/12px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.07em;text-transform:uppercase;padding:3px 6px 1px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.catsel b{display:block;border-radius:var(--radius-sm);background:var(--cc,transparent);color:var(--cco,var(--oncat));font:500 10px/12px var(--font-mono);font-variation-settings:"ELSH" 100;letter-spacing:.07em;text-transform:uppercase;padding:3px 6px 1px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
 .catsel b.none{background:transparent;color:var(--text-muted);box-shadow:inset 0 0 0 1px var(--border)}
 .catsel select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
 .catsel:focus-within b{outline:2px solid var(--focus);outline-offset:2px}
@@ -820,7 +819,7 @@ function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmi
   const ul=$('#queue');const nx=nextUnread(null);
   const VQ=Q.filter(inList);renderListSel();
   if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet',(can('items.add')?'Tap Add new item below and it lands here.':'Articles appear here once they’re added.'))}</li>`;}
-  else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c):''}">
+  else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c)+';--cco:'+cco(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
     <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span></button>
     <div class="qmeta">${catSelect(it)}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:`<span class="qst">${statusText(it)}</span>`}</div></div>
@@ -919,11 +918,14 @@ function toast(msg,undo,commit,tone){
 
 const LINK_ICON=ic('external');
 /* ---------- Categories ---------- */
-const CC=6;
+const CC=7;
+/* text on each tag colour: white on red and navy, ink on the light ones (all ≥4.7:1) */
+const CC_ON=['#FFFFFF','#190E10','#190E10','#190E10','#190E10','#190E10','#FFFFFF'];
 let C=store.get('folio.cats',[]);let F=store.get('folio.filter',null);
 const saveC=()=>{store.set('folio.cats',C);store.set('folio.filter',F);sbTouch()};
 const catOf=it=>C.find(c=>c.id===it.cat)||null;
 const ccv=c=>c?`var(--c${c.c+1})`:'';
+const cco=c=>c?CC_ON[c.c%CC]:'';
 function renderFilters(){
   const box=$('#filters');if(F&&!C.some(c=>c.id===F))F=null;
   if(!C.length){box.innerHTML='';$('#queue').classList.remove('filtering');return}
@@ -936,7 +938,7 @@ $('#filters').onclick=e=>{const b=e.target.closest('[data-f]');if(!b)return;
   F=b.dataset.f||null;saveC();renderQ()};
 function catSelect(it,extra=''){
   const c=catOf(it);
-  return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c):''}"><b class="${c?'':'none'}" aria-hidden="true">${c?esc(c.name):'+ Category'}</b>
+  return `<div class="qcat"><label class="catsel" style="${c?'--cc:'+ccv(c)+';--cco:'+cco(c):''}"><b class="${c?'':'none'}" aria-hidden="true">${c?esc(c.name):'+ Category'}</b>
     <select data-cat="${it.id}" class="${c?'':'none'}" aria-label="Category for ${esc(it.title)}">
       <option value="">${C.length?'+ Category':'+ Category'}</option>
       ${C.map(k=>`<option value="${k.id}"${it.cat===k.id?' selected':''}>${esc(k.name)}</option>`).join('')}
@@ -999,7 +1001,7 @@ function cardFor(it,k,nx){
   let blurb=a&&a.dek?a.dek:'';
   if(!blurb&&a&&a.blocks){const p=a.blocks.find(b=>b.t==='p'&&words(b.html)>12);if(p)blurb=clip(strip(p.html),40)}
   const st=isLink(it)?(it.status==='read'?'Link · opened':'Link'):needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
-  return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. ${isLink(it)?'Opens the original page':'Tap to read'}.">
+  return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c)+';--cco:'+cco(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. ${isLink(it)?'Opens the original page':'Tap to read'}.">
     ${hero?`<img class="cbg" src="${esc(hero)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('img');this.remove()">`:''}
     <div class="ctop"><span class="ckick">${esc(it.site||'')}</span></div>
     <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek">${esc(blurb)}</p>`:''}</div>
