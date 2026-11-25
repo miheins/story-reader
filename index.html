@@ -1094,7 +1094,7 @@ function renderListSel(){
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
-  if(tab==='notes')showTab('queue');renderQ();if(changed)toast('Opened '+listName(id))}
+  if(tab==='notes')showTab('queue');renderQ();renderNotes();if(changed)toast('Opened '+listName(id))}
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
   if(v==='__add'&&can('items.add')){renderListSel();$('#openAdd').click();return}
   if(v==='__unlock'){renderListSel();openUnlock('');return}
@@ -1469,7 +1469,7 @@ const Repo={
   lists:()=>LS.map(l=>({id:l.id,name:l.name,slug:l.slug,count:Q.filter(q=>q.list===l.id).length})),
   list:id=>LS.find(l=>l.id===id)||null,
   items:id=>Q.filter(q=>q.list===id),
-  notes:id=>{const ids=new Set(Q.filter(q=>q.list===id).map(q=>q.id));return N.filter(n=>ids.has(n.art))},
+  notes:id=>N.filter(n=>noteList(n)===id),
   setIntro(id,text){
     if(!can('list.rename',id))return{ok:false,error:'Only the admin can change the intro'};
     text=String(text||'').replace(/\r/g,'').replace(/\n{3,}/g,'\n\n').trim().slice(0,600);
@@ -1702,11 +1702,13 @@ function showTab(t){tab=t;store.set('folio.tab',t);
   $('#viewQueue').hidden=t!=='queue';$('#viewNotes').hidden=t!=='notes';if(t==='notes')renderNotes()}
 $('#tabQueue').onclick=()=>showTab('queue');$('#tabNotes').onclick=()=>showTab('notes');
 $('#tabQueue').onkeydown=$('#tabNotes').onkeydown=e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();const n=tab==='queue'?'notes':'queue';showTab(n);$(n==='queue'?'#tabQueue':'#tabNotes').focus()}};
-function renderNotes(){
+/* notes belong to one reading list: the list of the article they sit on (a copy in another list has its own notes) */
+function noteList(n){const it=Q.find(q=>q.id===n.art);return it?it.list:(n.list&&LS.some(l=>l.id===n.list)?n.list:(LS[0]&&LS[0].id))}
+function renderNotes(){const N=Repo.notes(AL);
   $('#noteTotal').textContent=N.length||'';
   if($('#viewNotes').hidden)return;
   const box=$('#notesList');
-  if(!N.length){box.innerHTML=emptyState('edit','No notes yet','While reading, tap the pencil in the top bar to note something on the slide you’re on. Every note appears here with the passage it belongs to.');$('#copyNotes').hidden=true;return}
+  if(!N.length){box.innerHTML=emptyState('edit',LS.length>1?`No notes in ${esc(listName(AL))} yet`:'No notes yet','While reading, tap the note button to note something on the slide you’re on. Notes on articles in this list appear here with the passage they belong to.');$('#copyNotes').hidden=true;return}
   $('#copyNotes').hidden=false;
   const groups=new Map();
   [...N].sort((a,b)=>b.at-a.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
@@ -1724,7 +1726,7 @@ $('#notesList').onclick=e=>{
     if(it)openItem(it,{pos:n.pos})}
   if(ed){const n=N.find(x=>x.id===ed.dataset.edit);if(n)openNote(n)}
 };
-function notesText(){
+function notesText(){const N=Repo.notes(AL);
   const groups=new Map();[...N].sort((a,b)=>a.at-b.at).forEach(n=>{if(!groups.has(n.art))groups.set(n.art,[]);groups.get(n.art).push(n)});
   return [...groups.values()].map(g=>{const h=g[0];g.sort((a,b)=>a.pos-b.pos);
     return `## ${h.title}${h.site?' · '+h.site:''}\n${h.url||''}\n\n`+g.map(n=>`> ${n.excerpt}\n> (${n.where})\n\n${n.text||'(remembered)'}${n.by?`\n(${n.by})`:''}\n`).join('\n')}).join('\n\n');
@@ -1732,7 +1734,7 @@ function notesText(){
 $('#copyNotes').onclick=()=>{const t=notesText();
   const fallback=()=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.append(ta);ta.select();
     let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();toast(ok?'Notes copied':'Copying is blocked here. Select the notes and copy them by hand.')};
-  try{navigator.clipboard.writeText(t).then(()=>toast(`Copied ${N.length} note${N.length>1?'s':''}`),fallback)}catch(e){fallback()}};
+  try{navigator.clipboard.writeText(t).then(()=>toast(`Copied ${Repo.notes(AL).length} note${Repo.notes(AL).length>1?'s':''}`),fallback)}catch(e){fallback()}};
 
 /* note sheet */
 let NC=null; // {note} when editing, or {ctx} when adding
@@ -1763,7 +1765,7 @@ $('#nSave').onclick=()=>{
   const sign=n=>{if(by)n.by=by;else delete n.by};
   if(NC&&NC.note){if(!t){if(NC.note.like)NC.note.text='';else N.splice(N.indexOf(NC.note),1)}else{NC.note.text=t;NC.note.at=Date.now();sign(NC.note)}}
   else if(NC&&NC.ctx){if(!t){$('#nText').focus();return}
-    const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,...(by?{by}:{}),at:Date.now()})}
+    const a=R.art,it=R.item;N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:it.id,list:it.list,title:a.title,site:a.site,url:a.url,...NC.ctx,text:t,...(by?{by}:{}),at:Date.now()})}
   saveN();closeSheets();updateNoteBadge();updateRemember();renderNotes();toast('Note saved');
 };
 $('#nDel').onclick=()=>{if(!NC||!NC.note)return;const n=NC.note,i=N.indexOf(n);N.splice(i,1);saveN();closeSheets();renderNotes();updateNoteBadge();updateRemember();
@@ -1779,7 +1781,7 @@ function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
 $('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
   if(ex){if(ex.text)delete ex.like;else N.splice(N.indexOf(ex),1)}
   else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
-    if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,...(store.get('folio.noteName','')?{by:store.get('folio.noteName','')}:{}),at:Date.now()})}
+    if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,list:R.item.list,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,...(store.get('folio.noteName','')?{by:store.get('folio.noteName','')}:{}),at:Date.now()})}
   saveN();updateRemember();updateNoteBadge();renderNotes()};
 function updateNoteBadge(){const n=R.item?N.filter(x=>x.art===R.item.id&&x.text).length:0;for(const b of [$('#noteCount'),$('#noteCount2')]){b.hidden=!n;b.textContent=n}}   /* written notes only; remembered slides show on the bookmark */
 

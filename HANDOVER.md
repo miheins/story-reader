@@ -170,3 +170,4 @@ Start a conversation, attach or link this repository, and say: *"Read HANDOVER.m
 - An article can sit in several lists as independent copies (own progress, own notes). Admin → Manage list → "Move or copy to" → Copy. Adding a link that already lives in another list adds a copy to the current list; adding it twice to the same list is refused.
 - Ids: the first copy keeps `hash(url)`, copies get `hash(url + '|' + listId)` (`idFor`). Supabase needs no change: `folio_articles` is keyed by (list_id, id).
 - `Repo.copyItems(ids, to)` skips articles whose URL is already in the target list, copies the cached text, returns an undo.
+- Notes belong to one list: `noteList(n)` = the list of the article the note sits on, else `n.list` (stamped on new notes), else the first list. The Notes tab, its count and "Copy all as text" show only the open list's notes; switching lists re-renders them.
