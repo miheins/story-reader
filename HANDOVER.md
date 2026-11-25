@@ -165,3 +165,8 @@ Start a conversation, attach or link this repository, and say: *"Read HANDOVER.m
 ## Note button position
 - `S.notePos`: `'bottom'` (default, green round `#noteFab` in `.frame`, outside `#stage` so it never triggers tap/swipe) or `'top'` (`#noteBtn` in the reader bar). Set via `#segNotePos`; applied as `html[data-notepos]`, CSS hides the other button. Both call `openNote(null)`; badge mirrored in `#noteCount2`.
 - Green line (`.frame.noted`) shows for written notes and remembered slides (`n.text||n.like`).
+
+## Same article in several lists (copies)
+- An article can sit in several lists as independent copies (own progress, own notes). Admin → Manage list → "Move or copy to" → Copy. Adding a link that already lives in another list adds a copy to the current list; adding it twice to the same list is refused.
+- Ids: the first copy keeps `hash(url)`, copies get `hash(url + '|' + listId)` (`idFor`). Supabase needs no change: `folio_articles` is keyed by (list_id, id).
+- `Repo.copyItems(ids, to)` skips articles whose URL is already in the target list, copies the cached text, returns an undo.

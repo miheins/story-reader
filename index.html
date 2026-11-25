@@ -252,6 +252,7 @@ a.who:not([href]){cursor:default}
 .osteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font:500 14px/1.45 var(--f-sans);color:var(--fg)}
 .osteps a,.obox a{color:var(--accent-text)}
 .prow{display:flex;gap:8px}.prow input{flex:1;min-width:0}
+.mvrow{flex-wrap:wrap}.mvrow .st-select{flex:1 1 100%}.mvrow .st-btn{flex:1}
 .obox .ohint{font-size:13px}
 .stackv{display:flex;flex-direction:column;gap:14px}
 .deck{position:relative;height:clamp(300px,42vh,400px);margin-top:24px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
@@ -512,10 +513,10 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
     </section>
 
     <section class="adsec" aria-labelledby="adMoveL">
-      <h3 class="st-field__label" id="adMoveL">Move to</h3>
+      <h3 class="st-field__label" id="adMoveL">Move or copy to</h3>
       <p class="adhint" id="adMoveHint"></p>
-      <div class="prow"><div class="st-select"><select id="adMoveTo" class="st-input st-select__el" aria-labelledby="adMoveL"></select><svg class="st-icon st-select__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
-        <button type="button" class="st-btn st-btn--primary" id="adMove">Move</button></div>
+      <div class="prow mvrow"><div class="st-select"><select id="adMoveTo" class="st-input st-select__el" aria-labelledby="adMoveL"></select><svg class="st-icon st-select__chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></div>
+        <button type="button" class="st-btn st-btn--secondary" id="adCopyTo">Copy</button><button type="button" class="st-btn st-btn--primary" id="adMove">Move</button></div>
       <button type="button" class="linkbtn addanger" id="adRemove">Remove selected items</button>
       <button type="button" class="linkbtn addanger" id="adDelete">Delete this list</button>
     </section>
@@ -768,6 +769,8 @@ const EXAMPLES=['https://www.itsnicethat.com/features/ffern-film-spotlight-23032
 let Q=store.get('folio.queue',null);
 if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(u=>({...mkItem(u),eg:true}))];}   /* eg: starter examples; they don't sync to Supabase until opened */
 {const sm=Q.find(q=>q.id==='sample');if(sm)sm.title=SAMPLE.title}
+/* one URL can sit in several lists as independent copies: the first keeps hash(url), copies get hash(url|list) */
+const idFor=(u,lid)=>Q.some(q=>q.id===hash(u)&&q.list!==lid)?hash(u+'|'+lid):hash(u);
 function mkItem(u,kind){const it={id:hash(u),url:u,title:slugTitle(u),site:host(u),status:'new',pos:-1,pct:0,list:typeof AL!=='undefined'?AL:'main'};if(kind==='link')it.kind='link';return it}
 /* "Just link" items: title and image from the page's Open Graph tags; tapping opens the original page */
 const isLink=it=>!!it&&it.kind==='link';
@@ -879,12 +882,12 @@ function addLinks(){
   if(!can('items.add')){toast('Only the admin can add articles',null,null,'info');return}
   const kind=addKind();
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
-  let elsewhere=null;const add=[];for(const u of urls){const ex=Q.find(q=>q.url===u);if(!ex){if(!add.some(a=>a.url===u))add.push(mkItem(u,kind))}else if(ex.list!==AL)elsewhere=ex.list}
+  const add=[];for(const u of urls){if(!Q.some(q=>q.url===u&&q.list===AL)&&!add.some(a=>a.url===u)){const it=mkItem(u,kind);it.id=idFor(u,AL);add.push(it)}}
   const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10);add.forEach(a=>{a.list=lid;a.added=day});
   if(n)edit(`Add ${n} link${n>1?'s':''} to ${listName(lid)}`,d=>add.forEach(a=>{if(!d.articles.some(x=>x.id===a.id))d.articles.push({...a})}));
   $('#links').value='';saveQ();renderQ();if(n&&!$('#addSheet').hidden)closeSheets();
   if(kind==='link')add.forEach(a=>fetchLinkMeta(Q.find(q=>q.id===a.id)));
-  if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:elsewhere?`Already in ${listName(elsewhere)}`:'Already in this list');
+  if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:'Already in this list');
   else toast('No links found in that text');
   return n;
 }
@@ -897,7 +900,7 @@ function syncKind(){const link=addKind()==='link';
 $('#segKind').addEventListener('change',syncKind);
 if(store.get('folio.addKind','story')==='link')$('#kLink').checked=true;syncKind();
 $('#readNext').onclick=()=>{const first=($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/)||[''])[0].replace(/[),.;]+$/,'');
-  if(first)addLinks();const it=(first&&Q.find(q=>q.url===first))||nextUnread(null);if(it)openItem(it)};
+  if(first)addLinks();const it=(first&&Q.find(q=>q.url===first&&q.list===AL))||nextUnread(null);if(it)openItem(it)};
 $('#openAdd').onclick=()=>{if(!can('items.add'))return;renderMode();openSheet('#addSheet');setTimeout(()=>$('#links').focus(),50)};
 $('#aX').onclick=closeSheets;
 $('#clearRead').onclick=()=>{if(!can('items.remove'))return;const gone=Q.filter(q=>q.status==='read'&&inList(q)),ids=gone.map(g=>g.id);
@@ -1152,9 +1155,9 @@ const adSel=()=>[...$('#adItems').querySelectorAll('input[data-ad]:checked')].ma
 function adSync(){
   const all=[...$('#adItems').querySelectorAll('input[data-ad]')],n=adSel().length,others=LS.filter(l=>l.id!==AD);
   $('#adAll').checked=!!all.length&&n===all.length;$('#adAll').indeterminate=n>0&&n<all.length;
-  $('#adMoveHint').textContent=!others.length?'Create a second list in the menu to move articles between lists.'
-    :n?`Move ${n} selected article${n>1?'s':''} to another list.`:`Select articles above, or move all ${all.length}.`;
-  $('#adMove').textContent=n?`Move ${n}`:'Move all';$('#adMove').disabled=!others.length||!all.length;
+  $('#adMoveHint').textContent=!others.length?'Create a second list in the menu to move or copy articles between lists.'
+    :n?`Move or copy ${n} selected article${n>1?'s':''}. A copy is independent: its own progress and notes.`:`Select articles above, or move or copy all ${all.length}. A copy is independent: its own progress and notes.`;
+  $('#adMove').textContent=n?`Move ${n}`:'Move all';$('#adMove').disabled=$('#adCopyTo').disabled=!others.length||!all.length;$('#adCopyTo').textContent=n?`Copy ${n}`:'Copy all';
   $('#adRemove').disabled=!n;$('#adRemove').textContent=n?`Remove ${n} selected`:'Remove selected items';
 }
 function renderAdmin(){
@@ -1186,6 +1189,10 @@ $('#adCopy').onclick=()=>{const url=location.origin+location.pathname+listHash(A
 $('#adMove').onclick=()=>{const to=$('#adMoveTo').value,sel=adSel(),ids=sel.length?sel:Repo.items(AD).map(i=>i.id);
   const r=Repo.moveItems(ids,to);if(!r.ok){toast(r.error,null,null,'info');return}
   renderAdmin();toast(`Moved ${r.n} to ${listName(to)}`,()=>{r.undo();renderAdmin()})};
+$('#adCopyTo').onclick=()=>{const to=$('#adMoveTo').value,sel=adSel(),ids=sel.length?sel:Repo.items(AD).map(i=>i.id);
+  const r=Repo.copyItems(ids,to);if(!r.ok){toast(r.error,null,null,'info');return}
+  renderAdmin();if(!r.n){toast(`Already in ${listName(to)}`,null,null,'info');return}
+  toast(`Copied ${r.n} to ${listName(to)}`+(r.skip?` · ${r.skip} already there`:''),()=>{r.undo();renderAdmin()})};
 $('#adRemove').onclick=()=>{const r=Repo.removeItems(adSel());if(!r.ok){toast(r.error,null,null,'info');return}
   renderAdmin();toast(`Removed ${r.n}`,()=>{r.undo();renderAdmin()},r.commit)};
 $('#adDelete').onclick=()=>{
@@ -1485,6 +1492,18 @@ const Repo={
     if(!n)return{ok:false,error:'Select at least one article'};
     edit(`Move ${n} to ${listName(to)}`,d=>d.articles.forEach(a=>{if(ids.includes(a.id))a.list=to}));
     return{ok:true,n,undo:()=>edit('Undo move',d=>d.articles.forEach(a=>{if(from[a.id])a.list=from[a.id]}))};
+  },
+  copyItems(ids,to){
+    if(!can('items.move',to))return{ok:false,error:'Only the owner can copy articles'};
+    if(!Repo.list(to))return{ok:false,error:'Choose a list to copy to'};
+    const src=Q.filter(q=>ids.includes(q.id));if(!src.length)return{ok:false,error:'Select at least one article'};
+    const day=new Date().toISOString().slice(0,10),made=[];let skip=0;
+    for(const it of src){if(Q.some(q=>q.url===it.url&&q.list===to)){skip++;continue}
+      const c={...it,id:idFor(it.url,to),list:to,status:'new',pos:-1,pct:0,added:day};delete c.ord;made.push(c)}
+    if(made.length)edit(`Copy ${made.length} to ${listName(to)}`,d=>made.forEach(c=>{if(!d.articles.some(a=>a.id===c.id))d.articles.push({...c})}));
+    made.forEach((c,i)=>{const from=src.find(x=>x.url===c.url),cache=from&&store.get('folio.c.'+from.id,null);if(cache)store.set('folio.c.'+c.id,cache)});
+    const gone=made.map(c=>c.id);
+    return{ok:true,n:made.length,skip,undo:()=>edit('Undo copy',d=>rmWhere(d.articles,a=>gone.includes(a.id)))};
   },
   removeItems(ids){
     if(!can('items.remove'))return{ok:false,error:'Only the admin can remove articles'};
