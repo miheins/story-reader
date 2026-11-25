@@ -171,3 +171,7 @@ Start a conversation, attach or link this repository, and say: *"Read HANDOVER.m
 - Ids: the first copy keeps `hash(url)`, copies get `hash(url + '|' + listId)` (`idFor`). Supabase needs no change: `folio_articles` is keyed by (list_id, id).
 - `Repo.copyItems(ids, to)` skips articles whose URL is already in the target list, copies the cached text, returns an undo.
 - Notes belong to one list: `noteList(n)` = the list of the article the note sits on, else `n.list` (stamped on new notes), else the first list. The Notes tab, its count and "Copy all as text" show only the open list's notes; switching lists re-renders them.
+
+## "Why I added this"
+- Optional field in Add new item (`#why`, max 280 chars), saved as `item.why` on every link added in that go. Shown in italics under the headline in list rows (`.qwhy`) and on stack cards, where it replaces the pulled opening line (`.cwhy`). Deck is taller: `clamp(340px,50vh,460px)`.
+- Supabase: `folio_articles.why` (needs the updated schema.sql); changing it needs the admin key, like other article fields.

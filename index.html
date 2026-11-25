@@ -255,7 +255,7 @@ a.who:not([href]){cursor:default}
 .mvrow{flex-wrap:wrap}.mvrow .st-select{flex:1 1 100%}.mvrow .st-btn{flex:1}
 .obox .ohint{font-size:13px}
 .stackv{display:flex;flex-direction:column;gap:14px}
-.deck{position:relative;height:clamp(300px,42vh,400px);margin-top:24px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.deck{position:relative;height:clamp(340px,50vh,460px);margin-top:24px;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 .card2{position:absolute;inset:0;border-radius:22px;overflow:hidden;box-sizing:border-box;padding:20px 22px 22px;display:flex;flex-direction:column;gap:14px;
   background:var(--card);color:var(--on-card);cursor:pointer;outline:none;
   transform:translateY(calc(var(--k) * -14px)) scale(calc(1 - var(--k) * .05));transform-origin:50% 0;
@@ -279,6 +279,10 @@ a.who:not([href]){cursor:default}
 :root[data-face="sans"] .ctl{font-family:var(--f-sans);font-weight:600;letter-spacing:-.028em}
 .cdek{margin:0;font:400 16px/1.45 var(--f-serif);opacity:.88;text-wrap:pretty;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
 :root[data-face="sans"] .cdek{font-family:var(--f-sans);font-size:15px}
+.cwhy{font-style:italic;opacity:1;-webkit-line-clamp:5}
+.qwhy{display:block;margin-top:4px;font:italic 400 15px/1.4 var(--f-serif);color:var(--text-muted);text-wrap:pretty}
+:root[data-face="sans"] .qwhy{font-family:var(--f-sans)}
+.st-field__label .opt{text-transform:none;letter-spacing:0;font-family:var(--f-sans);color:var(--text-subtle);margin-left:4px}
 .cfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;font:500 13px/1.3 var(--f-sans);font-variant-numeric:tabular-nums}
 .cfoot > span:first-child{opacity:.85}
 .ccat{flex:none;padding:3px 6px 1px;border-radius:var(--radius-sm);background:var(--cc);color:var(--cco,var(--oncat));font:500 10px/12px var(--font-mono);letter-spacing:.07em;text-transform:uppercase;font-variation-settings:"ELSH" 100}
@@ -610,6 +614,10 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       <label class="st-field__label" for="links">Links</label>
       <textarea id="links" class="st-input st-textarea" rows="4" placeholder="One or more links, any separator"></textarea>
     </div>
+    <div class="st-field">
+      <label class="st-field__label" for="why">Why I added this <span class="opt">optional</span></label>
+      <textarea id="why" class="st-input st-textarea" rows="2" maxlength="280" placeholder="A line for readers: why it’s worth their time"></textarea>
+    </div>
     <div class="row eq">
       <button type="button" class="st-btn st-btn--primary" id="addBtn">Add to list</button>
       <button type="button" class="st-btn st-btn--secondary" id="readNext">Add and read</button>
@@ -824,7 +832,7 @@ function renderQ(){renderMode();if(typeof AD!=='undefined'&&AD!==null)renderAdmi
   if(!VQ.length){ul.innerHTML=`<li class="empty-row">${emptyState('inbox','Nothing in '+esc(listName(AL))+' yet',(can('items.add')?'Tap Add new item below and it lands here.':'Articles appear here once they’re added.'))}</li>`;}
   else ul.innerHTML=VQ.map(it=>{const c=catOf(it);return `<li data-id="${it.id}" class="${F&&it.cat===F?'hl':''}" style="${c?'--cc:'+ccv(c)+';--cco:'+cco(c):''}">
     <button class="grip" data-grip="${it.id}" aria-label="Reorder ${esc(it.title)}. Drag, or use the arrow keys"></button>
-    <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span></button>
+    <div class="qmid"><button class="qopen" data-open="${it.id}"><span class="qdom">${esc(it.site||'')}</span><span class="qt">${esc(it.title)}</span>${it.why?`<span class="qwhy">${esc(it.why)}</span>`:''}</button>
     <div class="qmeta">${catSelect(it)}${needsText(it)?`<button class="st-btn st-btn--secondary st-btn--sm" data-open="${it.id}">Paste text</button>`:`<span class="qst">${statusText(it)}</span>`}</div></div>
     <button class="st-icon-btn st-icon-btn--sm qdel" data-rm="${it.id}" aria-label="Remove ${esc(it.title)}" title="Remove">${ic('close')}</button>
     ${thumbOf(it)?`<img class="qthumb" src="${esc(thumbOf(it))}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:'<span></span>'}</li>`}).join('');
@@ -883,9 +891,9 @@ function addLinks(){
   const kind=addKind();
   const urls=[...new Set(($('#links').value.match(/https?:\/\/[^\s<>"'“”]+/g)||[]).map(u=>u.replace(/[),.;]+$/,'')))];
   const add=[];for(const u of urls){if(!Q.some(q=>q.url===u&&q.list===AL)&&!add.some(a=>a.url===u)){const it=mkItem(u,kind);it.id=idFor(u,AL);add.push(it)}}
-  const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10);add.forEach(a=>{a.list=lid;a.added=day});
+  const n=add.length,lid=AL,day=new Date().toISOString().slice(0,10),why=$('#why').value.trim().slice(0,280);add.forEach(a=>{a.list=lid;a.added=day;if(why)a.why=why});
   if(n)edit(`Add ${n} link${n>1?'s':''} to ${listName(lid)}`,d=>add.forEach(a=>{if(!d.articles.some(x=>x.id===a.id))d.articles.push({...a})}));
-  $('#links').value='';saveQ();renderQ();if(n&&!$('#addSheet').hidden)closeSheets();
+  $('#links').value='';if(n)$('#why').value='';saveQ();renderQ();if(n&&!$('#addSheet').hidden)closeSheets();
   if(kind==='link')add.forEach(a=>fetchLinkMeta(Q.find(q=>q.id===a.id)));
   if(urls.length)toast(n?`Added ${n} link${n>1?'s':''} to ${listName(AL)}`:'Already in this list');
   else toast('No links found in that text');
@@ -1001,13 +1009,13 @@ function cardFor(it,k,nx){
   const w=a&&a.blocks?words(a.blocks.map(b=>b.html||'').join(' ')):0;
   const mins=w?Math.max(1,Math.round(w/230))+' min':'';
   const hero=thumbOf(it);
-  let blurb=a&&a.dek?a.dek:'';
+  const why=it.why||'';let blurb=why||(a&&a.dek?a.dek:'');
   if(!blurb&&a&&a.blocks){const p=a.blocks.find(b=>b.t==='p'&&words(b.html)>12);if(p)blurb=clip(strip(p.html),40)}
   const st=isLink(it)?(it.status==='read'?'Link · opened':'Link'):needsText(it)?'Needs text':it.status==='read'?'Read':it.status==='reading'?it.pct+'% read':'Unread';
   return `<article class="card2 k${k}${c?' cat':''}${hero?' img':''}${it.status==='read'?' done':''}" style="--k:${k};${c?'--cc:'+ccv(c)+';--cco:'+cco(c):''}" data-card="${it.id}"${k===0?' tabindex="0" role="button"':' aria-hidden="true"'} aria-label="${esc(it.title)}. ${st}. ${isLink(it)?'Opens the original page':'Tap to read'}.">
     ${hero?`<img class="cbg" src="${esc(hero)}" alt="" referrerpolicy="no-referrer" onerror="this.parentNode.classList.remove('img');this.remove()">`:''}
     <div class="ctop"><span class="ckick">${esc(it.site||'')}</span></div>
-    <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek">${esc(blurb)}</p>`:''}</div>
+    <div class="cmain"><h3 class="ctl">${esc(it.title)}</h3>${blurb?`<p class="cdek${why?' cwhy':''}">${esc(blurb)}</p>`:''}</div>
     <div class="cfoot"><span>${[mins,st].filter(Boolean).join(' · ')}</span>${c?`<span class="ccat">${esc(c.name)}</span>`:''}</div>
     ${it.status==='reading'?`<i class="cprog" style="width:${it.pct}%"></i>`:''}
   </article>`;
@@ -1239,7 +1247,7 @@ async function sbRpc(fn,args){
 function sbListRows(l){
   const arts=Q.filter(a=>a.url&&a.list===l.id&&!(a.eg&&a.status==='new')),ids=new Set(arts.map(a=>a.id));
   return{list:{name:l.name,slug:l.slug||'',alt:l.alt||[],intro:l.intro||''},
-    articles:arts.map((a,i)=>{const c=catOf(a);return{id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',kind:a.kind==='link'?'link':'story',img:a.img||null,added:a.added||null,position:i,cat_name:c?c.name:null,cat_c:c?(c.c||0):null}}),
+    articles:arts.map((a,i)=>{const c=catOf(a);return{id:String(a.id),url:a.url,title:a.title||'',site:a.site||'',kind:a.kind==='link'?'link':'story',img:a.img||null,added:a.added||null,position:i,cat_name:c?c.name:null,cat_c:c?(c.c||0):null,why:a.why||''}}),
     notes:N.filter(n=>ids.has(n.art)).map(n=>({id:String(n.id),article_id:String(n.art),pos:Number.isFinite(n.pos)?n.pos:0,where_label:n.where||'',excerpt:n.excerpt||'',body:n.text||'',author:n.by||'',liked:!!n.like,noted_at:n.at||0,title:n.title||'',site:n.site||'',url:n.url||''}))};
 }
 async function sbPushList(l){
@@ -1262,7 +1270,7 @@ function sbApplyList(l,d){
     LS.forEach(x=>{if(x!==l&&(x.slug===l.slug||(l.alt||[]).includes(x.slug)))x.slug=uniqueSlug(x.name,x)});
     const mine=new Set(Q.filter(q=>q.list===l.id&&q.url).map(q=>q.id)),all=new Map(Q.map(q=>[q.id,q]));
     const arts=d.articles.map(r=>{const o=all.get(r.id)||{status:'new',pos:-1,pct:0};
-      Object.assign(o,{id:r.id,url:r.url,title:r.title||o.title||slugTitle(r.url),site:r.site||'',list:l.id,added:r.added||o.added,cat:r.cat_name?sbCat(r.cat_name,r.cat_c):null});
+      Object.assign(o,{id:r.id,url:r.url,title:r.title||o.title||slugTitle(r.url),site:r.site||'',list:l.id,added:r.added||o.added,cat:r.cat_name?sbCat(r.cat_name,r.cat_c):null});if(r.why)o.why=r.why;else if('why' in r)delete o.why;
       if(r.kind==='link')o.kind='link';else delete o.kind;if(r.img)o.img=r.img;else delete o.img;delete o.eg;return o});
     const ids=new Set(arts.map(a=>a.id)),stays=q=>q.list!==l.id||!q.url||(q.eg&&q.status==='new');
     const rest=Q.filter(q=>!ids.has(q.id)&&stays(q));Q.length=0;Q.push(...rest,...arts);

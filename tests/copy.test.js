@@ -25,7 +25,9 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));let fail=0;const ok=(n,c)=>{cons
   ok('copying again does not duplicate',Q().filter(x=>x.url==='https://a.com/x').length===2&&/Already in/.test($('#toastT').textContent));
   // adding a link that already lives in another list now adds it here too
   $('#adBack').click();await wait(100);const ls=$('#listSel');ls.value='w';ls.dispatchEvent(new w.Event('change',{bubbles:true}));await wait(200);
-  $('#links').value='https://b.com/y';$('#addBtn').click();await wait(50);
+  $('#links').value='https://b.com/y';$('#why').value='  Read the second half  ';$('#addBtn').click();await wait(50);
+  {const it=Q().find(x=>x.url==='https://b.com/y'&&x.list==='w');ok('why saved, trimmed',it&&it.why==='Read the second half');ok('why field cleared',$('#why').value==='');
+   ok('why shown under the headline in the list',[...d.querySelectorAll('.qwhy')].some(e=>e.textContent==='Read the second half'));}
   ok('same link can be added to a second list',Q().filter(x=>x.url==='https://b.com/y').map(x=>x.list).sort().join()==='main,w');
   $('#links').value='https://b.com/y';$('#addBtn').click();await wait(50);
   ok('but not twice to the same list',Q().filter(x=>x.url==='https://b.com/y').length===2&&/Already in this list/.test($('#toastT').textContent));

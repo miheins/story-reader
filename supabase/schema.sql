@@ -52,6 +52,7 @@ create table if not exists public.folio_articles (
   cat_c    smallint,
   primary key (list_id, id)
 );
+alter table public.folio_articles add column if not exists why text not null default '';   -- "why I added this", shown under the headline
 
 create table if not exists public.folio_notes (
   list_id     uuid not null references public.folio_lists (id) on delete cascade,
@@ -193,12 +194,12 @@ begin
   end if;
 
   delete from folio_articles where list_id = l.id and id in (select jsonb_array_elements_text(coalesce(p_del_articles, '[]'::jsonb)));
-  insert into folio_articles (list_id, id, url, title, site, kind, img, added, position, cat_name, cat_c)
-  select l.id, r.id, r.url, coalesce(r.title, ''), coalesce(r.site, ''), coalesce(r.kind, 'story'), r.img, r.added, coalesce(r.position, 0), r.cat_name, r.cat_c
-  from jsonb_to_recordset(coalesce(p_articles, '[]'::jsonb)) as r (id text, url text, title text, site text, kind text, img text, added date, position integer, cat_name text, cat_c smallint)
+  insert into folio_articles (list_id, id, url, title, site, kind, img, added, position, cat_name, cat_c, why)
+  select l.id, r.id, r.url, coalesce(r.title, ''), coalesce(r.site, ''), coalesce(r.kind, 'story'), r.img, r.added, coalesce(r.position, 0), r.cat_name, r.cat_c, left(coalesce(r.why, ''), 280)
+  from jsonb_to_recordset(coalesce(p_articles, '[]'::jsonb)) as r (id text, url text, title text, site text, kind text, img text, added date, position integer, cat_name text, cat_c smallint, why text)
   where r.id is not null and r.url is not null
   on conflict (list_id, id) do update set url = excluded.url, title = excluded.title, site = excluded.site, kind = excluded.kind, img = excluded.img,
-    added = excluded.added, position = excluded.position, cat_name = excluded.cat_name, cat_c = excluded.cat_c;
+    added = excluded.added, position = excluded.position, cat_name = excluded.cat_name, cat_c = excluded.cat_c, why = excluded.why;
 
   delete from folio_notes where list_id = l.id and id in (select jsonb_array_elements_text(coalesce(p_del_notes, '[]'::jsonb)));
   insert into folio_notes (list_id, id, article_id, pos, where_label, excerpt, body, author, liked, noted_at, title, site, url)
