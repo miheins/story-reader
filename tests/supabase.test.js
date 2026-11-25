@@ -4,22 +4,25 @@ const {JSDOM}=require('jsdom');const fs=require('fs');
 const html=fs.readFileSync(require('path').join(__dirname,'..','index.html'),'utf8').replace(/const SB_URL='[^']*',SB_KEY='[^']*';/,"const SB_URL='',SB_KEY='';").replace(/<link[^>]+>/g,'');
 const URL_='https://proj.supabase.co',KEY='sb_publishable_test',ADMIN='admin-key-123';
 function server(){const lists=[];const log=[];let n=0,up=true;
-  const json=(status,body)=>({ok:status<300,status,json:async()=>body});const err=m=>json(400,{code:'P0001',message:m});
-  const find=(ref,key)=>{const l=lists.find(x=>x.id===ref||x.slug===ref||x.alt.includes(ref));if(!l)return'FOLIO_NOLIST';return l.key===key?l:'FOLIO_KEY'};
+  const json=(status,body)=>({ok:status<300,status,json:async()=>body});const err=m=>json(200,{error:m});   /* the functions return {error} rather than raising */
+  const find=(ref,key)=>{const l=lists.find(x=>x.id===ref||x.slug===ref||x.alt.includes(ref));if(!l)return'FOLIO_NOMATCH';return l.key===key?l:'FOLIO_NOMATCH'};
+  const findOpen=(ref,key)=>{const l=lists.find(x=>x.id===ref||x.slug===ref||x.alt.includes(ref));if(!l)return'FOLIO_NOMATCH';if(!key)return l.vis!=='private'?[l,false]:'FOLIO_NOMATCH';return l.key===key?[l,true]:'FOLIO_NOMATCH'};
   const fns={folio_ping:()=>true,
-    folio_check_admin:a=>a.p_admin===ADMIN?true:'FOLIO_ADMIN',
-    folio_publish:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';if((a.p_key||'').length<8)return'FOLIO_SHORT';if(lists.some(l=>l.slug===a.p_slug))return'FOLIO_SLUG';
-      const l={id:'00000000-0000-4000-8000-00000000000'+(++n),slug:a.p_slug,name:a.p_name,alt:[],key:a.p_key,articles:[],notes:[]};lists.push(l);return l.id},
-    folio_set_key:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOLIST';l.key=a.p_key;return null},
-    folio_delete_list:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const i=lists.findIndex(x=>x.id===a.p_list);if(i>=0)lists.splice(i,1);return null},
-    folio_open:a=>{const l=find(a.p_ref,a.p_key);if(typeof l==='string')return l;
-      return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt,intro:l.intro||''},articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
+    folio_check_admin:a=>a.p_admin===ADMIN?{ok:true}:'FOLIO_ADMIN',
+    folio_publish:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';if((a.p_key||'').length<10)return'FOLIO_SHORT';if(lists.some(l=>l.slug===a.p_slug))return'FOLIO_SLUG';
+      const l={id:'00000000-0000-4000-8000-00000000000'+(++n),slug:a.p_slug,name:a.p_name,alt:[],key:a.p_key,vis:a.p_visibility||'private',articles:[],notes:[]};lists.push(l);return{id:l.id}},
+    folio_set_visibility:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOMATCH';l.vis=a.p_visibility;return{ok:true}},
+    folio_directory:()=>lists.filter(l=>l.vis==='public').map(l=>({id:l.id,name:l.name,slug:l.slug,intro:l.intro||'',articles:l.articles.length})),
+    folio_set_key:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOMATCH';l.key=a.p_key;return{ok:true}},
+    folio_delete_list:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const i=lists.findIndex(x=>x.id===a.p_list);if(i>=0)lists.splice(i,1);return{ok:true}},
+    folio_open:a=>{const f=findOpen(a.p_ref,a.p_key);if(typeof f==='string')return f;const [l,write]=f;
+      return{list:{id:l.id,name:l.name,slug:l.slug,alt:l.alt,intro:l.intro||'',visibility:l.vis},write,articles:[...l.articles].sort((x,y)=>x.position-y.position),notes:[...l.notes].sort((x,y)=>x.noted_at-y.noted_at)}},
     folio_push:a=>{const l=find(a.p_list,a.p_key);if(typeof l==='string')return l;
       if((a.p_meta||a.p_articles.length||a.p_del_articles.length)&&a.p_admin!==ADMIN)return'FOLIO_ADMIN';
       if(a.p_meta){l.intro=a.p_meta.intro||'';l.name=a.p_meta.name;l.slug=a.p_meta.slug;l.alt=a.p_meta.alt||[]}
       for(const [k,rows,del] of [['articles',a.p_articles,a.p_del_articles],['notes',a.p_notes,a.p_del_notes]]){
         l[k]=l[k].filter(r=>!del.includes(r.id));rows.forEach(r=>{const i=l[k].findIndex(x=>x.id===r.id);if(i<0)l[k].push(r);else l[k][i]=r})}
-      return null}};
+      return{ok:true}}};
   return{lists,log,down(){up=false},
     fetch:async(u,o={})=>{u=String(u);if(!u.startsWith(URL_))throw new TypeError('blocked');
       const fn=new URL(u).pathname.replace('/rest/v1/rpc/','');log.push(fn);
@@ -53,7 +56,7 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   $A('#mX').click();A.location.hash='#admin-weekend';await wait(200);
   ok('admin page offers Put online, no admin field',!!$A('#adPub')&&!$A('#adAdminK'));
   $A('#adListK').value='short';submit(A,'#adPub');await wait(50);
-  ok('short list key refused in the app',/8 characters/.test($A('#adOnMsg').textContent)&&!srv.lists.length);
+  ok('short pass phrase refused in the app',/10 characters/.test($A('#adOnMsg').textContent)&&!srv.lists.length);
   $A('#adListK').value='weekend-key-1';submit(A,'#adPub');await wait(300);
   const L=srv.lists[0];
   ok('list is online',!!L&&L.slug==='weekend'&&/Online/.test($A('#adOnline').textContent),$A('#adOnline').textContent.slice(0,50));
@@ -63,9 +66,9 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
 
   // second device: address + key
   const B=device(srv,{},'#list-weekend').window;await wait(400);const $B=s=>B.document.querySelector(s);
-  ok('unknown list address asks for its key',!$B('#unlockSheet').hidden&&$B('#uRef').value==='weekend');
+  ok('private list address asks for the pass phrase, without naming the list',!$B('#unlockSheet').hidden&&$B('#uRef').value==='weekend'&&$B('#uRefF').hidden&&!/Weekend/.test($B('#unlockSheet').textContent));
   $B('#uKey').value='not-the-key';submit(B,'#uForm');await wait(150);
-  ok('wrong list key refused',/doesn’t open/.test($B('#uMsg').textContent)&&(ls(B,'folio.lists')||[]).every(l=>!l.rid),$B('#uMsg').textContent);
+  ok('wrong pass phrase refused, neutrally',/didn’t match/.test($B('#uMsg').textContent)&&(ls(B,'folio.lists')||[]).every(l=>!l.rid),$B('#uMsg').textContent);
   $B('#uKey').value='weekend-key-1';submit(B,'#uForm');await wait(300);
   const lb=ls(B,'folio.lists').find(l=>l.rid===L.id);
   ok('B has the list and is on it',!!lb&&lb.name==='Weekend'&&B.location.hash==='#list-weekend'&&ls(B,'folio.alist')===lb.id,B.location.hash);
@@ -122,8 +125,9 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   A.document.querySelector('.adkey').open=true;$A('#adListK').value='brand-new-key-9';submit(A,'#adRekey');await wait(200);
   ok('key changed',L.key==='brand-new-key-9');
   $B('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);
-  ok('B is locked, keeps its copy',/1 locked/.test($B('#sbBox').textContent)&&ls(B,'folio.queue').some(q=>q.id==='a1'),$B('#sbBox').textContent.slice(0,120));
-  $B('#sbUnlockBtn').click();await wait(50);$B('#uRef').value='sunday';$B('#uKey').value='brand-new-key-9';submit(B,'#uForm');await wait(300);
+  ok('B is read only, keeps its copy',/1 read only/.test($B('#sbBox').textContent)&&ls(B,'folio.queue').some(q=>q.id==='a1'),$B('#sbBox').textContent.slice(0,120));
+  $B('#sbUnlockBtn').click();await wait(100);ok('Open a list goes to the start page',!$B('#viewStart').hidden&&B.location.hash==='#start');
+  $B('#stName').value='Sunday';$B('#stKey').value='brand-new-key-9';submit(B,'#stForm');await wait(300);
   ok('B unlocks with the new key',ls(B,'folio.sb.keys')[L.id]==='brand-new-key-9');
 
   // private link: the key travels in the link, then leaves the address bar
@@ -134,9 +138,38 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('private link opens the list without typing',ls(P,'folio.lists').some(l=>l.rid===L.id)&&P.document.querySelector('#unlockSheet').hidden,P.document.querySelector('#uMsg').textContent);
   ok('key removed from the address',P.location.hash==='#list-sunday'&&!P.location.href.includes('key='),P.location.href);
   const bad=device(srv,{},'#list-sunday&key=wrong-key-000').window;await wait(500);
-  ok('bad private link asks for the key',!bad.document.querySelector('#unlockSheet').hidden&&/doesn’t open/.test(bad.document.querySelector('#uMsg').textContent)&&!bad.location.href.includes('key='),bad.document.querySelector('#uMsg').textContent);
+  ok('bad private link asks for the key',!bad.document.querySelector('#unlockSheet').hidden&&/didn’t match/.test(bad.document.querySelector('#uMsg').textContent)&&!bad.location.href.includes('key='),bad.document.querySelector('#uMsg').textContent);
   bad.document.querySelector('#uRef').value=link;bad.document.querySelector('#uKey').value='';bad.document.querySelector('#uForm').dispatchEvent(new bad.Event('submit',{bubbles:true,cancelable:true}));await wait(300);
   ok('pasting the private link into Unlock works',ls(bad,'folio.lists').some(l=>l.rid===L.id));
+
+  // visibility: public lists are listed and open without the pass phrase; notes still need it
+  A.location.hash='#admin-sunday';await wait(200);
+  const vis=v=>{const r=A.document.querySelector(`#adVis input[value="${v}"]`);r.checked=true;r.dispatchEvent(new A.Event('change',{bubbles:true}))};
+  vis('public');await wait(200);ok('admin makes the list public',L.vis==='public');
+  const S=device(srv,{},'').window;await wait(500);const $S=q=>S.document.querySelector(q);
+  ok('first visit starts on the start page',!$S('#viewStart').hidden&&S.location.hash==='#start'&&$S('#tabs').hidden);
+  ok('public list in the directory',/Sunday/.test($S('#stDir').textContent),$S('#stDir').textContent);
+  $S('[data-pub="sunday"]').click();await wait(300);
+  const sl=ls(S,'folio.lists').find(l=>l.rid===L.id);
+  ok('public list opens without a pass phrase, read only',!!sl&&sl.open&&!(ls(S,'folio.sb.keys')||{})[L.id]&&ls(S,'folio.queue').some(q=>q.list===sl.id)&&$S('#viewStart').hidden);
+  $S('#tabNotes').click();await wait(100);const ed=$S('#notesList [data-edit]');if(ed)ed.click();await wait(50);
+  ok('notes on it ask for the pass phrase',!!ed&&$S('#noteSheet').hidden&&!$S('#unlockSheet').hidden&&$S('#uTitle').textContent==='Add notes');
+  $S('#uKey').value='wrong-phrase-1';submit(S,'#uForm');await wait(200);ok('wrong pass phrase for notes refused',/didn’t match/.test($S('#uMsg').textContent));
+  $S('#uKey').value='brand-new-key-9';submit(S,'#uForm');await wait(300);
+  $S('#tabNotes').click();await wait(100);$S('#notesList [data-edit]').click();await wait(50);
+  ok('right pass phrase unlocks notes',ls(S,'folio.sb.keys')[L.id]==='brand-new-key-9'&&!$S('#noteSheet').hidden);$S('#nX').click();
+  vis('unlisted');await wait(200);
+  const S2=device(srv,{},'#start').window;await wait(500);
+  ok('unlisted list not in the directory',!/Sunday/.test(S2.document.querySelector('#stDir').textContent));
+  const U=device(srv,{},'#list-sunday').window;await wait(500);
+  ok('unlisted list opens from its address without a pass phrase',ls(U,'folio.lists').some(l=>l.rid===L.id&&l.open)&&U.document.querySelector('#unlockSheet').hidden);
+  vis('private');await wait(200);
+  const V=device(srv,{},'#list-sunday').window;await wait(500);
+  ok('private again: address asks for the pass phrase',!V.document.querySelector('#unlockSheet').hidden&&!(ls(V,'folio.lists')||[]).some(l=>l.rid===L.id));
+  $S('#menuBtn').click();await wait(50);$S('#sbNow').click();await wait(300);
+  ok('a device with the pass phrase keeps reading after it goes private',ls(S,'folio.lists').some(l=>l.rid===L.id));
+  const S3=device(srv,{'folio.lists':[{id:L.id,rid:L.id,name:'Sunday',slug:'sunday',open:true,vis:'public'}],'folio.alist':L.id},'#list-sunday').window;await wait(500);
+  ok('a reader without it is told, and keeps their copy',!ls(S3,'folio.lists').find(l=>l.id===L.id).rid&&/isn’t open online/.test(S3.document.querySelector('#toastT').textContent),S3.document.querySelector('#toastT').textContent);
 
   // first connection, and a project without the functions
   const C=device(srv,{},'',false).window;await wait(300);C.document.querySelector('#menuBtn').click();await wait(50);

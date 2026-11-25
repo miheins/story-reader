@@ -175,3 +175,9 @@ Start a conversation, attach or link this repository, and say: *"Read HANDOVER.m
 ## "Why I added this"
 - Optional field in Add new item (`#why`, max 280 chars), saved as `item.why` on every link added in that go. Shown in italics under the headline in list rows (`.qwhy`) and on stack cards, where it replaces the pulled opening line (`.cwhy`). Deck is taller: `clamp(340px,50vh,460px)`.
 - Supabase: `folio_articles.why` (needs the updated schema.sql); changing it needs the admin key, like other article fields.
+
+## Sharing (public / unlisted / private, start page)
+- `folio_lists.visibility`; `folio_open(ref, key)` opens public/unlisted lists with an empty key (`write:false`), else needs the pass phrase (`write:true`). `folio_directory()` lists public lists. `folio_set_visibility` (admin). Wrong guesses counted in `folio_fails` (10 per 15 min per list / admin). All API functions return `{error}` instead of raising; `sbRpc` turns that into a thrown error with `.code`.
+- Client: a list opened without the phrase has `l.open=true` and no entry in `SBK`; `sbOnline()` includes it for pulls, `sbPushList` skips it; `sbReadOnly(l)`. `notesLocked(listId)` opens the unlock sheet in 'write' mode before any note or Remember.
+- Unlock sheet modes (`openUnlock(ref, mode)`): 'open' (name + phrase), 'link' (phrase only, neutral, no list name), 'write' (phrase to add notes).
+- Start page: `#start`, `openStart()/closeStart()`, shown automatically on a first visit (`FIRST_VISIT`: nothing saved on the device) when Supabase is configured.

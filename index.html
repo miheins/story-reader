@@ -252,6 +252,14 @@ a.who:not([href]){cursor:default}
 .osteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font:500 14px/1.45 var(--f-sans);color:var(--fg)}
 .osteps a,.obox a{color:var(--accent-text)}
 .prow{display:flex;gap:8px}.prow input{flex:1;min-width:0}
+.start .stdir{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.start .stdir button{all:unset;box-sizing:border-box;display:block;width:100%;cursor:pointer;padding:16px 18px;border-radius:var(--radius-md);background:var(--surface-sunken)}
+.start .stdir button:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.start .stdir b{display:block;font:500 21px/1.2 var(--f-serif)}
+.start .stdir span{display:block;margin-top:6px;color:var(--text-muted);font:400 15px/1.4 var(--f-sans)}
+.start .stdir small{display:block;margin-top:8px;color:var(--text-subtle);font:500 12px/1 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;font-variation-settings:"ELSH" 100}
+.stfoot{display:flex;justify-content:space-between;align-items:center;gap:16px}.stfoot .linkbtn{margin:0}
+.start .adtitle{margin-top:20px}
 .mvrow{flex-wrap:wrap}.mvrow .st-select{flex:1 1 100%}.mvrow .st-btn{flex:1}
 .obox .ohint{font-size:13px}
 .stackv{display:flex;flex-direction:column;gap:14px}
@@ -487,6 +495,27 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
   <button type="button" class="addbar owneronly" id="openAdd"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6M9 8h6M9 12h4M17 15v6M14 18h6"/></svg>Add new item</button>
   </div>
 
+  <div id="viewStart" class="view start" hidden aria-labelledby="stTitle">
+    <h2 class="adtitle" id="stTitle">Reading lists</h2>
+    <section class="adsec" aria-labelledby="stOpenL">
+      <h3 class="st-field__label" id="stOpenL">Open a list</h3>
+      <form class="oform" id="stForm">
+        <div class="st-field"><label class="st-field__label" for="stName">List name</label><input type="text" id="stName" class="st-input" placeholder="For example, Weekend Reads, or paste a link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+        <div class="st-field"><label class="st-field__label" for="stKey">Pass phrase</label><input type="password" id="stKey" class="st-input" placeholder="Leave empty for a public list" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+        <button type="submit" class="st-btn st-btn--primary" id="stGo" style="align-self:flex-start">Open</button>
+        <p class="ohint" id="stMsg" role="status"></p>
+      </form>
+    </section>
+    <section class="adsec" aria-labelledby="stPubL">
+      <h3 class="st-field__label" id="stPubL">Public reading lists</h3>
+      <div id="stDir"><p class="adhint">Loading…</p></div>
+    </section>
+    <section class="adsec stfoot">
+      <button type="button" class="linkbtn" id="stLocal">Use Folio on this device only</button>
+      <button type="button" class="linkbtn" id="stAdmin">Admin</button>
+    </section>
+  </div>
+
   <div id="viewAdmin" class="view admin" hidden aria-labelledby="adTitle">
     <div class="adtop"><a class="linkbtn" id="adBack" href="#">← <span id="adBackName">Back</span></a></div>
     <h2 class="adtitle" id="adTitle">Manage list</h2>
@@ -628,12 +657,12 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
 
 <div class="sheet" id="unlockSheet" hidden role="dialog" aria-modal="true" aria-labelledby="uTitle">
   <div class="in">
-    <div class="st-dialog__head"><h2 class="st-dialog__title" id="uTitle">Unlock a list</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="uX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <p>Enter the list’s address and the key you were given. The list then stays on this device and keeps in sync.</p>
+    <div class="st-dialog__head"><h2 class="st-dialog__title" id="uTitle">Open a list</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="uX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p id="uLead">Enter the list’s name and its pass phrase. The list then stays on this device and keeps in sync.</p>
     <form class="oform" id="uForm">
-      <div class="st-field"><label class="st-field__label" for="uRef">List address</label><input type="text" id="uRef" class="st-input" placeholder="weekend, or the full link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>
-      <div class="st-field"><label class="st-field__label" for="uKey">List key</label><input type="text" id="uKey" class="st-input" placeholder="Not needed if you pasted a private link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
-      <button type="submit" class="st-btn st-btn--primary" id="uGo">Unlock</button>
+      <div class="st-field" id="uRefF"><label class="st-field__label" for="uRef">List name</label><input type="text" id="uRef" class="st-input" placeholder="For example, Weekend Reads, or paste a link" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <div class="st-field"><label class="st-field__label" for="uKey">Pass phrase</label><input type="password" id="uKey" class="st-input" placeholder="Leave empty for a public list" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>
+      <button type="submit" class="st-btn st-btn--primary" id="uGo">Open</button>
       <p class="ohint" id="uMsg" role="status"></p>
     </form>
   </div>
@@ -665,9 +694,10 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
       <p id="installHow"></p>
       <button type="button" class="st-btn st-btn--primary" id="installBtn" hidden style="align-self:flex-start">Add Folio to home screen</button>
     </div>
+    <div class="set" id="openSet"><span class="st-field__label">Other lists</span><button type="button" class="st-btn st-btn--secondary" id="mStart" style="align-self:flex-start">Open a list or browse public lists</button></div>
     <div class="set" id="sbSet"><span class="st-field__label">Admin</span><div id="sbBox" class="obox"></div>
       <div class="subset"><h3 class="st-field__label">Reading lists</h3>
-        <p>Each article lives in one list.</p>
+        <p>An article can be in several lists as independent copies.</p>
         <ul class="cats lists" id="listList"></ul>
         <form class="st-field catadd" id="listForm"><label class="st-field__label" for="listName">New list</label><div class="prow"><input type="text" id="listName" class="st-input" placeholder="For example, Weekend" maxlength="40" autocomplete="off"><button class="st-btn st-btn--secondary" type="submit">Add list</button></div></form>
       </div>
@@ -775,6 +805,7 @@ const SAMPLE={id:'sample',title:'Reading as a story',site:'Folio',url:null,date:
 /* ---------- Queue ---------- */
 const EXAMPLES=['https://www.itsnicethat.com/features/ffern-film-spotlight-230326','https://howtorunacountry.substack.com/p/the-enemy-is-inertia','https://designerfund.com/blog/designer-founders-stephen-haney'];
 let Q=store.get('folio.queue',null);
+const FIRST_VISIT=Q===null&&store.get('folio.lists',null)===null;   /* nothing saved on this device yet: start on the start page */
 if(!Q){Q=[{id:'sample',url:null,title:SAMPLE.title,site:'Sample',status:'new',pos:-1,pct:0},...EXAMPLES.map(u=>({...mkItem(u),eg:true}))];}   /* eg: starter examples; they don't sync to Supabase until opened */
 {const sm=Q.find(q=>q.id==='sample');if(sm)sm.title=SAMPLE.title}
 /* one URL can sit in several lists as independent copies: the first keeps hash(url), copies get hash(url|list) */
@@ -807,7 +838,7 @@ const listName=id=>(LS.find(l=>l.id===id)||{}).name||'';
 const slugify=n=>String(n).toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40)||'list';
 function uniqueSlug(n,self){let b=slugify(n),s=b,k=2;while(LS.some(l=>l!==self&&(l.slug===s||(l.alt||[]).includes(s))))s=b+'-'+k++;return s}
 LS.forEach(l=>{if(!l.slug)l.slug=uniqueSlug(l.name,l)});
-const LIST='#list-';
+const LIST='#list-',START='#start';var STV=false;
 const listHash=(id=AL)=>LIST+(LS.find(l=>l.id===id)||LS[0]).slug;
 const listBySlug=sl=>LS.find(l=>l.slug===sl)||LS.find(l=>(l.alt||[]).includes(sl))||LS.find(l=>l.id===sl);
 const saveQ=()=>{store.set('folio.queue',Q);sbTouch()};
@@ -961,7 +992,8 @@ $('#queue').addEventListener('change',e=>{const sel=e.target.closest('[data-cat]
   if(sel.value==='__manage'){sel.value=it.cat||'';openMenu();return}
   const v=sel.value||null,id=it.id;edit('Set category',d=>{const a=d.articles.find(x=>x.id===id);if(a)a.cat=v});renderQ()});
 $('#queue').addEventListener('pointerdown',e=>{const sel=e.target.closest('[data-cat]');if(sel&&!C.length){e.preventDefault();openMenu()}});
-function openMenu(){$('#ownerSet').hidden=!ONLINE;renderSb();if(ONLINE)renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
+$('#mStart').onclick=()=>openStart();
+function openMenu(){$('#openSet').hidden=!SBC;$('#ownerSet').hidden=!ONLINE;renderSb();if(ONLINE)renderOwner();renderLists();renderCats();renderInstall();openSheet('#menuSheet')}
 /* home-screen install */
 let installEvt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;renderInstall()});
@@ -1098,14 +1130,14 @@ $('#stack').addEventListener('pointerup',endS);$('#stack').addEventListener('poi
 function renderListSel(){
   const sel=$('#listSel');if(!sel)return;
   sel.innerHTML=LS.filter(l=>l.id===AL||can('list.switch',l.id)).map(l=>`<option value="${l.id}"${l.id===AL?' selected':''}>${esc(l.name)} · ${Q.filter(q=>q.list===l.id).length}</option>`).join('')+
-    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+(can('list.manage',AL)?`<option value="__admin">Manage ${esc(listName(AL))}…</option>`:'')+(isRO()||!can('list.create')?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Unlock a list…</option>':'');
+    (isRO()?'':`<option value="__add">Add an article to ${esc(listName(AL))}…</option>`)+(can('list.manage',AL)?`<option value="__admin">Manage ${esc(listName(AL))}…</option>`:'')+(isRO()||!can('list.create')?'':'<option value="__new">New list…</option>')+(SBC&&(LS.find(l=>l.id===AL)||{}).rid&&SBK[(LS.find(l=>l.id===AL)||{}).rid]?'<option value="__plink">Copy private link</option>':'')+(SBC?'<option value="__unlock">Open another list…</option>':'');
 }
 function switchList(id,fromRoute){if(!LS.some(l=>l.id===id))return;const changed=AL!==id;AL=id;F=null;saveL();saveC();
   if(!fromRoute&&typeof setHash==='function'&&location.hash!==listHash())setHash(listHash(),true);
   if(tab==='notes')showTab('queue');renderQ();renderNotes();if(changed)toast('Opened '+listName(id))}
 $('#listSel').addEventListener('change',e=>{const v=e.target.value;
   if(v==='__add'&&can('items.add')){renderListSel();$('#openAdd').click();return}
-  if(v==='__unlock'){renderListSel();openUnlock('');return}
+  if(v==='__unlock'){renderListSel();openStart();return}
   if(v==='__plink'){renderListSel();const l=LS.find(x=>x.id===AL),url=privateLink(l);try{navigator.clipboard.writeText(url).then(()=>toast('Private link copied'),()=>toast(url))}catch(_){toast(url)}return}
   if(v==='__admin'){renderListSel();openAdmin(AL);return}
   if(v==='__new'||v==='__edit'){renderListSel();openMenu();if(v==='__new')setTimeout(()=>{try{$('#listName').focus()}catch(_){}},80);return}
@@ -1149,10 +1181,39 @@ $('#listList').addEventListener('change',e=>{const r=e.target.closest('[data-lre
 /* ---------- List admin: #admin-<slug> ---------- */
 const ADMIN='#admin-';var AD=null;
 const adminHash=(id=AL)=>ADMIN+(LS.find(l=>l.id===id)||LS[0]).slug;
+/* ---------- Start page: open a list by name and pass phrase, or pick a public one ---------- */
+function openStart(fromRoute){
+  if(!fromRoute&&location.hash!==START)setHash(START,true);
+  if(typeof AD!=='undefined'&&AD!==null)closeAdmin();
+  STV=true;toggleListSw(false);closeSheets();
+  $('#tabs').hidden=$('#viewQueue').hidden=$('#viewNotes').hidden=$('#listIntro').hidden=true;$('#viewStart').hidden=false;
+  $('#stMsg').textContent='';$('#stGo').disabled=false;loadDirectory();
+}
+function closeStart(){if(!STV)return;STV=false;$('#viewStart').hidden=true;$('#tabs').hidden=false;showTab(tab==='notes'?'notes':'queue');renderQ()}
+async function loadDirectory(){
+  const box=$('#stDir');
+  if(!SBC){box.innerHTML='<p class="adhint">Online lists aren’t set up here.</p>';return}
+  try{const d=await sbRpc('folio_directory');
+    box.innerHTML=d&&d.length?`<ul class="stdir">${d.map(x=>`<li><button type="button" data-pub="${esc(x.slug)}"><b>${esc(x.name)}</b>${x.intro?`<span>${esc(clip(x.intro,30))}</span>`:''}<small>${x.articles} article${x.articles===1?'':'s'}${LS.some(l=>l.rid===x.id)?' · on this device':''}</small></button></li>`).join('')}</ul>`
+      :'<p class="adhint">No public lists yet.</p>'}
+  catch(err){box.innerHTML=`<p class="adhint">${esc(err.status?err.message:'Couldn’t reach the server. Check your connection.')}</p>`}
+}
+async function openFromStart(raw,key,say,btn){
+  let ref=String(raw||'').trim();const km=ref.match(/&key=([^&\s]+)/);if(km){try{key=key||decodeURIComponent(km[1])}catch(_){}ref=ref.slice(0,km.index)}
+  ref=sbRef(ref);if(!ref){say('Enter the list’s name.');return}
+  btn&&(btn.disabled=true);say('Opening…');
+  try{const l=await sbUnlock(ref,key||'');STV=false;$('#viewStart').hidden=true;$('#tabs').hidden=false;showTab('queue');switchList(l.id);toast(key?'Opened '+l.name:'Opened '+l.name+' to read')}
+  catch(err){btn&&(btn.disabled=false);say(err.status?err.message:'Couldn’t reach the server. Check your connection.')}
+}
+$('#stForm').addEventListener('submit',e=>{e.preventDefault();openFromStart($('#stName').value,$('#stKey').value.trim(),t=>$('#stMsg').textContent=t,$('#stGo'))});
+$('#stDir').addEventListener('click',e=>{const b=e.target.closest('[data-pub]');if(!b)return;openFromStart(b.dataset.pub,'',t=>{if(t!=='Opening…')toast(t,null,null,'info')},b)});
+$('#stLocal').onclick=()=>{STV=false;$('#viewStart').hidden=true;$('#tabs').hidden=false;showTab('queue');setHash(listHash(),false);renderQ()};
+$('#stAdmin').onclick=()=>{openMenu();setTimeout(()=>{const k=$('#admKey');if(k){try{k.scrollIntoView({block:'center'});k.focus({preventScroll:true})}catch(e){}}},120)};
 function openAdmin(id,fromRoute){
   if(!LS.some(l=>l.id===id))return;
   if(!can('list.manage',id)){if(fromRoute)setHash(listHash(id),false);openMenu();setTimeout(()=>{const k=$('#admKey');if(k){try{k.scrollIntoView({block:'center'});k.focus({preventScroll:true})}catch(e){}}},120);toast('Managing lists needs the admin key',null,null,'info');return}
   if(AL!==id){AL=id;F=null;saveL();saveC()}
+  if(STV){STV=false;$('#viewStart').hidden=true}
   AD=id;if(!fromRoute&&location.hash!==adminHash(id))setHash(adminHash(id),true);
   toggleListSw(false);closeSheets();
   $('#tabs').hidden=$('#viewQueue').hidden=$('#viewNotes').hidden=$('#listIntro').hidden=true;$('#viewAdmin').hidden=false;
@@ -1216,11 +1277,12 @@ $('#adNotes').onclick=e=>{const j=e.target.closest('[data-jump]');if(!j)return;
 const GH=(()=>{const m=location.hostname.match(/^([a-z0-9-]+)\.github\.io$/i),seg=location.pathname.split('/').filter(Boolean)[0];
   return m?{owner:m[1],repo:seg&&!/\.html?$/i.test(seg)?seg:m[1]+'.github.io'}:{owner:'miheins',repo:'story-reader'}})();
 const GH_API=`https://api.github.com/repos/${GH.owner}/${GH.repo}`;
-/* ---------- Supabase: reading lists unlocked by a key ----------
-   No accounts. A list is put online once by the admin (admin key, set in Supabase) and gets its own list key.
-   Anyone with the list's address and its key can open and edit it on any device. Without the key the browser gets nothing:
-   the tables are closed to the public API, and every read and write goes through database functions that check the key
-   (supabase/schema.sql). Set-up: docs/supabase.md.
+/* ---------- Supabase: reading lists opened with a pass phrase ----------
+   No accounts. A list is put online once by the admin (admin key, set in Supabase) and gets its own pass phrase.
+   Its visibility decides who can read it: public (listed on the start page, #start), unlisted (anyone with the address)
+   or private (pass phrase needed). Adding notes always needs the pass phrase; articles and list settings need the admin key.
+   The tables are closed to the public API; every read and write goes through database functions that check the phrase,
+   count wrong guesses and return {"error": ...} when they refuse (supabase/schema.sql). Set-up: docs/supabase.md.
    SB_URL / SB_KEY: fill these in to bake the project into the app for every device; left empty, each device asks once (menu → Supabase).
    The key is the project's publishable (anon) key and is safe in public code. Never put a secret key here.
    What syncs per list: its name and address, its articles (order, category, "Just link" details) and the notes on them.
@@ -1230,9 +1292,12 @@ const SB_URL='https://glbhytitpuakocsjzuph.supabase.co',SB_KEY='sb_publishable_1
 var SBC=(()=>{const c=store.get('folio.sb',null)||{};const url=String(SB_URL||c.url||'').trim().replace(/\/+$/,''),key=String(SB_KEY||c.key||'').trim();return url&&key?{url,key}:null})();
 var SBK=store.get('folio.sb.keys',{})||{},SB_SNAP=store.get('folio.sb.snap',{})||{};   /* per online list id: its key on this device, and what Supabase last had */
 var sbTimer=null,sbChain=null,SB_APPLYING=false,SB_STATE='',SB_AT=null,SB_ERR='',SB_LAST=0;
-const SB_MSG={FOLIO_KEY:'That key doesn’t open this list.',FOLIO_NOLIST:'There’s no online list with that address.',FOLIO_ADMIN:'That isn’t the admin key.',
-  FOLIO_NOADMIN:'No admin key is set in this project yet. Set one in Supabase first (docs/supabase.md).',FOLIO_SLUG:'Another online list already uses this address. Rename the list, then try again.',FOLIO_SHORT:'A key needs at least 8 characters.'};
-const sbOnline=()=>LS.filter(l=>l.rid&&SBK[l.rid]);
+const SB_MSG={FOLIO_NOMATCH:'Name or pass phrase didn’t match.',FOLIO_LOCKED:'Too many wrong tries. Wait 15 minutes, then try again.',FOLIO_VIS:'Choose public, unlisted or private.',
+  FOLIO_KEY:'Name or pass phrase didn’t match.',FOLIO_NOLIST:'Name or pass phrase didn’t match.',FOLIO_ADMIN:'That isn’t the admin key.',
+  FOLIO_NOADMIN:'No admin key is set in this project yet. Set one in Supabase first (docs/supabase.md).',FOLIO_SLUG:'Another online list already uses this address. Rename the list, then try again.',FOLIO_SHORT:'A pass phrase needs at least 10 characters.'};
+/* online lists on this device: with the pass phrase (read and add notes), or opened without it because they're public or unlisted (read only) */
+const sbOnline=()=>LS.filter(l=>l.rid&&(SBK[l.rid]||l.open));
+const sbReadOnly=l=>!!(l&&l.rid&&!SBK[l.rid]);
 function sbSetState(st,err){SB_STATE=st;SB_ERR=err||'';if(st==='synced')SB_AT=new Date();if($('#menuSheet')&&!$('#menuSheet').hidden)renderSb();if(typeof AD!=='undefined'&&AD!==null)renderAdOnline()}
 async function sbRpc(fn,args){
   const h={apikey:SBC.key,'Content-Type':'application/json'};if(/^eyJ/.test(SBC.key))h.Authorization='Bearer '+SBC.key;
@@ -1241,6 +1306,7 @@ async function sbRpc(fn,args){
   if(!r.ok){const m=(j&&j.message)||'',code=(m.match(/FOLIO_[A-Z]+/)||[''])[0];
     const e=new Error(code?(SB_MSG[code]||code):r.status===404||/^PGRST20/.test((j&&j.code)||'')?'Folio isn’t set up in this project yet. Run supabase/schema.sql in the Supabase SQL editor.':(m||('Supabase answered '+r.status)));
     e.status=r.status;e.code=code;throw e}
+  if(j&&typeof j==='object'&&!Array.isArray(j)&&typeof j.error==='string'){const code=j.error;const e=new Error(SB_MSG[code]||code);e.status=200;e.code=code;throw e}
   return j;
 }
 /* one list as rows; the same shape is kept as the snapshot of what Supabase last had */
@@ -1256,6 +1322,7 @@ async function sbPushList(l){
   /* The database only accepts list and article changes with the admin key (folio_push). Without it, only notes go up;
      local article changes stay on this device until the next sync replaces them. */
   const adm=isAdmin(),A0=diff(cur.articles,snap.articles),A=adm?A0:{up:[],del:[]},T=diff(cur.notes,snap.notes),meta=adm&&JSON.stringify(cur.list)!==JSON.stringify(snap.list);
+  if(!SBK[l.rid])return;   /* read only: nothing goes up */
   if(!meta&&!A.up.length&&!A.del.length&&!T.up.length&&!T.del.length)return;
   try{await sbRpc('folio_push',{p_list:l.rid,p_key:SBK[l.rid],p_admin:meta||A.up.length||A.del.length?admKey():null,p_meta:meta?cur.list:null,p_articles:A.up,p_del_articles:A.del,p_notes:T.up,p_del_notes:T.del})}catch(e){admRefused(e);throw e}
   if(!meta&&snap.list)cur.list=snap.list;   /* keep an unsent name change pending */
@@ -1266,6 +1333,7 @@ function sbCat(name,c){let x=C.find(k=>k.name.toLowerCase()===String(name).toLow
 function sbApplyList(l,d){
   SB_APPLYING=true;
   try{
+    if(d.list.visibility)l.vis=d.list.visibility;if(l.vis&&l.vis!=='private')l.open=true;else delete l.open;
     l.name=d.list.name||l.name;if(d.list.intro)l.intro=d.list.intro;else delete l.intro;if(d.list.slug)l.slug=d.list.slug;if(Array.isArray(d.list.alt)&&d.list.alt.length)l.alt=d.list.alt;else delete l.alt;
     LS.forEach(x=>{if(x!==l&&(x.slug===l.slug||(l.alt||[]).includes(x.slug)))x.slug=uniqueSlug(x.name,x)});
     const mine=new Set(Q.filter(q=>q.list===l.id&&q.url).map(q=>q.id)),all=new Map(Q.map(q=>[q.id,q]));
@@ -1291,11 +1359,13 @@ function sbSync(pull,only){
     for(const l of lists){
       try{
         await sbPushList(l);
-        if(pull){const before=JSON.stringify(sbListRows(l)),d=await sbRpc('folio_open',{p_ref:l.rid,p_key:SBK[l.rid]});
+        if(pull){const before=JSON.stringify(sbListRows(l)),d=await sbRpc('folio_open',{p_ref:l.rid,p_key:SBK[l.rid]||null});
           if(JSON.stringify(sbListRows(l))===before){sbApplyList(l,d);changed=true}else sbTouch()}
       }catch(e){
-        if(e.code==='FOLIO_KEY'){delete SBK[l.rid];store.set('folio.sb.keys',SBK);toast(`“${l.name}” is locked: its key was changed`,null,null,'info')}
-        else if(e.code==='FOLIO_NOLIST'){delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false;toast(`“${l.name}” was taken offline. It stays on this device.`,null,null,'info')}
+        if(e.code==='FOLIO_LOCKED')bad=e;
+        else if(e.code==='FOLIO_NOMATCH'&&SBK[l.rid]){delete SBK[l.rid];store.set('folio.sb.keys',SBK);SB_APPLYING=true;saveL();SB_APPLYING=false;
+          toast(`“${l.name}”: its pass phrase changed, or it was taken offline. Enter the new pass phrase to keep it in sync.`,null,null,'info')}
+        else if(e.code==='FOLIO_NOMATCH'||e.code==='FOLIO_NOLIST'){delete l.open;delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false;toast(`“${l.name}” isn’t open online any more: it was made private or taken offline. It stays on this device.`,null,null,'info')}
         else bad=e;
       }
     }
@@ -1315,18 +1385,19 @@ async function sbUnlock(ref,key){
   const d=await sbRpc('folio_open',{p_ref:ref,p_key:key});
   let l=LS.find(x=>x.rid===d.list.id);
   if(!l){l={id:d.list.id,rid:d.list.id,name:d.list.name,slug:d.list.slug};LS.push(l)}
-  SBK[l.rid]=key;store.set('folio.sb.keys',SBK);sbApplyList(l,d);sbSetState('synced');
+  if(key&&d.write)SBK[l.rid]=key;store.set('folio.sb.keys',SBK);sbApplyList(l,d);SB_APPLYING=true;saveL();SB_APPLYING=false;sbSetState('synced');
   renderQ();renderNotes();renderLists();return l;
 }
 /* admin: put a list from this device online under a new list key */
-async function sbPublish(l,admin,key){
+async function sbPublish(l,admin,key,vis){
   if(!l.slug)l.slug=uniqueSlug(l.name,l);
-  const rid=await sbRpc('folio_publish',{p_admin:admin,p_slug:l.slug,p_name:l.name,p_key:key});
-  l.rid=rid;SBK[rid]=key;delete SB_SNAP[rid];store.set('folio.sb.keys',SBK);SB_APPLYING=true;saveL();SB_APPLYING=false;
+  const r=await sbRpc('folio_publish',{p_admin:admin,p_slug:l.slug,p_name:l.name,p_key:key,p_visibility:vis||'private'}),rid=typeof r==='string'?r:r.id;
+  l.rid=rid;l.vis=vis||'private';if(l.vis!=='private')l.open=true;SBK[rid]=key;delete SB_SNAP[rid];store.set('folio.sb.keys',SBK);SB_APPLYING=true;saveL();SB_APPLYING=false;
   return sbSync(false,l);
 }
 async function sbSetKey(l,admin,key){await sbRpc('folio_set_key',{p_admin:admin,p_list:l.rid,p_key:key});SBK[l.rid]=key;store.set('folio.sb.keys',SBK)}
-async function sbTakeOffline(l,admin){await sbRpc('folio_delete_list',{p_admin:admin,p_list:l.rid});delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false}
+async function sbSetVis(l,admin,vis){await sbRpc('folio_set_visibility',{p_admin:admin,p_list:l.rid,p_visibility:vis});l.vis=vis;if(vis!=='private')l.open=true;else delete l.open;SB_APPLYING=true;saveL();SB_APPLYING=false}
+async function sbTakeOffline(l,admin){await sbRpc('folio_delete_list',{p_admin:admin,p_list:l.rid});delete SBK[l.rid];delete SB_SNAP[l.rid];delete l.rid;delete l.open;delete l.vis;store.set('folio.sb.keys',SBK);store.set('folio.sb.snap',SB_SNAP);SB_APPLYING=true;saveL();SB_APPLYING=false}
 function sbStatusText(){
   return SB_STATE==='syncing'?'Syncing…':SB_STATE==='saving'?'Saving…':SB_STATE==='offline'?'Offline. Changes are kept here and sent when you’re back online.'
     :SB_STATE==='synced'&&SB_AT?'Synced '+SB_AT.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}):'';
@@ -1336,11 +1407,11 @@ const keyInput=(id,label,ph)=>`<div class="st-field"><label class="st-field__lab
 function renderSb(){
   const box=$('#sbBox');if(!box||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
   if(SBC){const n=sbOnline().length,locked=LS.filter(l=>l.rid&&!SBK[l.rid]).length;
-    box.innerHTML=`<p>Connected to <b>${esc(host(SBC.url))}</b>. ${n?`${n} list${n>1?'s are':' is'} online on this device`:'No list on this device is online yet'}${locked?`, ${locked} locked`:''}.${isAdmin()?' Put a list online from its <b>Manage</b> page.':''}</p>
+    box.innerHTML=`<p>Connected to <b>${esc(host(SBC.url))}</b>. ${n?`${n} list${n>1?'s are':' is'} online on this device`:'No list on this device is online yet'}${locked?`, ${locked} read only`:''}.${isAdmin()?' Put a list online from its <b>Manage</b> page.':''}</p>
       <p class="osync">${esc(sbStatusText())}</p>${sbErrHtml()}
       ${isAdmin()?`<p class="adhint"><b>Admin</b> on this device until ${new Date(store.get(ADM_K,{}).exp).toLocaleDateString('en-GB',{day:'numeric',month:'short'})}: you can create, rename and manage lists.</p>`
         :`<form class="oform" id="admForm"><div class="st-field"><label class="st-field__label" for="admKey">Admin key</label><div class="prow"><input type="password" id="admKey" class="st-input" autocomplete="current-password" required><button type="submit" class="st-btn st-btn--secondary" id="admGo">Unlock admin</button></div></div><p class="ohint" id="admMsg" role="status"></p></form>`}
-      <div class="row">${isAdmin()?'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="admLockBtn">Lock admin</button>':''}<button type="button" class="st-btn st-btn--secondary" id="sbUnlockBtn">Unlock a list…</button>${n?'<button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button>':''}${SB_URL?'':'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Disconnect</button>'}</div>`;return}
+      <div class="row">${isAdmin()?'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="admLockBtn">Lock admin</button>':''}<button type="button" class="st-btn st-btn--secondary" id="sbUnlockBtn">Open a list…</button>${n?'<button type="button" class="st-btn st-btn--secondary" id="sbNow">Sync now</button>':''}${SB_URL?'':'<button type="button" class="st-btn st-btn--ghost st-btn--sm" id="sbOut">Disconnect</button>'}</div>`;return}
   box.innerHTML=`<p>Keep reading lists in your own Supabase project. Each online list has a key; anyone with the list’s address and key can open it.</p>
     <form class="oform" id="sbForm">
       <div class="st-field"><label class="st-field__label" for="sbUrl">Project URL</label><input type="url" id="sbUrl" class="st-input" placeholder="https://your-project.supabase.co" autocapitalize="off" spellcheck="false" required></div>
@@ -1367,21 +1438,31 @@ $('#sbBox').addEventListener('submit',async e=>{
 $('#sbBox').addEventListener('click',e=>{
   if(e.target.closest('#admLockBtn')){admLock();toast('Admin locked on this device');return}
   if(e.target.closest('#sbNow'))sbSync(true);
-  else if(e.target.closest('#sbUnlockBtn'))openUnlock('');
+  else if(e.target.closest('#sbUnlockBtn'))openStart();
   else if(e.target.closest('#sbOut')){store.del('folio.sb');SBC=null;clearTimeout(sbTimer);SB_STATE='';renderSb();toast('Disconnected. Your lists stay on this device.')}
 });
 /* unlock sheet: the list's address and its key */
-function openUnlock(ref){
+var UMODE='open';
+function openUnlock(ref,mode){
+  UMODE=mode||(ref?'link':'open');
   closeSheets();$('#uRef').value=ref||'';$('#uKey').value='';$('#uMsg').textContent='';$('#uGo').disabled=false;
-  openSheet('#unlockSheet');setTimeout(()=>{try{$(ref?'#uKey':'#uRef').focus({preventScroll:true})}catch(e){}},60);
+  const l=UMODE==='write'?LS.find(x=>x.id===ref):null;
+  $('#uRefF').hidden=UMODE!=='open';
+  $('#uTitle').textContent=UMODE==='open'?'Open a list':UMODE==='write'?'Add notes':'Enter pass phrase';
+  $('#uLead').textContent=UMODE==='open'?'Enter the list’s name and its pass phrase. Public lists open without one. The list then stays on this device and keeps in sync.'
+    :UMODE==='write'?`To add notes to “${l?l.name:''}”, enter its pass phrase.`:'This list needs a pass phrase.';
+  $('#uKey').placeholder=UMODE==='open'?'Leave empty for a public list':'';
+  $('#uGo').textContent=UMODE==='write'?'Unlock notes':'Open';
+  openSheet('#unlockSheet');setTimeout(()=>{try{$(UMODE==='open'?'#uRef':'#uKey').focus({preventScroll:true})}catch(e){}},60);
 }
 $('#uX').onclick=closeSheets;
 $('#uForm').addEventListener('submit',async e=>{
   e.preventDefault();let raw=$('#uRef').value.trim(),key=$('#uKey').value.trim();
   const km=raw.match(/&key=([^&\s]+)/);if(km){try{key=key||decodeURIComponent(km[1])}catch(_){}raw=raw.slice(0,km.index)}
-  const ref=sbRef(raw);if(!ref)return;if(!key){$('#uMsg').textContent='Enter the list key, or paste the private link.';return}
+  const wl=UMODE==='write'?LS.find(x=>x.id===raw):null,ref=wl?wl.rid:sbRef(raw);if(!ref){$('#uMsg').textContent='Enter the list’s name.';return}
+  if(!key&&UMODE!=='open'){$('#uMsg').textContent='Enter the pass phrase.';return}
   $('#uGo').disabled=true;$('#uMsg').textContent='Opening…';
-  try{const l=await sbUnlock(ref,key);closeSheets();switchList(l.id);toast('Unlocked '+l.name)}
+  try{const l=await sbUnlock(ref,key);closeSheets();if(location.hash===START)setHash(baseHash(),false);switchList(l.id);toast(UMODE==='write'?'You can add notes now':key?'Opened '+l.name:'Opened '+l.name+' to read')}
   catch(err){$('#uGo').disabled=false;$('#uMsg').textContent=err.status?err.message:'Couldn’t reach Supabase. Check your connection.'}
 });
 /* ---------- Admin mode ----------
@@ -1398,6 +1479,10 @@ function admRefused(e){if(e&&e.code==='FOLIO_ADMIN'&&isAdmin())admLock('The admi
 
 /* private links: the list's address with its key, so the person opening it doesn't type the key */
 const privateLink=l=>location.origin+location.pathname+LIST+encodeURIComponent(l.slug)+'&key='+encodeURIComponent(SBK[l.rid]);
+async function openByLink(slug){
+  try{const l=await sbUnlock(sbRef(slug),'');switchList(l.id,true);toast('Opened '+l.name+' to read')}
+  catch(err){if(err.code==='FOLIO_NOMATCH'||err.code==='FOLIO_LOCKED')openUnlock(slug,'link');else toast(err.status?err.message:'Couldn’t reach Supabase. Check your connection.',null,null,'info')}
+}
 async function linkUnlock(slug,key){
   const have=listBySlug(slug);
   if(have&&have.rid&&SBK[have.rid]===key){switchList(have.id,true);return}
@@ -1411,27 +1496,40 @@ function renderAdOnline(){
   const box=$('#adOnline');if(!box||AD===null||(box.contains(document.activeElement)&&document.activeElement.tagName==='INPUT'))return;
   const l=LS.find(x=>x.id===AD);if(!l)return;
   if(!SBC){box.innerHTML='<p class="adhint">Only on this device. To put it online, connect a Supabase project first: menu → Admin.</p>';return}
-  if(!l.rid){box.innerHTML=`<p class="adhint">Only on this device. Put it online and anyone with its address and the list key can open and edit it.</p>
-    <form class="oform" id="adPub">${keyInput('adListK','List key','At least 8 characters; you choose it')}
+  const VIS=[['public','Public','Listed on the start page. Anyone can read it.'],['unlisted','Unlisted','Anyone with the address can read it. Not listed.'],['private','Private','Only people with the pass phrase can read it.']];
+  const visSeg=(cur,id)=>`<div class="st-seg" role="radiogroup" aria-label="Who can read it" id="${id}">${VIS.map(([v,t])=>`<label class="st-seg__opt${v===cur?' is-on':''}"><input type="radio" name="${id}" value="${v}" class="st-seg__input"${v===cur?' checked':''}>${t}</label>`).join('')}</div>`;
+  const visHint=v=>(VIS.find(x=>x[0]===v)||VIS[2])[2]+' Adding notes always needs the pass phrase.';
+  if(!l.rid){box.innerHTML=`<p class="adhint">Only on this device. Put it online to share it.</p>
+    <form class="oform" id="adPub"><span class="st-field__label">Who can read it</span>${visSeg('private','adPubVis')}<p class="adhint" id="adPubHint">${visHint('private')}</p>
+      ${keyInput('adListK','Pass phrase','At least 10 characters; four short words work well')}
       <button type="submit" class="st-btn st-btn--primary">Put online</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
-  if(!SBK[l.rid]){box.innerHTML=`<p class="adhint">Online, but locked on this device: its key was changed. Enter the new key to carry on.</p>
-    <form class="oform" id="adRelock">${keyInput('adListK','List key')}<button type="submit" class="st-btn st-btn--primary">Unlock</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
-  box.innerHTML=`<p class="adhint"><b>Online.</b> Anyone with the address <code>${esc(listHash(l.id))}</code> and the list key can open and edit it. ${esc(sbStatusText())}</p>${sbErrHtml()}
-    <div class="row"><button type="button" class="st-btn st-btn--primary" id="adPrivLink">Copy private link</button><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show list key</button></div>
-    <p class="adhint">The private link includes the key: whoever has it can open and edit the list. To cut off old links, change the key.</p>
-    <details class="adkey"><summary>Change the key or take offline</summary>
-      <form class="oform" id="adRekey">${keyInput('adListK','New list key','At least 8 characters')}
-        <div class="row"><button type="submit" class="st-btn st-btn--secondary">Change key</button><button type="button" class="linkbtn addanger" id="adOffline">Take offline</button></div>
+  if(!SBK[l.rid]){box.innerHTML=`<p class="adhint">Online, but this device doesn’t have its pass phrase (it was changed, or the list was opened to read). Enter it to carry on.</p>
+    <form class="oform" id="adRelock">${keyInput('adListK','Pass phrase')}<button type="submit" class="st-btn st-btn--primary">Unlock</button><p class="adhint" id="adOnMsg" role="status"></p></form>`;return}
+  const v=l.vis||'private';
+  box.innerHTML=`<p class="adhint"><b>Online.</b> Address <code>${esc(listHash(l.id))}</code>. ${esc(sbStatusText())}</p>${sbErrHtml()}
+    <span class="st-field__label">Who can read it</span>${visSeg(v,'adVis')}<p class="adhint" id="adVisHint">${visHint(v)}</p>
+    <div class="row"><button type="button" class="st-btn st-btn--primary" id="adPrivLink">Copy link with pass phrase</button><button type="button" class="st-btn st-btn--secondary" id="adSyncNow">Sync now</button><button type="button" class="st-btn st-btn--ghost st-btn--sm" id="adShowKey">Show pass phrase</button></div>
+    <p class="adhint">The link with the pass phrase lets whoever has it read the list and add notes. To cut off old links, change the pass phrase.</p>
+    <details class="adkey"><summary>Change the pass phrase or take offline</summary>
+      <form class="oform" id="adRekey">${keyInput('adListK','New pass phrase','At least 10 characters')}
+        <div class="row"><button type="submit" class="st-btn st-btn--secondary">Change pass phrase</button><button type="button" class="linkbtn addanger" id="adOffline">Take offline</button></div>
         <p class="adhint" id="adOnMsg" role="status"></p></form></details>`;
 }
+$('#adOnline').addEventListener('change',async e=>{
+  const r=e.target;if(r.name==='adPubVis'||r.name==='adVis')r.closest('.st-seg').querySelectorAll('input').forEach(x=>x.parentNode.classList.toggle('is-on',x.checked));
+  if(r.name==='adPubVis'){$('#adPubHint').textContent=r.closest('form')?(({public:'Listed on the start page. Anyone can read it.',unlisted:'Anyone with the address can read it. Not listed.',private:'Only people with the pass phrase can read it.'})[r.value]+' Adding notes always needs the pass phrase.'):'';return}
+  if(r.name!=='adVis')return;const l=LS.find(x=>x.id===AD);if(!l)return;
+  try{await sbSetVis(l,admKey()||'',r.value);renderAdOnline();toast(r.value==='public'?`“${l.name}” is public`:r.value==='unlisted'?`“${l.name}” is unlisted`:`“${l.name}” is private`)}
+  catch(err){toast(err.status?err.message:'Couldn’t reach Supabase.',null,null,'info');admRefused(err);renderAdOnline()}
+});
 $('#adOnline').addEventListener('submit',async e=>{
   e.preventDefault();const l=LS.find(x=>x.id===AD),say=t=>{const m=$('#adOnMsg');if(m)m.textContent=t},btn=e.target.querySelector('[type=submit]');if(!l)return;
   const admin=admKey()||'',key=$('#adListK').value.trim();
-  if(e.target.id!=='adRelock'&&key.length<8){say(SB_MSG.FOLIO_SHORT);return}
+  if(e.target.id!=='adRelock'&&key.length<10){say(SB_MSG.FOLIO_SHORT);return}
   btn.disabled=true;say('Working…');
   try{
-    if(e.target.id==='adPub'){await sbPublish(l,admin,key);toast(`“${l.name}” is online`)}
-    else if(e.target.id==='adRekey'){await sbSetKey(l,admin,key);toast('List key changed. Other devices need the new key.')}
+    if(e.target.id==='adPub'){const vr=e.target.querySelector('input[name=adPubVis]:checked');await sbPublish(l,admin,key,vr?vr.value:'private');toast(`“${l.name}” is online`)}
+    else if(e.target.id==='adRekey'){await sbSetKey(l,admin,key);toast('Pass phrase changed. Other devices need the new one to add notes.')}
     else{await sbUnlock(l.rid,key);toast('Unlocked '+l.name)}
     document.activeElement&&document.activeElement.blur();renderAdmin();
   }catch(err){btn.disabled=false;say(err.status?err.message:'Couldn’t reach Supabase. Check your connection.');admRefused(err)}
@@ -1441,7 +1539,7 @@ $('#adOnline').addEventListener('click',async e=>{
   if(e.target.closest('#adPrivLink')){const url=privateLink(l);
     try{navigator.clipboard.writeText(url).then(()=>toast('Private link copied'),()=>toast(url))}catch(_){toast(url)}return}
   if(e.target.closest('#adSyncNow'))sbSync(true,l);
-  else if(e.target.closest('#adShowKey')){const b=e.target.closest('#adShowKey');b.textContent=b.dataset.on?'Show list key':SBK[l.rid];b.dataset.on=b.dataset.on?'':'1'}
+  else if(e.target.closest('#adShowKey')){const b=e.target.closest('#adShowKey');b.textContent=b.dataset.on?'Show pass phrase':SBK[l.rid];b.dataset.on=b.dataset.on?'':'1'}
   else if(e.target.closest('#adOffline')){const b=e.target.closest('#adOffline'),say=t=>{$('#adOnMsg').textContent=t};
     if(!b.dataset.arm){b.dataset.arm='1';b.textContent='Tap again to take offline';setTimeout(()=>{delete b.dataset.arm;b.textContent='Take offline'},4000);return}
     try{await sbTakeOffline(l,admKey()||'');document.activeElement&&document.activeElement.blur();renderAdmin();toast(`“${l.name}” is offline. It stays on this device.`)}
@@ -1755,7 +1853,10 @@ function slideRef(){
   const n=a.blocks.slice(0,cd.first+1).filter(isText).length;
   return{pos:cd.first,where:(cd.k==='chap'?'Section':'Paragraph')+' '+n,excerpt:clip(strip(cd.items.map(i=>i.html).join(' ')))};
 }
+/* notes on an online list need its pass phrase; a list opened to read asks for it first */
+function notesLocked(listId){const l=LS.find(x=>x.id===listId);if(!sbReadOnly(l))return false;openUnlock(l.id,'write');return true}
 function openNote(note){
+  {const it=note?Q.find(q=>q.id===note.art):R.item;if(it&&notesLocked(it.list))return}
   if(note){NC={note};$('#nTitle').textContent='Edit note';$('#nWhere').textContent=note.where+' · '+note.title;$('#nRef').textContent=note.excerpt;
     $('#nText').value=note.text;$('#nName').value=note.by||'';$('#nDel').hidden=false;$('#nOthers').innerHTML=''}
   else{const ref=slideRef();NC={ctx:ref};$('#nTitle').textContent='Note';$('#nWhere').textContent=ref.where;$('#nRef').textContent=ref.excerpt;
@@ -1786,7 +1887,7 @@ function updateRemember(){const b=$('#remBtn'),cd=R.cards&&R.cards[R.idx];
   $('#noteFab').hidden=!(cd&&R.art);
   if(!cd||!R.art||cd.k==='cover'||cd.k==='end'){b.hidden=true;return}
   const on=!!likeAt(slideRef().pos);b.hidden=false;b.setAttribute('aria-pressed',String(on));const t=on?'Remembered: tap to forget':'Remember this slide';b.setAttribute('aria-label',t);b.title=t}
-$('#remBtn').onclick=()=>{if(!R.art)return;const ref=slideRef(),ex=likeAt(ref.pos);
+$('#remBtn').onclick=()=>{if(!R.art)return;if(R.item&&notesLocked(R.item.list))return;const ref=slideRef(),ex=likeAt(ref.pos);
   if(ex){if(ex.text)delete ex.like;else N.splice(N.indexOf(ex),1)}
   else{const same=N.find(n=>n.art===R.item.id&&n.pos===ref.pos&&!n.like);
     if(same)same.like=true;else N.push({id:'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),art:R.item.id,list:R.item.list,title:R.art.title,site:R.art.site,url:R.art.url,...ref,text:'',like:true,...(store.get('folio.noteName','')?{by:store.get('folio.noteName','')}:{}),at:Date.now()})}
@@ -2163,7 +2264,7 @@ let wake=null;
 /* ---------- Routes: #list-<slug> for a list, #admin-<slug> to manage it, #read-<id> for an article, #notes for the notes tab ---------- */
 const READ='#read-';
 const isReadHash=()=>location.hash.startsWith(READ);
-const baseHash=()=>typeof AD!=='undefined'&&AD!==null?adminHash(AD):tab==='notes'?'#notes':listHash();
+const baseHash=()=>STV?START:typeof AD!=='undefined'&&AD!==null?adminHash(AD):tab==='notes'?'#notes':listHash();
 function setHash(h,push){
   const url=location.pathname+location.search+h;
   try{push?history.pushState({fo:1},'',url):history.replaceState({fo:1},'',url)}catch(e){try{location.replace(url)}catch(_){}}
@@ -2198,6 +2299,8 @@ function route(){
     if(l.slug!==h.slice(ADMIN.length))setHash(adminHash(l.id),false);
     openAdmin(l.id,true);return;
   }
+  if(h===START){if(AD!==null){AD=null;$('#viewAdmin').hidden=true}openStart(true);return}
+  closeStart();
   if(AD!==null)closeAdmin();
   if(h.startsWith(LIST)&&/&key=/.test(h)){
     const i=h.indexOf('&key='),slug=decodeURIComponent(h.slice(LIST.length,i));let key='';try{key=decodeURIComponent(h.slice(i+5))}catch(e){}
@@ -2206,7 +2309,7 @@ function route(){
   }
   if(h.startsWith(LIST)){
     const l=listBySlug(decodeURIComponent(h.slice(LIST.length)));
-    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);if(SBC){openUnlock(decodeURIComponent(h.slice(LIST.length)));return}toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
+    if(!l){if(!SYNCED){PENDING_ROUTE=true;return}setHash(baseHash(),false);if(SBC){openByLink(decodeURIComponent(h.slice(LIST.length)));return}toast(REMOTE?'That reading list doesn’t exist any more':'That reading list isn’t on this device');return}
     if(l.slug!==h.slice(LIST.length))setHash(listHash(l.id),false);   // an old address after a rename
     switchList(l.id,true);return;
   }
@@ -2379,7 +2482,7 @@ const fontsReady=(document.fonts?Promise.race([
 applySettings();
 if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
 if(location.hash.startsWith(LIST)){const l=listBySlug(decodeURIComponent(location.hash.slice(LIST.length).split('&key=')[0]));if(l){AL=l.id;saveL()}}
-admClass();renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();route();BOOTING=false;syncDown();
+admClass();renderQ();showTab(location.hash==='#notes'?'notes':location.hash.startsWith(LIST)?'queue':tab);renderNotes();roClass();if(FIRST_VISIT&&SBC&&(!location.hash||location.hash==='#'))setHash(START,false);route();BOOTING=false;syncDown();
 if(canFetch!==true){fetch('https://r.jina.ai/https://example.com').then(r=>{canFetch=r.ok?true:canFetch}).catch(()=>{canFetch=false})
   .finally(()=>{if(canFetch!==null)store.set('folio.canFetch',canFetch);renderQ()})}
 })();
