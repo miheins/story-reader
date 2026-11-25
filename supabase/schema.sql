@@ -11,10 +11,11 @@
 --         unlisted (anyone with the address) or private (pass phrase needed);
 --       the list's PASS PHRASE is needed to add notes, and to read a private list;
 --       the ADMIN KEY is needed for articles, list settings, putting a list online or taking it offline.
---   * Pass phrases and the admin key are stored only as bcrypt hashes.
---   * Wrong guesses are counted: after 10 wrong tries in 15 minutes a list (or the admin key) is locked
---     for the rest of those 15 minutes. Functions return {"error": ...} instead of raising, so the count
---     is saved (a raised error would roll it back).
+--   * Pass phrases and the admin key are stored only as bcrypt hashes, so every guess is slow.
+--   * There is no lock-out (it would let anyone lock a list for everyone). Instead pass phrases are long:
+--     the app generates five random words (about 52 bits), and the database refuses anything under 16 characters.
+--     Keep the admin key long too.
+--   * Functions return {"error": ...} instead of raising.
 --   * An unknown list and a wrong pass phrase give the same answer, so private lists can't be discovered.
 
 create extension if not exists pgcrypto with schema extensions;
@@ -81,22 +82,14 @@ create table if not exists public.folio_notes (
   primary key (list_id, id)
 );
 
--- wrong pass phrases and admin keys, to lock out guessing (scope: 'admin' or a list id)
-create table if not exists public.folio_fails (
-  scope text not null,
-  at    timestamptz not null default now()
-);
-create index if not exists folio_fails_scope_at on public.folio_fails (scope, at);
-
 alter table public.folio_admin    enable row level security;
-alter table public.folio_fails    enable row level security;
 -- added later: the name a reader gives with a note (optional)
 alter table public.folio_notes add column if not exists author text not null default '';
 
 alter table public.folio_lists    enable row level security;
 alter table public.folio_articles enable row level security;
 alter table public.folio_notes    enable row level security;
-revoke all on public.folio_admin, public.folio_lists, public.folio_articles, public.folio_notes, public.folio_fails from anon, authenticated;
+revoke all on public.folio_admin, public.folio_lists, public.folio_articles, public.folio_notes from anon, authenticated;
 
 -- ---------- helpers (not callable from the API) ----------
 
@@ -110,17 +103,10 @@ drop function if exists public.folio_delete_list(text, uuid);
 drop function if exists public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb);
 drop function if exists public.folio_push(uuid, text, jsonb, jsonb, jsonb, jsonb, jsonb, text);
 
--- 10 wrong tries in 15 minutes locks a scope ('admin' or a list id) until the window passes.
-create or replace function public.folio__locked(p_scope text) returns boolean
-language sql security definer set search_path = public as $$
-  select count(*) >= 10 from folio_fails where scope = p_scope and at > now() - interval '15 minutes'
-$$;
-
-create or replace function public.folio__fail(p_scope text) returns void
-language sql security definer set search_path = public as $$
-  delete from folio_fails where at < now() - interval '1 day';
-  insert into folio_fails (scope) values (p_scope);
-$$;
+-- A draft of this file locked lists after wrong guesses; that is gone (anyone could lock a list for everyone).
+drop function if exists public.folio__locked(text);
+drop function if exists public.folio__fail(text);
+drop table if exists public.folio_fails;
 
 -- The admin key: null when it is right, otherwise the error code.
 create or replace function public.folio__admin_err(p_admin text) returns text
@@ -129,8 +115,7 @@ declare h text;
 begin
   select key_hash into h from folio_admin;
   if h is null then return 'FOLIO_NOADMIN'; end if;
-  if folio__locked('admin') then return 'FOLIO_LOCKED'; end if;
-  if h is distinct from crypt(coalesce(p_admin, ''), h) then perform folio__fail('admin'); return 'FOLIO_ADMIN'; end if;
+  if h is distinct from crypt(coalesce(p_admin, ''), h) then return 'FOLIO_ADMIN'; end if;
   return null;
 end $$;
 
@@ -146,8 +131,7 @@ create or replace function public.folio__key_err(l public.folio_lists, p_key tex
 language plpgsql security definer set search_path = public, extensions as $$
 begin
   if l.id is null then return 'FOLIO_NOMATCH'; end if;
-  if folio__locked(l.id::text) then return 'FOLIO_LOCKED'; end if;
-  if l.key_hash is distinct from crypt(coalesce(p_key, ''), l.key_hash) then perform folio__fail(l.id::text); return 'FOLIO_NOMATCH'; end if;
+  if l.key_hash is distinct from crypt(coalesce(p_key, ''), l.key_hash) then return 'FOLIO_NOMATCH'; end if;
   return null;
 end $$;
 
@@ -155,7 +139,7 @@ end $$;
 create or replace function public.folio_set_admin_key(p_key text) returns void
 language plpgsql security definer set search_path = public, extensions as $$
 begin
-  if char_length(coalesce(p_key, '')) < 10 then raise exception 'FOLIO_SHORT'; end if;
+  if char_length(coalesce(p_key, '')) < 16 then raise exception 'FOLIO_SHORT'; end if;
   insert into folio_admin (one, key_hash) values (true, crypt(p_key, gen_salt('bf', 10)))
   on conflict (one) do update set key_hash = excluded.key_hash;
 end $$;
@@ -179,7 +163,7 @@ language plpgsql security definer set search_path = public, extensions as $$
 declare v uuid; e text := folio__admin_err(p_admin);
 begin
   if e is not null then return jsonb_build_object('error', e); end if;
-  if char_length(coalesce(p_key, '')) < 10 then return jsonb_build_object('error', 'FOLIO_SHORT'); end if;
+  if char_length(coalesce(p_key, '')) < 16 then return jsonb_build_object('error', 'FOLIO_SHORT'); end if;
   if coalesce(p_visibility, 'private') not in ('public', 'unlisted', 'private') then return jsonb_build_object('error', 'FOLIO_VIS'); end if;
   begin
     insert into folio_lists (slug, name, key_hash, visibility)
@@ -196,7 +180,7 @@ language plpgsql security definer set search_path = public, extensions as $$
 declare e text := folio__admin_err(p_admin);
 begin
   if e is not null then return jsonb_build_object('error', e); end if;
-  if char_length(coalesce(p_key, '')) < 10 then return jsonb_build_object('error', 'FOLIO_SHORT'); end if;
+  if char_length(coalesce(p_key, '')) < 16 then return jsonb_build_object('error', 'FOLIO_SHORT'); end if;
   update folio_lists set key_hash = crypt(p_key, gen_salt('bf', 10)), updated_at = now() where id = p_list;
   if not found then return jsonb_build_object('error', 'FOLIO_NOMATCH'); end if;
   return jsonb_build_object('ok', true);
@@ -303,7 +287,7 @@ begin
 end $$;
 
 -- Who may call what: the browser gets only the API functions, never the helpers.
-revoke execute on function public.folio__locked(text), public.folio__fail(text), public.folio__admin_err(text), public.folio__find(text),
+revoke execute on function public.folio__admin_err(text), public.folio__find(text),
   public.folio__key_err(public.folio_lists, text), public.folio_set_admin_key(text) from public, anon, authenticated;
 revoke execute on function public.folio_ping(), public.folio_check_admin(text), public.folio_publish(text, text, text, text, text),
   public.folio_set_key(text, uuid, text), public.folio_set_visibility(text, uuid, text), public.folio_delete_list(text, uuid),

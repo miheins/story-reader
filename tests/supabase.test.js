@@ -9,7 +9,7 @@ function server(){const lists=[];const log=[];let n=0,up=true;
   const findOpen=(ref,key)=>{const l=lists.find(x=>x.id===ref||x.slug===ref||x.alt.includes(ref));if(!l)return'FOLIO_NOMATCH';if(!key)return l.vis!=='private'?[l,false]:'FOLIO_NOMATCH';return l.key===key?[l,true]:'FOLIO_NOMATCH'};
   const fns={folio_ping:()=>true,
     folio_check_admin:a=>a.p_admin===ADMIN?{ok:true}:'FOLIO_ADMIN',
-    folio_publish:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';if((a.p_key||'').length<10)return'FOLIO_SHORT';if(lists.some(l=>l.slug===a.p_slug))return'FOLIO_SLUG';
+    folio_publish:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';if((a.p_key||'').length<16)return'FOLIO_SHORT';if(lists.some(l=>l.slug===a.p_slug))return'FOLIO_SLUG';
       const l={id:'00000000-0000-4000-8000-00000000000'+(++n),slug:a.p_slug,name:a.p_name,alt:[],key:a.p_key,vis:a.p_visibility||'private',articles:[],notes:[]};lists.push(l);return{id:l.id}},
     folio_set_visibility:a=>{if(a.p_admin!==ADMIN)return'FOLIO_ADMIN';const l=lists.find(x=>x.id===a.p_list);if(!l)return'FOLIO_NOMATCH';l.vis=a.p_visibility;return{ok:true}},
     folio_directory:()=>lists.filter(l=>l.vis==='public').map(l=>({id:l.id,name:l.name,slug:l.slug,intro:l.intro||'',articles:l.articles.length})),
@@ -55,9 +55,11 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('admin unlocked',!A.document.documentElement.classList.contains('noadmin')&&/Admin/.test($A('#sbBox').textContent));
   $A('#mX').click();A.location.hash='#admin-weekend';await wait(200);
   ok('admin page offers Put online, no admin field',!!$A('#adPub')&&!$A('#adAdminK'));
+  await wait(50);ok('Folio suggests a five-word pass phrase',/^[a-z]+(-[a-z]+){4}$/.test($A('#adListK').value)&&$A('#adListK').readOnly,$A('#adListK').value);
+  {const a=$A('#adListK').value;$A('#adNewPhr').click();await wait(50);ok('Another makes a new one',$A('#adListK').value!==a&&/^[a-z]+(-[a-z]+){4}$/.test($A('#adListK').value))}
   $A('#adListK').value='short';submit(A,'#adPub');await wait(50);
-  ok('short pass phrase refused in the app',/10 characters/.test($A('#adOnMsg').textContent)&&!srv.lists.length);
-  $A('#adListK').value='weekend-key-1';submit(A,'#adPub');await wait(300);
+  ok('short pass phrase refused in the app',/16 characters/.test($A('#adOnMsg').textContent)&&!srv.lists.length);
+  $A('#adListK').value='weekend-key-1-long';submit(A,'#adPub');await wait(300);
   const L=srv.lists[0];
   ok('list is online',!!L&&L.slug==='weekend'&&/Online/.test($A('#adOnline').textContent),$A('#adOnline').textContent.slice(0,50));
   ok('its articles and notes went up',L.articles.length===2&&L.notes.length===1&&L.articles.find(r=>r.id==='a1').cat_name==='Branding'&&L.articles.find(r=>r.id==='a2').kind==='link');
@@ -69,7 +71,7 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('private list address asks for the pass phrase, without naming the list',!$B('#unlockSheet').hidden&&$B('#uRef').value==='weekend'&&$B('#uRefF').hidden&&!/Weekend/.test($B('#unlockSheet').textContent));
   $B('#uKey').value='not-the-key';submit(B,'#uForm');await wait(150);
   ok('wrong pass phrase refused, neutrally',/didn’t match/.test($B('#uMsg').textContent)&&(ls(B,'folio.lists')||[]).every(l=>!l.rid),$B('#uMsg').textContent);
-  $B('#uKey').value='weekend-key-1';submit(B,'#uForm');await wait(300);
+  $B('#uKey').value='weekend-key-1-long';submit(B,'#uForm');await wait(300);
   const lb=ls(B,'folio.lists').find(l=>l.rid===L.id);
   ok('B has the list and is on it',!!lb&&lb.name==='Weekend'&&B.location.hash==='#list-weekend'&&ls(B,'folio.alist')===lb.id,B.location.hash);
   const qb=ls(B,'folio.queue').filter(q=>q.list===lb.id);
@@ -98,7 +100,7 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   $A('#ad_a2').checked=true;$A('#adItems').dispatchEvent(new A.Event('change',{bubbles:true}));$A('#adRemove').click();await wait(2200);
   ok('admin removal reaches Supabase',L.articles.length===1);
   // a reader's note syncs without admin (fresh device holding the list key and one new note)
-  const R2=device(srv,{'folio.lists':[{id:L.id,rid:L.id,name:'Sunday',slug:'sunday'}],'folio.alist':L.id,'folio.sb.keys':{[L.id]:'weekend-key-1'},
+  const R2=device(srv,{'folio.lists':[{id:L.id,rid:L.id,name:'Sunday',slug:'sunday'}],'folio.alist':L.id,'folio.sb.keys':{[L.id]:'weekend-key-1-long'},
     'folio.queue':[{id:'a1',url:'https://a.com/1',title:'First',site:'a.com',status:'new',pos:-1,pct:0,list:L.id}],
     'folio.notes':[{id:'nr',art:'a1',pos:1,where:'Paragraph 1',excerpt:'x',text:'',like:true,at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'},{id:'ns',art:'a1',pos:2,where:'Paragraph 2',excerpt:'y',text:'Signed',by:'Sam',at:Date.now(),title:'First',site:'a.com',url:'https://a.com/1'}]}).window;await wait(500);
   ok('the note’s name reaches Supabase',L.notes.some(n=>n.id==='ns'&&n.author==='Sam'));
@@ -122,18 +124,18 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   ok('A’s private list untouched',ls(A,'folio.queue').some(q=>q.id==='p1')&&ls(A,'folio.notes').some(n=>n.id==='n2'));
 
   // admin changes the key: B is locked out until it has the new one
-  A.document.querySelector('.adkey').open=true;$A('#adListK').value='brand-new-key-9';submit(A,'#adRekey');await wait(200);
-  ok('key changed',L.key==='brand-new-key-9');
+  A.document.querySelector('.adkey').open=true;$A('#adListK').value='brand-new-key-9-long';submit(A,'#adRekey');await wait(200);
+  ok('key changed',L.key==='brand-new-key-9-long');
   $B('#menuBtn').click();await wait(50);$B('#sbNow').click();await wait(300);
   ok('B is read only, keeps its copy',/1 read only/.test($B('#sbBox').textContent)&&ls(B,'folio.queue').some(q=>q.id==='a1'),$B('#sbBox').textContent.slice(0,120));
   $B('#sbUnlockBtn').click();await wait(100);ok('Open a list goes to the start page',!$B('#viewStart').hidden&&B.location.hash==='#start');
-  $B('#stName').value='Sunday';$B('#stKey').value='brand-new-key-9';submit(B,'#stForm');await wait(300);
-  ok('B unlocks with the new key',ls(B,'folio.sb.keys')[L.id]==='brand-new-key-9');
+  $B('#stName').value='Sunday';$B('#stKey').value='brand-new-key-9-long';submit(B,'#stForm');await wait(300);
+  ok('B unlocks with the new key',ls(B,'folio.sb.keys')[L.id]==='brand-new-key-9-long');
 
   // private link: the key travels in the link, then leaves the address bar
   let link='';Object.defineProperty(A.navigator,'clipboard',{value:{writeText:t=>{link=t;return Promise.resolve()}},configurable:true});
   A.document.querySelector('#adPrivLink').click();await wait(50);
-  ok('private link carries slug and key',/#list-sunday&key=brand-new-key-9$/.test(link),link);
+  ok('private link carries slug and key',/#list-sunday&key=brand-new-key-9-long$/.test(link),link);
   const P=device(srv,{},link.slice(link.indexOf('#'))).window;await wait(500);
   ok('private link opens the list without typing',ls(P,'folio.lists').some(l=>l.rid===L.id)&&P.document.querySelector('#unlockSheet').hidden,P.document.querySelector('#uMsg').textContent);
   ok('key removed from the address',P.location.hash==='#list-sunday'&&!P.location.href.includes('key='),P.location.href);
@@ -155,9 +157,9 @@ const submit=(w,sel)=>w.document.querySelector(sel).dispatchEvent(new w.Event('s
   $S('#tabNotes').click();await wait(100);const ed=$S('#notesList [data-edit]');if(ed)ed.click();await wait(50);
   ok('notes on it ask for the pass phrase',!!ed&&$S('#noteSheet').hidden&&!$S('#unlockSheet').hidden&&$S('#uTitle').textContent==='Add notes');
   $S('#uKey').value='wrong-phrase-1';submit(S,'#uForm');await wait(200);ok('wrong pass phrase for notes refused',/didn’t match/.test($S('#uMsg').textContent));
-  $S('#uKey').value='brand-new-key-9';submit(S,'#uForm');await wait(300);
+  $S('#uKey').value='brand-new-key-9-long';submit(S,'#uForm');await wait(300);
   $S('#tabNotes').click();await wait(100);$S('#notesList [data-edit]').click();await wait(50);
-  ok('right pass phrase unlocks notes',ls(S,'folio.sb.keys')[L.id]==='brand-new-key-9'&&!$S('#noteSheet').hidden);$S('#nX').click();
+  ok('right pass phrase unlocks notes',ls(S,'folio.sb.keys')[L.id]==='brand-new-key-9-long'&&!$S('#noteSheet').hidden);$S('#nX').click();
   vis('unlisted');await wait(200);
   const S2=device(srv,{},'#start').window;await wait(500);
   ok('unlisted list not in the directory',!/Sunday/.test(S2.document.querySelector('#stDir').textContent));

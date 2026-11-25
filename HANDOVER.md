@@ -177,7 +177,7 @@ Start a conversation, attach or link this repository, and say: *"Read HANDOVER.m
 - Supabase: `folio_articles.why` (needs the updated schema.sql); changing it needs the admin key, like other article fields.
 
 ## Sharing (public / unlisted / private, start page)
-- `folio_lists.visibility`; `folio_open(ref, key)` opens public/unlisted lists with an empty key (`write:false`), else needs the pass phrase (`write:true`). `folio_directory()` lists public lists. `folio_set_visibility` (admin). Wrong guesses counted in `folio_fails` (10 per 15 min per list / admin). All API functions return `{error}` instead of raising; `sbRpc` turns that into a thrown error with `.code`.
+- `folio_lists.visibility`; `folio_open(ref, key)` opens public/unlisted lists with an empty key (`write:false`), else needs the pass phrase (`write:true`). `folio_directory()` lists public lists. `folio_set_visibility` (admin). No lock-out (dropped: it let anyone lock a list for everyone); instead `genPhrase()` makes five-word phrases from `WORDS` (~52 bits) and the database needs ≥16 characters. All API functions return `{error}` instead of raising; `sbRpc` turns that into a thrown error with `.code`.
 - Client: a list opened without the phrase has `l.open=true` and no entry in `SBK`; `sbOnline()` includes it for pulls, `sbPushList` skips it; `sbReadOnly(l)`. `notesLocked(listId)` opens the unlock sheet in 'write' mode before any note or Remember.
 - Unlock sheet modes (`openUnlock(ref, mode)`): 'open' (name + phrase), 'link' (phrase only, neutral, no list name), 'write' (phrase to add notes).
 - Start page: `#start`, `openStart()/closeStart()`, shown automatically on a first visit (`FIRST_VISIT`: nothing saved on the device) when Supabase is configured.

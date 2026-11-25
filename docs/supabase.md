@@ -35,7 +35,7 @@ Local storage is the working copy, so the app works offline. After each save, on
 - The four tables (`folio_admin`, `folio_lists`, `folio_articles`, `folio_notes`) have row-level security on with **no policies**, and the public API roles have no rights on them. A browser cannot read or write them directly.
 - All access goes through database functions that check a key first: `folio_open` and `folio_push` need the pass phrase; `folio_publish`, `folio_set_key` and `folio_delete_list` need the admin key. `folio_set_admin_key` can only be run from the SQL editor.
 - Keys are stored as bcrypt hashes. On each device, a list's key is kept in local storage (`folio.sb.keys`).
-- **Limits to know:** after 10 wrong guesses in 15 minutes a list (or the admin key) is locked for the rest of those 15 minutes. Someone could use this to lock a list on purpose for a while; they still can't get in. Anyone holding a pass phrase can edit and delete in that list, not just read. A wrong key and an unknown address give different messages, so list addresses can be guessed at (their contents can't).
+- **Limits to know:** there is no lock-out after wrong guesses (it would let anyone lock a list for everyone). Instead Folio makes every pass phrase itself: five random words, about 52 bits, so guessing is hopeless. Keep the admin key long too. Anyone holding a pass phrase can edit and delete in that list, not just read. A wrong key and an unknown address give different messages, so list addresses can be guessed at (their contents can't).
 
 ## Code
 
@@ -66,5 +66,5 @@ Each online list has a visibility, set on its **Manage** page → *Online* → *
 - **Articles and list settings** still need the admin key.
 - **Start page** (`#start`): open a list by name and pass phrase, or tap a public list. New visitors land here; everyone else reaches it from ☰ → *Other lists*, or the list switcher → *Open another list…*.
 - **A link to a private list** asks only for the pass phrase and doesn't show the list's name. A wrong name and a wrong pass phrase give the same answer ("Name or pass phrase didn't match"), so private lists can't be found by guessing names.
-- New pass phrases need at least 10 characters. Existing ones keep working.
-- Functions return `{"error": "FOLIO_..."}` instead of raising, so the count of wrong guesses is saved (an error would roll it back). The app reads both.
+- **Pass phrases are made by Folio:** five random words joined with hyphens (e.g. `mule-roman-skirt-crazy-self`), with *Another* for a new suggestion. The database refuses anything under 16 characters. Lists put online earlier keep their old phrase until you change it (Manage → Online → *Change the pass phrase*).
+- Functions return `{"error": "FOLIO_..."}` instead of raising. The app reads both.
