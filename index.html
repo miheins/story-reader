@@ -24,7 +24,7 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Inter:wght@300..700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=Inter:wght@300..700&family=Merriweather:ital,wght@0,300..700;1,300..700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&display=swap">
 <style>
 /* Folio layer on Product Starter (styles/product-starter/tokens.css). Folio's names alias the kit's semantic tokens;
    only the accent, category colours and reading type are Folio's own. */
@@ -38,6 +38,8 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
   --cover-bg:var(--accent); --cover-fg:var(--on-accent); --tint:color-mix(in srgb,var(--accent) 6%,var(--surface));
   --stagebg:var(--neutral-150); --scrim:rgba(19,9,11,.48);
   --f-serif:"Newsreader","Iowan Old Style","Palatino Linotype",Georgia,serif;
+  --f-merri:"Merriweather",Georgia,serif;
+  --f-source:"Source Serif 4","Source Serif Pro",Georgia,serif;
   /* The kit's own fonts (Labil Grotesk, GT Alpina Typewriter) are licensed to More Yum and can't ship in this public repo.
      Folio uses Inter (Google Fonts, OFL) and Bitcount Single (bundled, OFL) with round pixels for labels. */
   --font-sans:Inter,"Helvetica Neue",Arial,sans-serif; --font-mono:"Bitcount Single","Courier Prime",ui-monospace,monospace;
@@ -50,6 +52,9 @@ if(t==='auto')t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').ma
   --stagebg:#000000; --scrim:rgba(0,0,0,.6); color-scheme:dark;
 }
 :root[data-face="sans"]{--rf:var(--f-sans)}
+:root[data-face="merri"]{--rf:var(--f-merri)}
+:root[data-face="source"]{--rf:var(--f-source)}
+.faceseg{display:grid;grid-template-columns:1fr 1fr}.faceseg .st-seg__opt{display:flex;align-items:center;justify-content:center}
 /* calmer schemes: a soft sage paper, a mid stone grey and a warm dusk; each sits on top of light or dark */
 :root[data-scheme="sage"]{
   --bg:#B9C1B8; --surface:#C7CEC5; --surface-sunken:#ACB4AB; --text:#262A25; --text-muted:#454C44; --text-subtle:#555C54;
@@ -131,7 +136,7 @@ textarea::placeholder,input::placeholder{color:var(--muted)}
 .txt{font-family:var(--rf);font-size:calc(var(--rs) * var(--sc,1));line-height:calc(var(--rl) - (var(--sc,1) - 1) * .3);color:var(--ink);
   font-optical-sizing:auto;font-kerning:normal;font-variant-ligatures:common-ligatures}
 :root[data-face="sans"] .txt{letter-spacing:calc(-.004em - (var(--sc,1) - 1) * .012em)}
-:root[data-face="serif"] .txt{letter-spacing:calc((var(--sc,1) - 1) * -.01em)}
+:root:not([data-face="sans"]) .txt{letter-spacing:calc((var(--sc,1) - 1) * -.01em)}
 .txt p{margin:0;hyphens:auto;-webkit-hyphens:auto;hyphenate-limit-chars:7 3 3;text-wrap:pretty}
 .txt p + p{margin-top:.7em}
 .txt p.li{position:relative;padding-left:1.15em}
@@ -588,8 +593,10 @@ input.st-input:focus-visible,textarea.st-input:focus-visible{border-color:var(--
   <div class="in">
     <div class="st-dialog__head"><h2 class="st-dialog__title" id="setTitle">Reading</h2><button type="button" class="st-icon-btn st-icon-btn--sm" id="setX" aria-label="Close" title="Close"><svg class="st-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="set"><span class="st-field__label" id="lFace">Typeface</span>
-      <div class="st-seg" role="radiogroup" aria-labelledby="lFace" id="segFace">
+      <div class="st-seg faceseg" role="radiogroup" aria-labelledby="lFace" id="segFace">
         <label class="st-seg__opt"><input type="radio" name="face" value="serif" class="st-seg__input"><span style="font-family:var(--f-serif)">Newsreader</span></label>
+        <label class="st-seg__opt"><input type="radio" name="face" value="source" class="st-seg__input"><span style="font-family:var(--f-source)">Source Serif</span></label>
+        <label class="st-seg__opt"><input type="radio" name="face" value="merri" class="st-seg__input"><span style="font-family:var(--f-merri)">Merriweather</span></label>
         <label class="st-seg__opt"><input type="radio" name="face" value="sans" class="st-seg__input"><span style="font-family:var(--f-sans)">Inter</span></label>
       </div></div>
     <div class="set"><span class="st-field__label" id="lSize">Size</span>
@@ -750,8 +757,10 @@ function slugTitle(u){try{const p=new URL(u);const seg=p.pathname.split('/').fil
 
 /* ---------- Settings ---------- */
 const SIZES=[16,19,22,25,28,31],SIZE_DEFAULT=2;
-const LH={serif:[1.42,1.55,1.7],sans:[1.38,1.5,1.66]};
+/* line height per typeface (tight, normal, loose); Merriweather is large and dark, so it gets more leading and is set 8% smaller */
+const LH={serif:[1.42,1.55,1.7],source:[1.42,1.55,1.7],merri:[1.5,1.64,1.8],sans:[1.38,1.5,1.66]},FACE_SCALE={merri:.92};
 const S=Object.assign({face:'serif',size:SIZE_DEFAULT,lh:1,theme:'auto',auto:false,fit:'same',notePos:'bottom'},store.get('folio.settings',{}));
+if(!LH[S.face])S.face='serif';
 /* the size scale changed (now six sizes, default the middle, 22 px): anyone who hasn't picked a size on it gets the default */
 if(S.sv!==3){if(!S.sizeSet)S.size=SIZE_DEFAULT;S.sv=3}
 S.size=Math.max(0,Math.min(SIZES.length-1,S.size|0));
@@ -762,7 +771,7 @@ const SCHEMES={sage:'light',stone:'dark',dusk:'dark'};
 function applySettings(){
   const r=document.documentElement;
   r.setAttribute('data-face',S.face);
-  r.style.setProperty('--rs',SIZES[S.size]+'px');
+  r.style.setProperty('--rs',Math.round(SIZES[S.size]*(FACE_SCALE[S.face]||1)*10)/10+'px');
   r.style.setProperty('--rl',LH[S.face][S.lh]);
   const sc=SCHEMES[S.theme];
   if(sc)r.setAttribute('data-scheme',S.theme);else r.removeAttribute('data-scheme');
@@ -2485,7 +2494,7 @@ $('#pGo').onclick=()=>{
 
 /* boot */
 const fontsReady=(document.fonts?Promise.race([
-  Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px Inter','500 20px Inter','500 12px "Bitcount Single"'].map(f=>document.fonts.load(f))),
+  Promise.all(['400 20px Newsreader','italic 400 20px Newsreader','500 20px Newsreader','400 20px Inter','500 20px Inter','500 12px "Bitcount Single"',...(S.face==='merri'?['400 20px Merriweather','italic 400 20px Merriweather']:S.face==='source'?['400 20px "Source Serif 4"','italic 400 20px "Source Serif 4"']:[])].map(f=>document.fonts.load(f))),
   new Promise(r=>setTimeout(r,2500))]):Promise.resolve()).catch(()=>{});
 applySettings();
 if(ONLINE){const cr=store.get('folio.remote',null);if(cr&&cr.doc){try{applyRemote(cr.doc,cr.sha,false)}catch(e){}}}
